@@ -1,0 +1,376 @@
+/* Variables CSS para la nueva paleta */
+@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap');
+
+/* VARIABLES DE DISEÑO */
+:root {
+    --color-fondo-principal: #f7f9fc; /* Fondo principal */
+    --color-fondo-secundario: #ffffff; /* Fondo blanco */
+    --color-acento: #4a90e2; /* Azul moderno */
+    --color-acento-hover: #357abd; /* Azul más oscuro */
+    --color-texto-principal: #333333; /* Texto principal */
+    --color-texto-secundario: #666666; /* Texto secundario */
+    --color-borde: #e0e6ed; /* Bordes sutiles */
+    --sombra-suave: rgba(0, 0, 0, 0.1); /* Sombras ligeras */
+    --sombra-hover: rgba(0, 0, 0, 0.2); /* Sombras en hover */
+}
+#loading .spinner-border {
+    color: #007bff; /* Cambiar al color principal de Bootstrap */
+}
+#toggler {
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(10, 10, 30, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e"); 
+}
+
+/* ESTILO GENERAL */
+body {
+    background-color: var(--color-fondo-principal);
+    color: var(--color-texto-principal);
+    font-family: 'Roboto', sans-serif;
+    font-size: 16px;
+}
+
+a {
+    color: var(--color-acento);
+    text-decoration: none;
+    font-weight: 500;
+    transition: color 0.3s ease-in-out;
+}
+
+a:hover {
+    color: var(--color-acento-hover);
+    text-decoration: underline;
+	cursor:pointer;
+}
+
+/* CONTENEDOR DINÁMICO */
+#cuerpo_T {
+    margin-top: 30px;
+    padding: 20px;
+    border-radius: 10px;
+    background-color: var(--color-fondo-secundario);
+    box-shadow: 0px 4px 8px var(--sombra-suave);
+}
+
+#inicioPanel {
+    margin-bottom: 30px;
+}
+
+/* ENCABEZADOS */
+h3 {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 20px;
+    padding: 10px;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--color-acento);
+    color: var(--color-texto-principal);
+}
+.infoitalica {
+	text-align:center;
+	font-style:italic;
+}
+/* LISTAS Y ELEMENTOS REPETIDOS */
+.lista {
+    background-color: var(--color-fondo-secundario);
+    padding: 20px;
+    margin-bottom: 15px;
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+    transition: all 0.3s ease-in-out;
+    box-shadow: 0px 2px 4px var(--sombra-suave);
+    opacity: 1; /* Para el contenido visible */
+}
+
+.lista:hover {
+    background-color: var(--color-fondo-principal);
+    box-shadow: 0px 4px 8px var(--sombra-hover);
+    transform: translateY(-2px);
+}
+
+/* TARJETAS (COMO "RECUADRO") */
+.recuadro {
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0px 4px 8px var(--sombra-suave);
+    opacity: 0.7; /* Para marcar "desactivado" */
+    background-color: var(--color-fondo-secundario);
+}
+
+.recuadro:hover {
+    opacity: 1;
+    background-color: var(--color-fondo-principal);
+}
+
+/* FILAS DENTRO DE LAS TARJETAS */
+.row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+/*.col-6, .col-12, .col-md-3, .col-md-4, .col-md-5 {
+    padding: 5px;
+}*/
+
+.titulo {
+    font-size: 1.2rem;
+    font-weight: bold;
+    color: var(--color-texto-principal);
+}
+
+.text-end {
+    text-align: right;
+}
+
+a span {
+    color: var(--color-acento);
+    font-weight: 600;
+}
+
+/* OTROS ESTILOS */
+.margen-bottom {
+    margin-bottom: 30px;
+}
+
+.text-muted {
+    color: var(--color-texto-secundario);
+}
+
+/* BOTONES O ACCIONES */
+div.text-end a {
+    color: var(--color-acento);
+    font-weight: bold;
+    transition: color 0.3s ease-in-out;
+}
+
+div.text-end a:hover {
+    color: var(--color-acento-hover);
+}
+
+.navbar-nav .nav-item a {
+    color: var(--color-texto-principal) !important; /* Asegurar el mismo tono negro */
+    text-decoration: none; /* Eliminar cualquier subrayado */
+    transition: color 0.3s ease-in-out; /* Suavidad al interactuar */
+}
+
+/* Efecto hover */
+.navbar-nav .nav-item a:hover {
+    color: var(--color-texto-principal); /* Mantiene el negro al hacer hover */
+}
+
+/* General para contenedores de selects */
+div[id^='sel'] {
+    margin-bottom: 20px; /* Separación entre selects */
+    font-family: 'Roboto', sans-serif; /* Usar fuente global */
+}
+
+/* Labels personalizados */
+label {
+    font-weight: bold;
+    margin-bottom: 5px;
+    display: block; /* Asegura que estén encima del select */
+    color: var(--color-texto-principal); /* Texto gris oscuro */
+}
+
+/* Estilo general para los selects */
+select {
+    width: 100%; /* Ocupa todo el ancho del contenedor */
+    padding: 10px 12px; /* Espaciado interno */
+    font-family: inherit; /* Fuente general consistente */
+    font-size: 16px; /* Tamaño de texto ajustado */
+    color: var(--color-texto-principal); /* Texto principal gris oscuro */
+    background-color: var(--color-fondo-principal); /* Fondo claro */
+    border: 1px solid var(--color-borde); /* Borde sutil */
+    border-radius: 5px; /* Bordes redondeados */
+    box-shadow: 0px 1px 2px var(--sombra-suave); /* Da profundidad */
+    transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Animación */
+}
+input[type="date"],
+input[type="time"],
+input[type="text"] {
+    width: 100%; /* Ocupa todo el ancho del contenedor */
+    padding: 10px 12px; /* Espaciado interno */
+    font-family: inherit; /* Fuente general consistente */
+    font-size: 16px; /* Tamaño de texto ajustado */
+    color: var(--color-texto-principal); /* Texto gris oscuro */
+    background-color: var(--color-fondo-principal); /* Fondo claro */
+    border: 1px solid var(--color-borde); /* Borde sutil */
+    border-radius: 5px; /* Bordes redondeados */
+    box-shadow: 0px 1px 2px var(--sombra-suave); /* Da profundidad */
+    transition: border-color 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Animación */
+}
+
+input[type="date"]:focus,
+input[type="time"]:focus {
+    border-color: var(--color-principal); /* Borde destacado al enfocar */
+    box-shadow: 0px 0px 4px var(--color-principal); /* Resaltado suave */
+    outline: none; /* Elimina el contorno predeterminado */
+}
+/* Hover y foco en selects */
+select:hover {
+    border-color: var(--color-acento-hover); /* Azul más oscuro */
+    box-shadow: 0px 2px 4px var(--sombra-hover); /* Sombra más pronunciada */
+}
+
+select:focus {
+    outline: none; /* Elimina el contorno del foco */
+    border-color: var(--color-acento); /* Azul moderno */
+    box-shadow: 0px 2px 6px var(--sombra-hover); /* Sombra al interactuar */
+}
+
+/* Opciones - texto y disposición */
+select option {
+    padding: 10px; /* Espaciado interno */
+    color: var(--color-texto-principal); /* Texto gris oscuro por defecto */
+    background-color: var(--color-fondo-principal); /* Fondo claro */
+    font-size: 16px; /* Tamaño estándar */
+}
+
+/* Opciones deshabilitadas */
+select option:disabled {
+    color: var(--color-texto-secundario); /* Texto gris claro */
+    background-color: rgba(0, 0, 0, 0.05); /* Fondo gris muy pálido */
+    opacity: 0.5; /* Apariencia deshabilitada */
+}
+
+/* Placeholder (primera opción por defecto) */
+
+/*select option[value="0"] {
+    color: var(--color-texto-secundario); /* Texto gris claro */
+/*}*/
+
+/* Para hacer modales o dropdowns responsivos */
+@media (max-width: 768px) {
+    select {
+        font-size: 14px; /* Reduce el tamaño en pantallas pequeñas */
+        padding: 8px 10px; /* Ajusta el espaciado */
+    }
+}
+
+.form-container {
+  margin: 20px auto;
+  padding: 30px;
+  background-color: var(--color-fondo-secundario);
+  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+
+/*PROPUESTAS GENERALES*/
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 15px; /* Espaciado entre bloques */
+}
+/*
+.col-12 {
+  flex: 0 0 100%;
+}
+
+.col-md-6 {
+  flex: 0 0 48%;
+  margin: 10px 1%;
+}*/
+select,
+input[type="checkbox"] {
+  width: 100%;
+  margin-top: 5px;
+  padding: 10px;
+  font-size: 16px;
+  color: var(--color-texto-principal);
+  background-color: var(--color-fondo-principal);
+  border: 1px solid var(--color-borde);
+  border-radius: 5px;
+}
+
+input[type="checkbox"] {
+  width: auto;
+  transform: scale(1.2);
+  margin-right: 10px;
+}
+.btn {
+  padding: 10px 20px;
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--color-fondo-secundario);
+  background-color: var(--color-acento);
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: 0.3s ease all;
+}
+
+.btn:hover {
+  background-color: var(--color-acento-hover);
+}
+.carrera-item {
+  background-color: var(--color-fondo-principal);
+  padding: 10px;
+  border: 1px solid var(--color-borde);
+  border-radius: 5px;
+  transition: background-color 0.3s;
+}
+
+.carrera-item:hover {
+  background-color: var(--color-acento-claro);
+}
+/* VARIABLES DARK MODE */
+.dark-mode {
+    --color-fondo-principal: #1e1e1e; /* Fondo oscuro principal */
+    --color-fondo-secundario: #2b2b2b; /* Fondo secundario */
+    --color-acento: #4a90e2; /* Azul moderno (sin cambios, pero opcionalmente podría suavizarse) */
+    --color-acento-hover: #357abd; /* Azul más oscuro que destaca */
+    --color-texto-principal: #e0e0e0; /* Texto principal claro */
+    --color-texto-secundario: #a9a9a9; /* Texto secundario gris claro */
+    --color-borde: #444444; /* Bordes más oscuros */
+    --sombra-suave: rgba(255, 255, 255, 0.05); /* Sombras suaves con color claro */
+    --sombra-hover: rgba(255, 255, 255, 0.1); /* Mayor contraste en hover */
+}
+
+/* EJEMPLO DEL USO */
+.dark-mode body {
+    background-color: var(--color-fondo-principal);
+    color: var(--color-texto-principal);
+}
+.dark-mode #toggler {
+	background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(110, 110, 130, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e"); 
+}
+.dark-mode a {
+    color: var(--color-acento);
+}
+.dark-mode a:hover {
+    color: var(--color-acento-hover);
+}
+
+/* PARA CONTENEDORES */
+.dark-mode #cuerpo_T {
+    background-color: var(--color-fondo-secundario);
+    box-shadow: 0px 4px 8px var(--sombra-suave);
+}
+
+.dark-mode .lista {
+    background-color: var(--color-fondo-secundario);
+    border: 1px solid var(--color-borde);
+    box-shadow: 0px 2px 4px var(--sombra-suave);
+}
+.dark-mode .lista:hover {
+    background-color: var(--color-fondo-principal);
+    box-shadow: 0px 4px 8px var(--sombra-hover);
+}
+
+/* ENCABEZADOS */
+.dark-mode h3 {
+    color: var(--color-texto-principal);
+    border-bottom: 2px solid var(--color-acento);
+}
+
+/* BOTONES */
+.dark-mode .btn {
+    background-color: var(--color-acento);
+    color: var(--color-texto-principal);
+}
+.dark-mode .btn:hover {
+    background-color: var(--color-acento-hover);
+}
+
