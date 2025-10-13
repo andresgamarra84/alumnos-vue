@@ -24,7 +24,7 @@ const login = async (nrodocValue = nrodoc.value, isNewPassword = false) => {
       entity: "login",
       action: isNewPassword ? "update" : "login",
       type: 0,
-      data : isNewPassword ? { nrodoc: nrodocValue, newPwd: newPwd.value } : { nrodoc: nrodocValue, pwd: pass.value },
+      payload : isNewPassword ? { nrodoc: nrodocValue, newPwd: newPwd.value } : { nrodoc: nrodocValue, pwd: pass.value },
     }
     const response = await api.post('/', payload);
     switch (response.payload.stat) {
