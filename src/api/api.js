@@ -1,25 +1,35 @@
 const BASE_URL = "https://cjjc.edu.ar/api-v2/";
 
-const request = async (endpoint, options = {}) => {
+const request = async (options = {}) => {
     try {
-        if (options.method === "GET") {
-            let e = {}
-            if (endpoint) {
-                e = new URLSearchParams(endpoint)
-                endpoint = "?"+e.toString()
+        let url = BASE_URL;
+        
+        if (options.method === "GET" || !options.method) {
+            // Convierte body a query params automáticamente para GET
+            if (options.body && typeof options.body === 'object') {
+                const params = new URLSearchParams(options.body);
+                url += `?${params.toString()}`;
             }
         }
-        const response = await fetch(`${BASE_URL}${endpoint}`, {
+
+        const response = await fetch(url, {
             method: options.method || 'GET',
             headers: {
                 'Content-Type': 'application/json',
                 ...options.headers,
             },
-            body: options.body ? JSON.stringify(options.body) : null,
+            body: options.method !== 'GET' ? JSON.stringify(options.body) : null,
             credentials: 'include', // Incluir cookies
         });
 
-        const data = await response.json();
+        // Manejo inteligente de response type
+        let data;
+        const contentType = response.headers.get('Content-Type');
+        if (contentType && contentType.includes('application/json')) {
+            data = await response.json();
+        } else {
+            data = await response.blob();
+        }
 
         if (!response.ok) {
             throw new Error(data.message || 'Error en la solicitud');
@@ -32,8 +42,6 @@ const request = async (endpoint, options = {}) => {
 };
 
 export const api = {
-    post: (endpoint, body, headers = {}) => request(endpoint, { method: 'POST', body, headers }),
-    get: (endpoint, headers = {}) => request(endpoint, { method:'GET', headers }),
-    put: (endpoint, body, headers = {}) => request(endpoint, { method: 'PUT', body, headers }),
-    delete: (endpoint, headers = {}) => request(endpoint, { method: 'DELETE', headers }),
+    post: (body, headers = {}) => request({ method: 'POST', body, headers }),
+    get: (params, headers = {}) => request({ method: 'GET', body: params, headers }),
 };
