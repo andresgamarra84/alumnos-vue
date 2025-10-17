@@ -29,7 +29,7 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
     if (to.meta.requiresAuth) {
         try {
-            await api.get({ entity: 'auth', action: 'checkSession' });
+            //await api.get({ entity: 'auth', action: 'checkSession' });
             next();
         } catch (err) {
             next('/login');
