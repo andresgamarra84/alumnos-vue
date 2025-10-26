@@ -55,7 +55,7 @@
           </ul>
         </div>
         <div style="width: 100%; display: inline;" class="text-end">
-          <div id="d_pers" class="py-2"></div>
+          <div id="d_pers" class="py-2">{{ userName || 'Cargando...' }}</div>
           <button class="navbar-toggler custom-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
             <span id="toggler" class="navbar-toggler-icon"></span>
           </button>
@@ -64,16 +64,15 @@
     </nav>
 
     <div id="cuerpo_T" style="margin-top: 30px;">
-      <!-- Contenido dinámico: Usa slots o router-view para subsecciones -->
-      <slot></slot> <!-- O <router-view /> si usas nested routes -->
+      <router-view></router-view>
     </div>
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { api } from '../api/api.js'; // Ajusta path
 import { useRouter } from 'vue-router';
+import { api } from '../api/api.js'; // Adjust path
 
 // Modal State
 const isModalVisible = ref(false);
@@ -83,7 +82,6 @@ const modalType = ref(0); // 0: info, 1: confirm, 2: input
 const modalTxt = ref('');
 let modalResolver = null;
 
-// Función para mostrar modal (llámala desde cualquier lógica)
 const showModal = (title, message, type = 0) => {
   modalTitle.value = title;
   modalMessage.value = message;
@@ -104,106 +102,95 @@ const resolveModal = (value) => {
   isModalVisible.value = false;
 };
 
-// Ejemplo de uso: const result = await showModal('Título', 'Mensaje', 1);
-
 // Loading Control
 const showLoading = () => document.getElementById('loading').classList.remove('d-none');
 const hideLoading = () => document.getElementById('loading').classList.add('d-none');
-// Router para navegación interna (opcional, reemplaza href si usas Vue Router)
+
+// User Data
+const userName = ref('');
+
+// Router
 const router = useRouter();
-// Función a_Click adaptada: Previene default, usa router si es interno, o permite href externo
+
+// Handle Navbar Clicks
 const handleLinkClick = (event) => {
-  event.preventDefault(); // Previene navegación full page
+  event.preventDefault();
   const href = event.target.getAttribute('href');
-  
-  // Lógica custom: Ej, si href empieza con '/', usa router
-  if (href.startsWith('/')) {
-    router.push(href); // Navegación SPA
+  if (href === '/logout') {
+    logout();
+  } else if (href.startsWith('/')) {
+    router.push(href); // Internal SPA navigation
   } else {
-    // Externo: window.location = href;
-    window.open(href, '_blank'); // O _self
+    window.open(href, '_blank'); // External links
   }
-  
-  // Agrega tu lógica original aquí (ej: cargar contenido en #cuerpo_T via API)
-  console.log('Link clicked:', href); // Placeholder para tu a_Click original
-  // Ej: loadContent(href); 
 };
 
-onMounted(async () => {
+// Populate Navbar
+const populateNavbar = async () => {
   showLoading();
   try {
-    // Fetch menú (ajusta entity/action para tu backend)
-    const r = await api.get({ entity: 'menu', action: 'getMenu' });
-    const dato = r.payload || {}; // Asegura payload
+    const r = await api.get({ entity: 'menu', action: 'getMenu' }); // Adjust action if needed
+    const dato = r.payload || {};
 
-    // IDs de elementos (agrega más si necesitas)
     const collections = ['inscr', 'const', 'tramites', 'inicio', 'consultas', 'notif', 'salir'];
-
     for (let coleccion of collections) {
       const menuItem = dato[coleccion];
-      if (!menuItem) continue; // Salta si no existe en payload
+      if (!menuItem) continue;
 
       const element = document.getElementById(coleccion);
-      if (!element) continue; // Seguridad
+      if (!element) continue;
 
+      element.innerHTML = '';
       if (menuItem.esDropDown) {
-        // Limpia dropdown previo
-        element.innerHTML = '';
-        
-        menuItem.data.forEach(function(valor) {
+        menuItem.data.forEach((valor) => {
           const li = document.createElement('li');
           const a = document.createElement('a');
           a.setAttribute('href', valor[0]);
           a.textContent = valor[1];
           a.setAttribute('class', 'dropdown-item');
-          a.addEventListener('click', handleLinkClick); // Tu a_Click adaptado
+          a.addEventListener('click', handleLinkClick);
           li.appendChild(a);
           element.appendChild(li);
         });
       } else {
-        // Item simple: Sobrescribe contenido
-        element.innerHTML = '';
         const a = document.createElement('a');
         a.setAttribute('href', menuItem.data[0]);
         a.textContent = menuItem.data[1];
-        a.setAttribute('class', 'nav-link'); // Para consistencia Bootstrap
+        a.setAttribute('class', 'nav-link');
         a.addEventListener('click', handleLinkClick);
         element.appendChild(a);
       }
     }
 
-    // Opcional: Popula #d_pers aquí o en separado API
-    // const userData = await api.get({ entity: 'auth', action: 'getProfile' });
-    // document.getElementById('d_pers').innerText = `${userData.nombre} (${userData.tipo})`;
-
+    // Populate user data
+    //const userData = await api.get({ entity: 'auth', action: 0 }); // Adjust action
+    //userName.value = `${userData.payload.nombre} (${userData.payload.tipo})`;
   } catch (err) {
     await showModal('Error', 'No se pudieron cargar los menús: ' + err.message, 0);
     console.error(err);
   } finally {
     hideLoading();
   }
-});
+};
 
-// Logout Ejemplo
-
+// Logout
 const logout = async () => {
   const confirm = await showModal('Confirmar', '¿Salir de la sesión?', 1);
   if (confirm) {
-    await api.post({ entity: 'auth', action: 'logout' });
-    router.push('/login');
+    try {
+      await api.post({ entity: 'auth', action: 'logout' });
+      router.push('/login');
+    } catch (err) {
+      await showModal('Error', 'Error al cerrar sesión: ' + err.message, 0);
+    }
   }
 };
+
+onMounted(populateNavbar);
 </script>
 
 <style scoped>
-/* Estilos locales si necesitas overrides; global.css maneja la mayoría */
 .fondo1 {
   background-color: var(--color-fondo-principal);
-}
-.modal-overlay {
-  /* Asegura overlay */
-}
-.custom-toggler {
-  /* Para tu #toggler icon */
 }
 </style>

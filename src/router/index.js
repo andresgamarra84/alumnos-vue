@@ -14,7 +14,7 @@ const routes = [
     path: '/dashboard',
     component: DashboardView,
     children: [
-      { path: 'home', component: HomeSection }, // Ejemplo
+      { path: '/inicio', component: HomeSection }, // Ejemplo
       // Rutas dinámicas: las agregarás en runtime con router.addRoute()
     ],
     meta: { requiresAuth: true },
