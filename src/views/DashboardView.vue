@@ -32,7 +32,7 @@
       <h2 class="text-center">Panel de Estudiantes</h2>
     </header>
 
-    <nav class="navbar navbar-expand-lg navbar-light fondo1">
+    <nav class="navbar navbar-expand-lg navbar-light fondo1" ref="navbarRef">
       <div class="container-fluid">
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
           <ul class="navbar-nav me-auto">
@@ -80,6 +80,8 @@ const modalTitle = ref('');
 const modalMessage = ref('');
 const modalType = ref(0); // 0: info, 1: confirm, 2: input
 const modalTxt = ref('');
+const navbarRef = ref(null);
+const collections = ref([]);
 let modalResolver = null;
 
 const showModal = (title, message, type = 0) => {
@@ -131,9 +133,7 @@ const populateNavbar = async () => {
   try {
     const r = await api.get({ entity: 'menu', action: 'getMenu' }); // Adjust action if needed
     const dato = r.payload || {};
-
-    const collections = ['inscr', 'const', 'tramites', 'inicio', 'consultas', 'notif', 'salir'];
-    for (let coleccion of collections) {
+    for (let coleccion of collections.value) {
       const menuItem = dato[coleccion];
       if (!menuItem) continue;
 
@@ -161,7 +161,7 @@ const populateNavbar = async () => {
         element.appendChild(a);
       }
     }
-
+    router.push('/inicio'); // Internal SPA navigation
     // Populate user data
     //const userData = await api.get({ entity: 'auth', action: 0 }); // Adjust action
     //userName.value = `${userData.payload.nombre} (${userData.payload.tipo})`;
@@ -186,7 +186,15 @@ const logout = async () => {
   }
 };
 
-onMounted(populateNavbar);
+onMounted(() => {
+  if (navbarRef.value) {
+    // Busca todos los <li> con id dentro del navbar
+    const liElements = navbarRef.value.querySelectorAll('li[id]');
+    collections.value = Array.from(liElements).map(li => li.id);
+  }
+  populateNavbar();
+
+});
 </script>
 
 <style scoped>
