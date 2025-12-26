@@ -36,6 +36,46 @@
       <div class="container-fluid">
         <div class="collapse navbar-collapse" id="navbarNavDropdown">
           <ul class="navbar-nav me-auto">
+            <li
+              v-for="entry in menu"
+              :key="entry.key"
+              class="nav-item"
+              :class="{ dropdown: entry.esDropDown }"
+            >
+              <template v-if="entry.esDropDown">
+                <a
+                  class="nav-link dropdown-toggle"
+                  href="#"
+                  data-bs-toggle="dropdown"
+                >
+                  {{ entry.data.nombre }}
+                </a>
+                <ul class="dropdown-menu">
+                  <li v-for="item in entry.items" :key="item.path">
+                    <a
+                      class="dropdown-item"
+                      href="#"
+                      @click.prevent="navigate(item.path)"
+                    >
+                      {{ item.label }}
+                    </a>
+                  </li>
+                </ul>
+              </template>
+
+              <template v-else>
+                <a
+                  class="nav-link"
+                  href="#"
+                  @click.prevent="navigate(entry.data.path)"
+                >
+                  {{ entry.data.nombre }}
+                </a>
+              </template>
+            </li>
+          </ul>
+
+          <!--<ul class="navbar-nav me-auto">
             <li class="nav-item" id="inicio"></li>
             <li class="nav-item dropdown">
               <a class="dropdown-toggle nav-link" href="#" id="navbarDropdownInscr" role="button" data-bs-toggle="dropdown" aria-expanded="false">Inscripciones</a>
@@ -52,10 +92,10 @@
             <li class="nav-item" style="flex-shrink: 0;" id="consultas"></li>
             <li class="nav-item" style="flex-shrink: 0;" id="notif"></li>
             <li class="nav-item" id="salir"></li>
-          </ul>
+          </ul>-->
         </div>
         <div style="width: 100%; display: inline;" class="text-end">
-          <div id="d_pers" class="py-2">{{ userName || 'Cargando...' }}</div>
+          <div id="d_pers" class="py-2">{{ userName.nombreEdad || 'Cargando...' }}</div>
           <button class="navbar-toggler custom-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
             <span id="toggler" class="navbar-toggler-icon"></span>
           </button>
@@ -81,7 +121,14 @@ const modalMessage = ref('');
 const modalType = ref(0); // 0: info, 1: confirm, 2: input
 const modalTxt = ref('');
 const navbarRef = ref(null);
-const collections = ref([]);
+const menu = ref([]);
+const collections = ref([
+  "inscr",
+  "const",
+  "tramites",
+  "consultas",
+  "notif",
+]);
 let modalResolver = null;
 
 const showModal = (title, message, type = 0) => {
@@ -109,32 +156,31 @@ const showLoading = () => document.getElementById('loading').classList.remove('d
 const hideLoading = () => document.getElementById('loading').classList.add('d-none');
 
 // User Data
-const userName = ref('');
+const userName = ref([]);
 
 // Router
 const router = useRouter();
 
-// Handle Navbar Clicks
-const handleLinkClick = (event) => {
-  event.preventDefault();
-  const href = event.target.getAttribute('href');
-  if (href === '/logout') {
-    logout();
-  } else if (href.startsWith('/')) {
-    router.push(href); // Internal SPA navigation
+const navigate = (item) => {
+  if (item.path === '/logout') {
+    logout()
+  } else if (item.external) {
+    window.open(item.path, '_blank')
   } else {
-    window.open(href, '_blank'); // External links
+    router.push(item.path)
   }
-};
+}
 
 // Populate Navbar
+
 const populateNavbar = async () => {
-  showLoading();
+/*  showLoading();
   try {
     const r = await api.get({ entity: 'menu', action: 'getMenu' }); // Adjust action if needed
     const dato = r.payload || {};
     for (let coleccion of collections.value) {
       const menuItem = dato[coleccion];
+      console.log(menuItem);
       if (!menuItem) continue;
 
       const element = document.getElementById(coleccion);
@@ -170,7 +216,26 @@ const populateNavbar = async () => {
     console.error(err);
   } finally {
     hideLoading();
-  }
+  }*/
+  const r = await api.get({ entity: 'menu', action: 'getMenu' })
+  const payload = r.payload.menu
+  userName.value = r.payload.datosPersonales
+  menu.value = Object.entries(payload).map(([key, item]) => {
+    return {
+      key,
+      esDropDown: item.esDropDown,
+      data: item.data,
+      items: item.esDropDown
+        ? item.children.map(d => ({
+            path: d.path,
+            label: d.nombre,
+            external: d.external,
+          }))
+        : [],
+    }
+  })
+  console.log(menu);
+
 };
 
 // Logout

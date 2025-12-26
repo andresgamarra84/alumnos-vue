@@ -193,6 +193,11 @@ div.text-end a:hover {
     color: var(--color-texto-principal) !important;
     text-decoration: none;
     transition: color 0.3s ease-in-out;
+    flex: 0 0 auto;
+}
+
+.nav-link {
+    white-space: nowrap;
 }
 
 .navbar-nav .nav-item a:hover {

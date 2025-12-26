@@ -1,10 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import LoginView from '../views/LoginView.vue';
 import DashboardView from '../views/DashboardView.vue';
-import { api } from '../api/api.js';  // Import api para check
+import HomeSection from '../views/sections/HomeSection.vue';
+//import { api } from '../api/api.js';  // Import api para check
 
 // Import dinámico para secciones (agrega más según menú)
-const HomeSection = () => import('../views/sections/HomeSection.vue');
+const MesasView = () => import('../views/sections/inscripciones/MesasView.vue');
 // ... agrega más
 
 const routes = [
@@ -14,8 +15,8 @@ const routes = [
     path: '/dashboard',
     component: DashboardView,
     children: [
-      { path: '/inicio', component: HomeSection }, // Ejemplo
-      // Rutas dinámicas: las agregarás en runtime con router.addRoute()
+      { path: '/inicio', component: HomeSection },
+      { path: '/inscrMesas', component: MesasView },
     ],
     meta: { requiresAuth: true },
   },
