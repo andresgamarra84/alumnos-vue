@@ -1,11 +1,12 @@
 import { createRouter, createWebHistory } from 'vue-router';
-import LoginView from '../views/LoginView.vue';
-import DashboardView from '../views/DashboardView.vue';
-import HomeSection from '../views/sections/HomeSection.vue';
+import LoginView from '@/views/LoginView.vue';
+import HomeSection from '@/views/sections/HomeSection.vue';
+import DashboardView from '@/views/DashboardView.vue';
 //import { api } from '../api/api.js';  // Import api para check
 
 // Import dinámico para secciones (agrega más según menú)
-const MesasView = () => import('../views/sections/inscripciones/MesasView.vue');
+const MesasView = () => import('@/views/sections/inscripciones/MesasView.vue');
+//const MesasView = () => import('../views/sections/inscripciones/MesasView.vue');
 // ... agrega más
 
 const routes = [
@@ -16,7 +17,7 @@ const routes = [
     component: DashboardView,
     children: [
       { path: '/inicio', component: HomeSection },
-      { path: '/inscrMesas', component: MesasView },
+      { path: '/inscrExamenes', component: MesasView },
     ],
     meta: { requiresAuth: true },
   },

@@ -55,7 +55,7 @@
                     <a
                       class="dropdown-item"
                       href="#"
-                      @click.prevent="navigate(item.path)"
+                      @click.prevent="navigate(item)"
                     >
                       {{ item.label }}
                     </a>
@@ -67,7 +67,7 @@
                 <a
                   class="nav-link"
                   href="#"
-                  @click.prevent="navigate(entry.data.path)"
+                  @click.prevent="navigate(data)"
                 >
                   {{ entry.data.nombre }}
                 </a>
@@ -112,7 +112,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { useRouter } from 'vue-router';
-import { api } from '../api/api.js'; // Adjust path
+import { api } from '@/api/api.js'; // Adjust path
 
 // Modal State
 const isModalVisible = ref(false);
@@ -174,49 +174,6 @@ const navigate = (item) => {
 // Populate Navbar
 
 const populateNavbar = async () => {
-/*  showLoading();
-  try {
-    const r = await api.get({ entity: 'menu', action: 'getMenu' }); // Adjust action if needed
-    const dato = r.payload || {};
-    for (let coleccion of collections.value) {
-      const menuItem = dato[coleccion];
-      console.log(menuItem);
-      if (!menuItem) continue;
-
-      const element = document.getElementById(coleccion);
-      if (!element) continue;
-
-      element.innerHTML = '';
-      if (menuItem.esDropDown) {
-        menuItem.data.forEach((valor) => {
-          const li = document.createElement('li');
-          const a = document.createElement('a');
-          a.setAttribute('href', valor[0]);
-          a.textContent = valor[1];
-          a.setAttribute('class', 'dropdown-item');
-          a.addEventListener('click', handleLinkClick);
-          li.appendChild(a);
-          element.appendChild(li);
-        });
-      } else {
-        const a = document.createElement('a');
-        a.setAttribute('href', menuItem.data[0]);
-        a.textContent = menuItem.data[1];
-        a.setAttribute('class', 'nav-link');
-        a.addEventListener('click', handleLinkClick);
-        element.appendChild(a);
-      }
-    }
-    router.push('/inicio'); // Internal SPA navigation
-    // Populate user data
-    //const userData = await api.get({ entity: 'auth', action: 0 }); // Adjust action
-    //userName.value = `${userData.payload.nombre} (${userData.payload.tipo})`;
-  } catch (err) {
-    await showModal('Error', 'No se pudieron cargar los menús: ' + err.message, 0);
-    console.error(err);
-  } finally {
-    hideLoading();
-  }*/
   const r = await api.get({ entity: 'menu', action: 'getMenu' })
   const payload = r.payload.menu
   userName.value = r.payload.datosPersonales
@@ -235,7 +192,6 @@ const populateNavbar = async () => {
     }
   })
   console.log(menu);
-
 };
 
 // Logout
@@ -258,7 +214,7 @@ onMounted(() => {
     collections.value = Array.from(liElements).map(li => li.id);
   }
   populateNavbar();
-
+  router.push('/inicio'); // Internal SPA navigation
 });
 </script>
 

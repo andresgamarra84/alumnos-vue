@@ -26,7 +26,7 @@
           </div>
           <div class="col-6 col-md-2">Prof. {{ item.infoCurso.nombreProf }}</div>
           <div class="col-12 col-md-5">
-            <div v-for="it in item.infoCurso.horarios" :key="it.dia">{{ it.dia }} {{ it.hora }} Aula {{ it.aula }} - Sede {{ it.sede }}</div>
+            <div v-for="it in item.infoCurso.horarios" :key="it.dia">{{ it.dia }} {{ it.horario }} Aula {{ it.aula }} - Sede {{ it.sede }}</div>
           </div>
           <div class="col-6">
             Calif. 1º cuatrimestre: 
@@ -57,7 +57,7 @@
               </div>
               <div class="col-6 col-md-2">Prof. {{ item.infoCurso.nombreProf }}</div>
               <div class="col-12 col-md-5">
-                <div v-for="it in item.infoCurso.horarios" :key="it.dia">{{ it.dia }} {{ it.hora }} Aula {{ it.aula }} - Sede {{ it.sede }}</div>
+                <div v-for="it in item.infoCurso.horarios" :key="it.dia">{{ it.dia }} {{ it.horario }} Aula {{ it.aula }} - Sede {{ it.sede }}</div>
               </div>
               <!-- Notas similares -->
               <div class="col-12 text-end">
@@ -197,9 +197,9 @@ const toggleDarkMode = () => {
 const listMaterias = async () => {
   arrInscrMaterias.value = [];
   try {
-    const r = await api.get({ entity: 'materias', action: 'inscripciones' });
+    const r = await api.get({ entity: 'materias', action: 'getMateriasInscripto' });
     if (r.ok) {
-      arrInscrMaterias.value = r.payload.cursos;
+      arrInscrMaterias.value = r.payload;
     }
   } catch (err) {
     console.error('Error listMaterias:', err);
@@ -209,7 +209,7 @@ const listMaterias = async () => {
 const listNotif = async () => {
   arrNotif.value = [];
   try {
-    const r = await api.get({ entity: 'inicio', action: 7 });
+    const r = await api.get({ entity: 'notificaciones', action: 'getAll' });
     if (r.ok) {
       r.payload.forEach(v => arrNotif.value.push(v));
     }

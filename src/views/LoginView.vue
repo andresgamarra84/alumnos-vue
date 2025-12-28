@@ -15,7 +15,7 @@
 </template>
 
 <script setup>
-import { api } from '../api/api.js';  // Ajusta path si es necesario
+import { api } from '@/api/api.js';  // Ajusta path si es necesario
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 

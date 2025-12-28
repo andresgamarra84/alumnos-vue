@@ -1,95 +1,182 @@
-import { ref } from 'vue'
-import { api } from '@/api'
+// src/composables/useMesasExamen.js
+import { ref } from 'vue';
+import { api } from '@/api/api';
 
-export function useMesas() {
+export function useMesasExamen() {
+  /* ---------- state ---------- */
+  const carreras = ref([]);
+  const materias = ref([]);
+  const mesasDisponibles = ref([]);
+  const mesasInscriptas = ref([]);
+  const condiciones = ref([]);
 
-  // =====================
-  // Estado (antes: data)
-  // =====================
-  const carreras = ref([])
-  const materias = ref([])
-  const profesores = ref([])
-  const permitLibre = ref(true)
+  const loading = ref(false);
+  const error = ref(null);
 
-  // =====================
-  // Acciones (antes: methods)
-  // =====================
+  /* ---------- helpers ---------- */
 
-  // Paso 0 – listar carreras
-  const cargarCarreras = async () => {
-    carreras.value = []
-    materias.value = []
-    profesores.value = []
+  const resetError = () => {
+    error.value = null;
+  };
 
-    const r = await api.get({ recurso: 'mesas' })
-    carreras.value = r.payload
-  }
-
-  // Paso 1 – listar materias
-  const cargarMaterias = async (carrera) => {
-    materias.value = []
-    profesores.value = []
-
-    const r = await api.get({
-      recurso: 'mesas',
-      paso: 1,
-      codigo: carrera.codigo,
-      codCarrera: carrera.carrera.codigo,
-      codInstrumento: carrera.instrumento.codigo
-    })
-
-    materias.value = r.payload.materias
-    permitLibre.value = r.payload.permitirLibre
-  }
-
-  // Paso 2 – listar profesores
-  const cargarProfesores = async (carrera, codMateria) => {
-    profesores.value = []
-
-    const r = await api.get({
-      recurso: 'mesas',
-      paso: 2,
-      codigo: carrera.codigo,
-      codCarrera: carrera.carrera.codigo,
-      codInstrumento: carrera.instrumento.codigo,
-      codMC: codMateria
-    })
-
-    profesores.value = r.payload
-  }
-
-  // Paso 3 – solicitar mesa
-  const solicitarMesa = async ({ carrera, codMateria, profesor, condicion }) => {
-    const r = await api.post({
-      recurso: 'mesas',
-      paso: 0,
-      codigo: carrera.codigo,
-      codMC: codMateria,
-      codPlHorarios: profesor.codPlHorarios,
-      codProfesor: profesor.codProfesor,
-      condicion
-    })
-
-    if (r.ok) {
-      alert('La solicitud ha sido ingresada correctamente')
+  const assertOk = r => {
+    if (!r || r.ok !== true) {
+      throw new Error(r?.message || 'Error en la solicitud');
     }
+    return r.payload;
+  };
 
-    // reset visual
-    materias.value = []
-    profesores.value = []
-  }
+  /* ---------- api calls ---------- */
 
-  // =====================
-  // Lo que la View puede usar
-  // =====================
+  const loadInicial = async () => {
+    loading.value = true;
+    resetError();
+
+    try {
+      const r = await api.get({
+        entity: 'examenes',
+        action: 0,
+      });
+
+      const payload = assertOk(r);
+
+      carreras.value = payload.carreras ?? [];
+      condiciones.value = payload.condiciones ?? [];
+    } catch (e) {
+      error.value = e;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const loadMaterias = async codAlCarrera => {
+    loading.value = true;
+    resetError();
+
+    materias.value = [];
+    mesasDisponibles.value = [];
+
+    try {
+      const r = await api.get({
+        entity: 'examenes',
+        action: 1,
+        codAlCarrera,
+      });
+
+      materias.value = assertOk(r) ?? [];
+    } catch (e) {
+      error.value = e;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const loadMesas = async (codAlCarrera, codMC) => {
+    loading.value = true;
+    resetError();
+
+    mesasDisponibles.value = [];
+
+    try {
+      const r = await api.get({
+        entity: 'examenes',
+        action: 2,
+        codAlCarrera,
+        codMC,
+      });
+
+      mesasDisponibles.value = assertOk(r) ?? [];
+    } catch (e) {
+      error.value = e;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const loadMesasInscriptas = async () => {
+    loading.value = true;
+    resetError();
+
+    try {
+      const r = await api.get({
+        entity: 'examenes',
+        action: 3,
+      });
+
+      mesasInscriptas.value = assertOk(r) ?? [];
+    } catch (e) {
+      error.value = e;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  const inscribirse = async payload => {
+    loading.value = true;
+    resetError();
+
+    try {
+      const r = await api.post({
+        entity: 'examenes',
+        action: 4,
+        ...payload,
+      });
+
+      assertOk(r);
+      return true;
+    } catch (e) {
+      error.value = e;
+      return false;
+    } finally {
+      loading.value = false;
+    }
+  };
+
+  /* ---------- FUTURO: cancelar inscripción ---------- */
+  /*
+  const cancelarInscripcion = async codMesa => {
+    loading.value = true;
+    resetError();
+
+    try {
+      const r = await api.post({
+        entity: 'examenes',
+        action: 5,
+        codMesa,
+      });
+
+      assertOk(r);
+
+      mesasInscriptas.value = mesasInscriptas.value.filter(
+        m => m.codigo !== codMesa
+      );
+
+      return true;
+    } catch (e) {
+      error.value = e;
+      return false;
+    } finally {
+      loading.value = false;
+    }
+  };
+  */
+
   return {
+    /* state */
     carreras,
     materias,
-    profesores,
-    permitLibre,
-    cargarCarreras,
-    cargarMaterias,
-    cargarProfesores,
-    solicitarMesa
-  }
+    mesasDisponibles,
+    mesasInscriptas,
+    condiciones,
+    loading,
+    error,
+
+    /* actions */
+    loadInicial,
+    loadMaterias,
+    loadMesas,
+    loadMesasInscriptas,
+    inscribirse,
+    // cancelarInscripcion
+  };
 }
