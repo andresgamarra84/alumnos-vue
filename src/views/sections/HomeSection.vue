@@ -24,7 +24,7 @@
             <div class="titulo">{{ item.infoCurso.nombreCurso }} {{ item.infoInscripcion.esCondicional ? '(Condicional)' : '' }}</div>
             <div>({{ item.infoInscripcion.nombreCarrera }})</div>
           </div>
-          <div class="col-6 col-md-2">Prof. {{ item.infoCurso.nombreProf }}</div>
+          <div class="col-6 col-md-2">Prof. {{ item.infoCurso.nombreProf.apellido }}</div>
           <div class="col-12 col-md-5">
             <div v-for="it in item.infoCurso.horarios" :key="it.dia">{{ it.dia }} {{ it.horario }} Aula {{ it.aula }} - Sede {{ it.sede }}</div>
           </div>

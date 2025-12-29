@@ -4,7 +4,6 @@ import { api } from '@/api/api';
 
 export function useMesasExamen() {
   /* ---------- state ---------- */
-  const carreras = ref([]);
   const materias = ref([]);
   const mesasDisponibles = ref([]);
   const mesasInscriptas = ref([]);
@@ -13,84 +12,12 @@ export function useMesasExamen() {
   const loading = ref(false);
   const error = ref(null);
 
-  /* ---------- helpers ---------- */
-
-  const resetError = () => {
-    error.value = null;
-  };
-
-  const assertOk = r => {
-    if (!r || r.ok !== true) {
-      throw new Error(r?.message || 'Error en la solicitud');
-    }
-    return r.payload;
-  };
-
   /* ---------- api calls ---------- */
 
-  const loadInicial = async () => {
-    loading.value = true;
-    resetError();
+   const loadMesas = async (codAlCarrera, codMC) => {
+ 
 
-    try {
-      const r = await api.get({
-        entity: 'examenes',
-        action: 0,
-      });
-
-      const payload = assertOk(r);
-
-      carreras.value = payload.carreras ?? [];
-      condiciones.value = payload.condiciones ?? [];
-    } catch (e) {
-      error.value = e;
-    } finally {
-      loading.value = false;
-    }
-  };
-
-  const loadMaterias = async codAlCarrera => {
-    loading.value = true;
-    resetError();
-
-    materias.value = [];
-    mesasDisponibles.value = [];
-
-    try {
-      const r = await api.get({
-        entity: 'examenes',
-        action: 1,
-        codAlCarrera,
-      });
-
-      materias.value = assertOk(r) ?? [];
-    } catch (e) {
-      error.value = e;
-    } finally {
-      loading.value = false;
-    }
-  };
-
-  const loadMesas = async (codAlCarrera, codMC) => {
-    loading.value = true;
-    resetError();
-
-    mesasDisponibles.value = [];
-
-    try {
-      const r = await api.get({
-        entity: 'examenes',
-        action: 2,
-        codAlCarrera,
-        codMC,
-      });
-
-      mesasDisponibles.value = assertOk(r) ?? [];
-    } catch (e) {
-      error.value = e;
-    } finally {
-      loading.value = false;
-    }
+    
   };
 
   const loadMesasInscriptas = async () => {

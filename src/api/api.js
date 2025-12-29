@@ -7,6 +7,7 @@ const request = async (options = {}) => {
         if (options.method === "GET" || !options.method) {
             // Convierte body a query params automáticamente para GET
             if (options.body && typeof options.body === 'object') {
+                options.body.payload = JSON.stringify(options.body.payload) ?? {};
                 const params = new URLSearchParams(options.body);
                 url += `?${params.toString()}`;
             }

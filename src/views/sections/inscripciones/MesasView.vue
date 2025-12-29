@@ -13,7 +13,7 @@
           :value="item.codigo"
           :disabled="item.esFinalizada"
         >
-          {{ item.carrera.nombre }} - {{ item.instrumento.nombre }}
+          {{ item.nombre }} - {{ item.instrumento }}
         </option>
       </select>
     </div>
@@ -72,38 +72,39 @@
       </div>
     </div>
 
-    <!-- Estados -->
+    <!-- Estados 
     <div v-if="loading" class="mt-3">
       Cargando…
     </div>
 
     <div v-if="error" class="mt-3 text-danger">
       Ocurrió un error al cargar los datos
-    </div>
+    </div>-->
   </div>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue';
-import { useMesasExamen } from '@/composables/useMesas';
+import { api } from '@/api/api.js';
+//import { useMesasExamen } from '@/composables/useMesas';
 
 /* ---------- composable ---------- */
-
+/*
 const {
-  carreras,
   materias,
   mesasDisponibles,
   condiciones,
   loading,
   error,
-  loadInicial,
   loadMaterias,
   loadMesas,
   inscribirse,
 } = useMesasExamen();
-
+*/
 /* ---------- UI state ---------- */
-
+const carreras = ref([]);
+const materias = ref([]);
+const mesasDisponibles = ref([]);
 const selectedCarrera = ref('');
 const selectedMateria = ref('');
 const selectedCondicion = ref(4);
@@ -113,26 +114,60 @@ const condicionShow = ref(false);
 /* ---------- lifecycle ---------- */
 
 onMounted(() => {
-  loadInicial();
+  getCarrerasAlumno();
 });
 
 /* ---------- handlers ---------- */
-
-const onSelectCarrera = () => {
+const getCarrerasAlumno = async () => {
+  try {
+    const r = await api.get({
+      entity: 'carreras',
+      action: 'getCarrerasAlumno',
+    });
+    carreras.value = r.payload ?? [];
+    //condiciones.value = payload.condiciones ?? [];
+  } catch (e) {
+    console.log(e);
+  } /*finally {
+    loading.value = false;
+  }*/
+};
+const onSelectCarrera = async () => {
   selectedMateria.value = '';
   codMesa.value = null;
   condicionShow.value = false;
-
-  loadMaterias(selectedCarrera.value);
+  materias.value = [];
+  mesasDisponibles.value = [];
+  try {
+    const r = await api.get({
+      entity: 'materias',
+      action: 'getMateriasCarrera',
+      payload: {codigo : selectedCarrera.value},
+    });
+    materias.value = r.payload ?? [];
+  } catch (e) {
+    console.log(e);
+  }
 };
-
-const onSelectMateria = () => {
+const onSelectMateria = async () => {
   codMesa.value = null;
   condicionShow.value = false;
-
-  loadMesas(selectedCarrera.value, selectedMateria.value);
+  mesasDisponibles.value = [];
+  try {
+    const r = await api.get({
+      entity: 'mesas',
+      action: 'listarMesas',
+      payload: {
+        codAlCarrera: selectedCarrera.value,
+        codMC: selectedMateria.value,
+      },
+    });
+    mesasDisponibles.value = r.payload ?? [];
+  } catch (e) {
+    console.log(e);
+  }
 };
-
+/*
 const onSelectMesa = mesa => {
   codMesa.value = mesa.codigo;
   condicionShow.value = true;
@@ -160,11 +195,13 @@ const confirmarInscripcion = async () => {
     );
 
     /* reset UI */
+    /*
     selectedCarrera.value = '';
     selectedMateria.value = '';
     selectedCondicion.value = 4;
     codMesa.value = null;
     condicionShow.value = false;
-  }
-};
+    */
+//  }
+//;
 </script>
