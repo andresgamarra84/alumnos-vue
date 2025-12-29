@@ -1,9 +1,10 @@
+import { useLoading } from '@/composables/useLoading'
+const { start, stop } = useLoading()
 const BASE_URL = "https://cjjc.edu.ar/api-v2/";
 
 const request = async (options = {}) => {
     try {
         let url = BASE_URL;
-        
         if (options.method === "GET" || !options.method) {
             // Convierte body a query params automáticamente para GET
             if (options.body && typeof options.body === 'object') {
@@ -12,7 +13,7 @@ const request = async (options = {}) => {
                 url += `?${params.toString()}`;
             }
         }
-
+        start();
         const response = await fetch(url, {
             method: options.method || 'GET',
             headers: {
@@ -35,10 +36,18 @@ const request = async (options = {}) => {
         if (!response.ok) {
             throw new Error(data.message || 'Error en la solicitud');
         }
-
+        if (!data.ok) {
+            throw {
+                type: 'API_ERROR',
+                message: data.errMsg
+            }
+        }
         return data;
     } catch (error) {
         throw new Error(error.message || 'Error de conexión. Intenta de nuevo.');
+    }
+    finally {
+        stop();
     }
 };
 
