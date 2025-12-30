@@ -53,16 +53,16 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { api } from '@/api/api.js';
+import { useModal } from '@/composables/useModal'
 import CarrerasSelect from '../../../components/CarrerasSelect.vue';
 import MateriasSelect from '../../../components/MateriasSelect.vue';
 const carreras = ref([]);
 const materias = ref([]);
-const mesasDisponibles = ref([]);
 const selectedCarrera = ref('');
 const selectedMateria = ref('');
-const selectedCondicion = ref(4);
-const codMesa = ref(null);
-const condicionShow = ref(false);
+const esCondicional = ref(false);
+const selectedCurso = ref('');
+const cursosDisponibles = ref([]);
 
 /* ---------- lifecycle ---------- */
 
@@ -100,43 +100,38 @@ const onSelectCarrera = async () => {
   }
 };
 const onSelectMateria = async () => {
+  const modal = useModal()
   codMesa.value = null;
-  condicionShow.value = false;
   mesasDisponibles.value = [];
   try {
     const r = await api.get({
-      entity: 'mesas',
-      action: 'listarMesas',
+      entity: 'cursos',
+      action: 'listarCursos',
       payload: {
         codAlCarrera: selectedCarrera.value,
         codMC: selectedMateria.value,
       },
     });
-    mesasDisponibles.value = r.payload ?? [];
+    cursosDisponibles.value = r.payload.cursos ?? [];
+    esCondicional.value = r.payload.esCondicional ?? false;
+    if (esCondicional.value) modal.show({
+      title: "Información",
+      message: "La inscripción a esta materia se tomará como Condicional por no tener acreditadas las correlativas necesarias."
+    });
   } catch (e) {
     console.log(e);
   }
 };
-/*
-const onSelectMesa = mesa => {
-  codMesa.value = mesa.codigo;
-  condicionShow.value = true;
-};
-
-const confirmarInscripcion = async () => {
-  if (selectedCondicion.value === 4) {
-    modal.show('Debe seleccionar una condición de examen');
-    return;
-  }
-
+const onSelectCurso = async () => {
+  const modal = useModal()
   const ok = await modal.show('¿Confirma inscripción?', 1);
   if (!ok) return;
 
-  const success = await inscribirse({
+  const success = await api.post({
     codAlCarrera: selectedCarrera.value,
     codMC: selectedMateria.value,
-    codMesa: codMesa.value,
-    condicion: selectedCondicion.value,
+    codCurso: selectedCurso.value,
+    esCondicional: esCondicional.value,
   });
 
   if (success) {
@@ -153,5 +148,7 @@ const confirmarInscripcion = async () => {
     condicionShow.value = false;
     */
 //  }
+};
+  
 //;
 </script>

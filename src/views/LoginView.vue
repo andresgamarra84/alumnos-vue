@@ -25,13 +25,13 @@ const pass = ref('');
 
 const login = async () => {
     try {
-        await api.post({ 
+        const r = await api.post({ 
             entity: 'login', 
             action: 'login',
             type: 0,
             payload: { nrodoc: user.value, pwd: pass.value } 
         });
-        router.push('/dashboard');
+        if (r.payload == "OK") router.push('/dashboard');
     } catch (err) {
         alert('Error: ' + err.message);
     }
