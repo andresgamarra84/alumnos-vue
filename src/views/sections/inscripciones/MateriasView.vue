@@ -1,5 +1,5 @@
 <template>
-  <h3 class="h3cabecera">Inscripción a Exámenes</h3>
+  <h3 class="h3cabecera">Inscripción a Materias</h3>
 
     <CarrerasSelect
     v-model="selectedCarrera"
