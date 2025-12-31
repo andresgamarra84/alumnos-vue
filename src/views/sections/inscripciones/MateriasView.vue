@@ -11,42 +11,42 @@
     :materias="materias"
     @change="onSelectMateria"
   />
-  <!-- Mesas disponibles -->
-  <div v-if="mesasDisponibles.length">
+  <!-- Cursos disponibles -->
+  <div v-if="cursosDisponibles.length">
     <div
-      v-for="mesa in mesasDisponibles"
-      :key="mesa.codigo"
+      v-for="curso in cursosDisponibles"
+      :key="curso.codigo"
       class="lista"
       style="border:1px solid white; margin:10px; padding:10px; cursor:pointer"
-      @click="onSelectMesa(mesa)"
+      @click="onSelectCurso(curso)"
     >
-      {{ mesa.nombre }}<br />
-      {{ mesa.fecha }}<br />
-      Prof: {{ mesa.nombreProf }}
+      <div class="col-12 col-md-6 col-lg-4">
+        {{ curso.titulo }}
+        <span v-if="curso.comision != 0">
+          "{{ curso.comision }}"
+        </span>
+      </div>
+
+      <div class="col-12 col-md-6 col-lg-4">
+        <div v-for="(dia, key) in curso.dia" :key="key">
+          {{ dia }} de {{ curso.horario[key][0] }} a {{ curso.horario[key][1] }},
+          Sede: {{ curso.sede[key] }}
+        </div>
+      </div>
+
+      <div class="col-12 col-md-6 col-lg-4">
+        Prof. {{ curso.nombreProf }}
+      </div>
+
+      <div class="col-12" v-if="curso.cupoCompleto">
+        (CUPO COMPLETO)
+      </div>
     </div>
   </div>
-
-  <!-- Condición -->
-  <div v-if="condicionShow" class="row" id="condicion">
-    <div class="d-flex align-items-center col-12">
-      <label>Seleccione la condición:</label>
-      <select v-model="selectedCondicion">
-        <option
-          v-for="item in condiciones"
-          :key="item[0]"
-          :value="item[0]"
-          :disabled="item[1]"
-        >
-          {{ item[2] }}
-        </option>
-      </select>
-    </div>
-
-    <div class="col-12 text-end">
-      <button class="btn btn-primary" @click="confirmarInscripcion">
-        Confirmar inscripción
-      </button>
-    </div>
+  <div class="col-12 text-end">
+    <button class="btn btn-primary" @click="confirmarInscripcion">
+      Confirmar inscripción
+    </button>
   </div>
 </template>
 
@@ -84,10 +84,7 @@ const getCarrerasAlumno = async () => {
 };
 const onSelectCarrera = async () => {
   selectedMateria.value = '';
-  codMesa.value = null;
-  condicionShow.value = false;
   materias.value = [];
-  mesasDisponibles.value = [];
   try {
     const r = await api.get({
       entity: 'materias',
@@ -99,16 +96,15 @@ const onSelectCarrera = async () => {
     console.log(e);
   }
 };
+
 const onSelectMateria = async () => {
   const modal = useModal()
-  codMesa.value = null;
-  mesasDisponibles.value = [];
   try {
     const r = await api.get({
       entity: 'cursos',
-      action: 'listarCursos',
+      action: 'listCursos',
       payload: {
-        codAlCarrera: selectedCarrera.value,
+        codAlC: selectedCarrera.value,
         codMC: selectedMateria.value,
       },
     });
@@ -138,17 +134,6 @@ const onSelectCurso = async () => {
     modal.show(
       'La inscripción ha sido realizada y ya puede visualizarse en la página de inicio'
     );
-
-    /* reset UI */
-    /*
-    selectedCarrera.value = '';
-    selectedMateria.value = '';
-    selectedCondicion.value = 4;
-    codMesa.value = null;
-    condicionShow.value = false;
-    */
-//  }
-};
-  
-//;
+  }
+}
 </script>
