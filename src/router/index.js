@@ -7,6 +7,8 @@ import DashboardView from '@/views/DashboardView.vue';
 // Import dinámico para secciones (agrega más según menú)
 const MesasView = () => import('@/views/sections/inscripciones/MesasView.vue');
 const MateriasView = () => import('../views/sections/inscripciones/MateriasView.vue');
+const ReservasView = () => import('../views/sections/ReservasView.vue');
+
 // ... agrega más
 
 const routes = [
@@ -19,6 +21,7 @@ const routes = [
       { path: '/inicio', component: HomeSection },
       { path: '/inscrExamenes', component: MesasView },
       { path: '/inscrMaterias', component: MateriasView },
+      { path: '/reservas', component: ReservasView },
     ],
     meta: { requiresAuth: true },
   },

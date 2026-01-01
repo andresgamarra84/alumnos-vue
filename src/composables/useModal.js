@@ -8,7 +8,7 @@ const inputValue = ref('')
 let resolver = null
 
 export function useModal() {
-  const show = ({ title: t, message: m, type: ty = 0 }) => {
+  const show = (m = "", ty = 0, t = "Información" ) => {
     title.value = t
     message.value = m
     type.value = ty

@@ -15,10 +15,10 @@
   <div v-if="cursosDisponibles.length">
     <div
       v-for="curso in cursosDisponibles"
-      :key="curso.codigo"
+      :key="curso.codPlHorarios"
       class="lista"
       style="border:1px solid white; margin:10px; padding:10px; cursor:pointer"
-      @click="onSelectCurso(curso)"
+      @click="onSelectCurso(curso.codPlHorarios)"
     >
       <div class="col-12 col-md-6 col-lg-4">
         {{ curso.titulo }}
@@ -42,11 +42,6 @@
         (CUPO COMPLETO)
       </div>
     </div>
-  </div>
-  <div class="col-12 text-end">
-    <button class="btn btn-primary" @click="confirmarInscripcion">
-      Confirmar inscripción
-    </button>
   </div>
 </template>
 
@@ -110,27 +105,28 @@ const onSelectMateria = async () => {
     });
     cursosDisponibles.value = r.payload.cursos ?? [];
     esCondicional.value = r.payload.esCondicional ?? false;
-    if (esCondicional.value) modal.show({
-      title: "Información",
-      message: "La inscripción a esta materia se tomará como Condicional por no tener acreditadas las correlativas necesarias."
-    });
+    if (esCondicional.value) modal.show("La inscripción a esta materia se tomará como Condicional por no tener acreditadas las correlativas necesarias.");
   } catch (e) {
     console.log(e);
   }
 };
-const onSelectCurso = async () => {
+const onSelectCurso = async (codPlHorarios) => {
   const modal = useModal()
   const ok = await modal.show('¿Confirma inscripción?', 1);
   if (!ok) return;
 
-  const success = await api.post({
-    codAlCarrera: selectedCarrera.value,
-    codMC: selectedMateria.value,
-    codCurso: selectedCurso.value,
-    esCondicional: esCondicional.value,
+  const response = await api.post({
+    entity: "materias",
+    action: "confirmarInscripcion",
+    payload: {
+      codAlCarrera: selectedCarrera.value,
+      codMC: selectedMateria.value,
+      codPlHorarios: codPlHorarios,
+      esCondicional: esCondicional.value,
+    }
   });
 
-  if (success) {
+  if (response.payload.ok) {
     modal.show(
       'La inscripción ha sido realizada y ya puede visualizarse en la página de inicio'
     );

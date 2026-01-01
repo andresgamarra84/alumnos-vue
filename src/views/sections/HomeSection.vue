@@ -298,7 +298,7 @@ const updMesa = async (k) => {
 const listReservas = async () => {
   arrReservas.value = [];
   try {
-    const r = await api.get({ entity: 'inicio', action: 3 });
+    const r = await api.get({ entity: 'reservas', action: 'listReservas' });
     if (r.ok) {
       r.payload.forEach(value => arrReservas.value.push(value));
     }
@@ -382,7 +382,7 @@ onMounted(async () => {
       listMaterias(),
       //listCambios(),
       //listMesas(),
-      //listReservas(),
+      listReservas(),
       //listSolicitudes(),
       //listNotif()
     ]);
