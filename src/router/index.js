@@ -2,18 +2,19 @@ import { createRouter, createWebHistory } from 'vue-router';
 import LoginView from '@/views/LoginView.vue';
 import HomeSection from '@/views/sections/HomeSection.vue';
 import DashboardView from '@/views/DashboardView.vue';
-//import { api } from '../api/api.js';  // Import api para check
 
 // Import dinámico para secciones (agrega más según menú)
 const MesasView = () => import('@/views/sections/inscripciones/MesasView.vue');
 const MateriasView = () => import('../views/sections/inscripciones/MateriasView.vue');
+const CarrerasView = () => import('../views/sections/inscripciones/CarrerasView.vue');
 const ReservasView = () => import('../views/sections/ReservasView.vue');
+
 
 // ... agrega más
 
 const routes = [
   { path: '/', redirect: '/login' },
-  { path: '/login', component: LoginView },
+  { path: '/login', component: LoginView, meta: {requiresAuth: false}},
   {
     path: '/dashboard',
     component: DashboardView,
@@ -21,9 +22,10 @@ const routes = [
       { path: '/inicio', component: HomeSection },
       { path: '/inscrExamenes', component: MesasView },
       { path: '/inscrMaterias', component: MateriasView },
+      { path: '/inscrCarreras', component: CarrerasView },
       { path: '/reservas', component: ReservasView },
+
     ],
-    meta: { requiresAuth: true },
   },
 ];
 
@@ -33,16 +35,21 @@ const router = createRouter({
 });
 
 router.beforeEach(async (to, from, next) => {
-    if (to.meta.requiresAuth) {
-        try {
-            //await api.get({ entity: 'auth', action: 'checkSession' });
-            next();
-        } catch (err) {
-            next('/login');
-        }
-    } else {
-        next();
-    }
-});
+  const requiresAuth = to.meta.requiresAuth !== false
+  if (!requiresAuth) {
+    next()
+    return
+  }
+  const url = "https://cjjc.edu.ar/api-v2/?entity=auth&action=checkSession";
+  const r = await fetch(url, {
+      credentials: 'include'
+  });
+  if (r.ok) {
+    next()
+  } else {
+    next('/login')
+  }
+})
+
 
 export default router;

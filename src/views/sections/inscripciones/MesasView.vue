@@ -27,7 +27,7 @@
   </div>
 
   <!-- Condición -->
-  <div v-if="condicionShow" class="row" id="condicion">
+  <div v-if="condicionShow" class="row">
     <div class="d-flex align-items-center col-12">
       <label>Seleccione la condición:</label>
       <select v-model="selectedCondicion">
@@ -53,21 +53,23 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { api } from '@/api/api.js';
+import { useModal } from '@/composables/useModal.js';
 import CarrerasSelect from '../../../components/CarrerasSelect.vue';
 import MateriasSelect from '../../../components/MateriasSelect.vue';
 const carreras = ref([]);
 const materias = ref([]);
 const mesasDisponibles = ref([]);
-const selectedCarrera = ref('');
+const selectedCarrera = ref(null);
 const selectedMateria = ref('');
-const selectedCondicion = ref(4);
+const selectedCondicion = ref(null);
 const codMesa = ref(null);
 const condicionShow = ref(false);
-
+const condiciones = ref([]);
 /* ---------- lifecycle ---------- */
 
 onMounted(() => {
   getCarrerasAlumno();
+  getCondiciones();
 });
 
 /* ---------- handlers ---------- */
@@ -82,6 +84,13 @@ const getCarrerasAlumno = async () => {
     console.log(e);
   } 
 };
+const getCondiciones = async () => {
+  const r = await api.get({
+    entity: "examenes",
+    action: "getCondicionesExamen",
+  });
+  condiciones.value = r.payload ?? [];
+}
 const onSelectCarrera = async () => {
   selectedMateria.value = '';
   codMesa.value = null;
@@ -89,10 +98,11 @@ const onSelectCarrera = async () => {
   materias.value = [];
   mesasDisponibles.value = [];
   try {
+    const codAlC = carreras.value[selectedCarrera.value].codigo;
     const r = await api.get({
       entity: 'materias',
       action: 'getMateriasCarrera',
-      payload: {codigo : selectedCarrera.value},
+      payload: {codigo : codAlC},
     });
     materias.value = r.payload ?? [];
   } catch (e) {
@@ -104,11 +114,12 @@ const onSelectMateria = async () => {
   condicionShow.value = false;
   mesasDisponibles.value = [];
   try {
+    const codAlC = carreras.value[selectedCarrera.value].codigo;
     const r = await api.get({
       entity: 'mesas',
-      action: 'listarMesas',
+      action: 'listarMesasDisponibles',
       payload: {
-        codAlCarrera: selectedCarrera.value,
+        codAlCarrera: codAlC,
         codMC: selectedMateria.value,
       },
     });
@@ -117,14 +128,14 @@ const onSelectMateria = async () => {
     console.log(e);
   }
 };
-/*
 const onSelectMesa = mesa => {
   codMesa.value = mesa.codigo;
   condicionShow.value = true;
 };
-
 const confirmarInscripcion = async () => {
-  if (selectedCondicion.value === 4) {
+  const modal = new useModal();
+  const codAlC = carreras.value[selectedCarrera.value].codigo;
+  if (!selectedCondicion.value) {
     modal.show('Debe seleccionar una condición de examen');
     return;
   }
@@ -132,26 +143,27 @@ const confirmarInscripcion = async () => {
   const ok = await modal.show('¿Confirma inscripción?', 1);
   if (!ok) return;
 
-  const success = await inscribirse({
-    codAlCarrera: selectedCarrera.value,
-    codMC: selectedMateria.value,
-    codMesa: codMesa.value,
-    condicion: selectedCondicion.value,
+  const r = await api.post({
+    entity: "mesas",
+    action: "inscribirEnMesa",
+    payload: {
+      codAlC: codAlC,
+      codMC: selectedMateria.value,
+      codMesa: codMesa.value,
+      condicion: selectedCondicion.value,
+    },
   });
 
-  if (success) {
+  if (r.ok) {
     modal.show(
       'La inscripción ha sido realizada y ya puede visualizarse en la página de inicio'
     );
+  }
+  selectedCarrera.value = '';
+  selectedMateria.value = '';
+  selectedCondicion.value = null;
+  codMesa.value = null;
+  condicionShow.value = false;
 
-    /* reset UI */
-    /*
-    selectedCarrera.value = '';
-    selectedMateria.value = '';
-    selectedCondicion.value = 4;
-    codMesa.value = null;
-    condicionShow.value = false;
-    */
-//  }
-//;
+};
 </script>

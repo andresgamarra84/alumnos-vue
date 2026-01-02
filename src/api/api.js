@@ -1,4 +1,6 @@
 import { useLoading } from '@/composables/useLoading'
+import { showModal } from '@/services/uiBus'
+
 const { start, stop } = useLoading()
 const BASE_URL = "https://cjjc.edu.ar/api-v2/";
 
@@ -33,16 +35,17 @@ const request = async (options = {}) => {
             data = await response.blob();
         }
 
-        if (!response.ok) {
+        /*if (!response.ok) {
             throw new Error(data.message || 'Error en la solicitud');
-        }
+        }*/
         if (!data.ok) {
-            throw {
-                type: 'API_ERROR',
-                message: data.errMsg
-            }
+            showModal(data.message)
         }
-        return data;
+        return {
+            ...data,
+            serverOk:response.ok,
+            serverStatus:response.status
+        };
     } catch (error) {
         throw new Error(error.message || 'Error de conexión. Intenta de nuevo.');
     }

@@ -80,11 +80,13 @@ const getCarrerasAlumno = async () => {
 const onSelectCarrera = async () => {
   selectedMateria.value = '';
   materias.value = [];
+  cursosDisponibles.value = [];
+  const codAlC = carreras.value[selectedCarrera.value].codigo;
   try {
     const r = await api.get({
       entity: 'materias',
       action: 'getMateriasCarrera',
-      payload: {codigo : selectedCarrera.value},
+      payload: {codigo : codAlC},
     });
     materias.value = r.payload ?? [];
   } catch (e) {
@@ -94,12 +96,13 @@ const onSelectCarrera = async () => {
 
 const onSelectMateria = async () => {
   const modal = useModal()
+  const codAlC = carreras.value[selectedCarrera.value].codigo;
   try {
     const r = await api.get({
       entity: 'cursos',
-      action: 'listCursos',
+      action: 'listCursosForMateria',
       payload: {
-        codAlC: selectedCarrera.value,
+        codAlC: codAlC,
         codMC: selectedMateria.value,
       },
     });
@@ -114,19 +117,19 @@ const onSelectCurso = async (codPlHorarios) => {
   const modal = useModal()
   const ok = await modal.show('¿Confirma inscripción?', 1);
   if (!ok) return;
-
+  const codAlC = carreras.value[selectedCarrera.value].codigo;
   const response = await api.post({
     entity: "materias",
     action: "confirmarInscripcion",
     payload: {
-      codAlCarrera: selectedCarrera.value,
+      codAlCarrera: codAlC,
       codMC: selectedMateria.value,
       codPlHorarios: codPlHorarios,
       esCondicional: esCondicional.value,
     }
   });
 
-  if (response.payload.ok) {
+  if (response.ok) {
     modal.show(
       'La inscripción ha sido realizada y ya puede visualizarse en la página de inicio'
     );

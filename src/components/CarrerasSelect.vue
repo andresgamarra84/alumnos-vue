@@ -22,15 +22,15 @@ function onChange(event) {
   <div v-if="carreras.length">
     <label>Carrera:</label>
     <select :value="modelValue" @change="onChange">
-      <option disabled value="">Seleccione una carrera</option>
+      <option disabled selected value="">Seleccione una carrera</option>
 
       <option
-        v-for="item in carreras"
+        v-for="(item, k) in carreras"
         :key="item.codigo"
-        :value="item.codigo"
-        :disabled="item.esFinalizada"
+        :value="k"
+        :disabled="item.disabled"
       >
-        {{ item.nombre }} - {{ item.instrumento }}
+        {{ item.nombre }}
       </option>
     </select>
   </div>

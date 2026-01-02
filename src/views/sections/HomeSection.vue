@@ -70,25 +70,32 @@
   <!-- Mesas de Examen (similar patrón) -->
   <div v-if="arrMesas.length > 0" class="margen-bottom">
     <h3 class="h3cabecera">Inscripciones a Mesas de Examen</h3>
-    <div v-for="(item, key) in arrMesas" :key="key" v-if="!item.deleted" class="row lista recuadro" style="padding:20px 10px;">
-      <div class="col-6 col-md-3"><span class="titulo">{{ item.nombre }} {{ item.instrumento }}</span><br>({{ item.carrera }})</div>
+    <template v-for="(item, key) in arrMesas">
+    <div :key="key" v-if="!item.deleted" class="row lista recuadro" style="padding:20px 10px;">
+      <div class="col-6 col-md-3"><span class="titulo">{{ item.Curso }} {{ item.nombreInstr }}</span><br>({{ item.nombreCarrera }})</div>
       <div class="col-6 col-md-4">Prof. {{ item.nombreProf }}</div>
       <div class="col-12 col-md-5">{{ item.fecha }}</div>
       <div class="col-12 text-end">
         <a @click="updMesa(key)" style="color:var(--bs-danger);">Borrar inscripción</a>
       </div>
     </div>
+    </template>
     <div class="mt-4" v-if="esAutoridad">
       <div class="text-end">
         <a @click="toggleDeleted(1)">{{ showDeleted[1] ? 'Ocultar inscripciones eliminadas' : 'Mostrar inscripciones eliminadas' }}</a>
       </div>
       <div v-show="showDeleted[1]">
-        <div v-for="(item, key) in arrMesas" :key="key" v-if="item.deleted" class="row lista recuadro" style="padding:20px 10px;opacity:0.5">
-          <!-- Estructura similar con Recuperar -->
+        <template v-for="(item, key) in arrMesas">
+        <div :key="key" v-if="item.deleted" class="row lista recuadro" style="padding:20px 10px;opacity:0.5">
+          <div class="col-6 col-md-3"><span class="titulo">{{ item.Curso }} {{ item.nombreInstr }}</span><br>({{ item.nombreCarrera }})</div>
+          <div class="col-6 col-md-4">Prof. {{ item.nombreProf }}</div>
+          <div class="col-12 col-md-5">{{ item.fecha }}</div>
           <div class="col-12 text-end">
             <a @click="updMesa(key)">Recuperar inscripción</a>
           </div>
         </div>
+        </template>
+        
       </div>
     </div>
   </div>
@@ -176,7 +183,7 @@ const arrReservas = ref([]);
 const arrSolicitudes = ref([]);
 const arrConstancias = ref([]);
 const showDeleted = ref([false, false, false, false]);
-const esAutoridad = ref(false);
+const esAutoridad = ref(true);
 
 // Modal placeholder (integra con Dashboard's showModal si compartido)
 const showModal = (message, type = 0) => {
@@ -190,10 +197,10 @@ const toggleDarkMode = () => {
 };
 
 // Métodos adaptados con nueva API
-const listMaterias = async () => {
+const getInscripcionesMaterias = async () => {
   arrInscrMaterias.value = [];
   try {
-    const r = await api.get({ entity: 'materias', action: 'getMateriasInscripto' });
+    const r = await api.get({ entity: 'materias', action: 'getInscripcionesMaterias' });
     if (r.ok) {
       arrInscrMaterias.value = r.payload;
     }
@@ -266,16 +273,9 @@ const updCambio = async (k) => {
   }
 };
 
-const listMesas = async () => {
-  arrMesas.value = [];
-  try {
-    const r = await api.get({ entity: 'inicio', action: 2 });
-    if (r.ok) {
-      r.payload.forEach(value => arrMesas.value.push(value));
-    }
-  } catch (err) {
-    console.error('Error listMesas:', err);
-  }
+const getInscripcionesMesas = async () => {
+  const r = await api.get({ entity: 'mesas', action: 'getInscripcionesMesas' });
+  arrMesas.value = r.payload;
 };
 
 const updMesa = async (k) => {
@@ -284,26 +284,19 @@ const updMesa = async (k) => {
   const confirm = await showModal(`¿Confirma que desea ${accion} esta inscripción?`, 1);
   if (confirm) {
     const d = { codigo: item.codigo, deleted: item.deleted };
-    try {
-      const r = await api.post({ entity: 'examenes', action: 1, payload: d });
-      if (r.ok) {
-        item.deleted = !item.deleted;
-      }
-    } catch (err) {
-      console.error('Error updMesa:', err);
+    
+    const r = await api.post({ entity: 'examenes', action: 1, payload: d });
+    if (r.ok) {
+      item.deleted = !item.deleted;
     }
   }
 };
 
 const listReservas = async () => {
   arrReservas.value = [];
-  try {
-    const r = await api.get({ entity: 'reservas', action: 'listReservas' });
-    if (r.ok) {
-      r.payload.forEach(value => arrReservas.value.push(value));
-    }
-  } catch (err) {
-    console.error('Error listReservas:', err);
+  const r = await api.get({ entity: 'reservas', action: 'listReservas' });
+  if (r.ok) {
+    r.payload.forEach(value => arrReservas.value.push(value));
   }
 };
 
@@ -313,13 +306,9 @@ const updReserva = async (k) => {
   const confirm = await showModal(`¿Confirma que desea ${accion} esta reserva?`, 1);
   if (confirm) {
     const d = { codigo: item.codigo, deleted: item.deleted };
-    try {
-      const r = await api.post({ entity: 'reserva', action: 1, payload: d });
-      if (r.ok) {
-        item.deleted = !item.deleted;
-      }
-    } catch (err) {
-      console.error('Error updReserva:', err);
+    const r = await api.post({ entity: 'reserva', action: 1, payload: d });
+    if (r.ok) {
+      item.deleted = !item.deleted;
     }
   }
 };
@@ -327,14 +316,10 @@ const updReserva = async (k) => {
 const listSolicitudes = async () => {
   arrSolicitudes.value = [];
   arrConstancias.value = [];
-  try {
-    const r = await api.get({ entity: 'inicio', action: 5 });
-    if (r.ok) {
-      r.payload.mesa.forEach(value => arrSolicitudes.value.push(value));
-      r.payload.constancia.forEach(value => arrConstancias.value.push(value));
-    }
-  } catch (err) {
-    console.error('Error listSolicitudes:', err);
+  const r = await api.get({ entity: 'inicio', action: 5 });
+  if (r.ok) {
+    r.payload.mesa.forEach(value => arrSolicitudes.value.push(value));
+    r.payload.constancia.forEach(value => arrConstancias.value.push(value));
   }
 };
 
@@ -349,17 +334,14 @@ const updSolicitud = async (k, i = false) => {
     }
     const entity = i ? 'constancias' : 'mesas';
     const action = i ? 8 : 1;
-    try {
-      const r = await api.post({ entity, action, payload: d });
-      if (r.ok) {
-        if (i) {
-          arrConstancias.value.splice(k, 1);
-        } else {
-          arrSolicitudes.value[k].deleted = !arrSolicitudes.value[k].deleted;
-        }
+    
+    const r = await api.post({ entity, action, payload: d });
+    if (r.ok) {
+      if (i) {
+        arrConstancias.value.splice(k, 1);
+      } else {
+        arrSolicitudes.value[k].deleted = !arrSolicitudes.value[k].deleted;
       }
-    } catch (err) {
-      console.error('Error updSolicitud:', err);
     }
   }
 };
@@ -371,25 +353,18 @@ const setActividades = (k) => {
 };
 
 onMounted(async () => {
-  try {
-    const configRes = await api.get({ entity: 'config', action: 'getConfig' }); // Action 0 default
-    arrConfig.value = configRes.payload || {};
-
-    const authRes = await api.get({ entity: 'config', action: 'authCheck' });
-    esAutoridad.value = authRes.payload || false;
-
-    await Promise.all([
-      listMaterias(),
-      //listCambios(),
-      //listMesas(),
-      listReservas(),
-      //listSolicitudes(),
-      //listNotif()
-    ]);
-  } catch (err) {
-    console.error('Error en mounted:', err);
-    // Opcional: await showModal('Error cargando datos iniciales');
-  }
+  const configRes = await api.get({ entity: 'config', action: 'getConfig' }); // Action 0 default
+  arrConfig.value = configRes.payload || {};
+  /*const authRes = await api.get({ entity: 'config', action: 'authCheck' });
+  esAutoridad.value = authRes.payload || false;*/
+  await Promise.all([
+    getInscripcionesMaterias(),
+    //listCambios(),
+    getInscripcionesMesas(),
+    listReservas(),
+    //listSolicitudes(),
+    //listNotif()
+  ]);
 });
 </script>
 

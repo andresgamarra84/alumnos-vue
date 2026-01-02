@@ -1,6 +1,6 @@
 <script setup>
 defineProps({
-  materias: {
+  instrumentos: {
     type: Array,
     required: true
   },
@@ -20,12 +20,12 @@ function onChange(event) {
 
 <template>
   <div v-if="instrumentos.length">
-    <label>Materia:</label>
+    <label>Instrumento:</label>
     <select :value="modelValue" @change="onChange">
-      <option disabled value="">Seleccione un Instrumento</option>
+      <option disabled selected value="">Seleccione un Instrumento</option>
 
       <option
-        v-for="item in materias"
+        v-for="item in instrumentos"
         :key="item.codigo"
         :value="item.codigo"
       >

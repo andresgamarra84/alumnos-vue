@@ -10,6 +10,7 @@ const collections = ref([
   "const",
   "tramites",
   "consultas",
+  "actividades",
   "notif",
 ]);
 const userName = ref([]);
