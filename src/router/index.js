@@ -1,55 +1,82 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import LoginView from '@/views/LoginView.vue';
-import HomeSection from '@/views/sections/HomeSection.vue';
-import DashboardView from '@/views/DashboardView.vue';
-
-// Import dinámico para secciones (agrega más según menú)
-const MesasView = () => import('@/views/sections/inscripciones/MesasView.vue');
-const MateriasView = () => import('../views/sections/inscripciones/MateriasView.vue');
-const CarrerasView = () => import('../views/sections/inscripciones/CarrerasView.vue');
-const ReservasView = () => import('../views/sections/ReservasView.vue');
-
-
-// ... agrega más
+import { createRouter, createWebHistory } from 'vue-router'
+import AuthLayout from '@/layouts/AuthLayout.vue'
+import LoginEstudiantes from '@/views/auth/LoginEstudiantes.vue'
+import estudiantesRoutes from './estudiantes.routes'
+//import docentesRoutes from './docentes.routes'
+//import adminRoutes from './admin.routes'
 
 const routes = [
-  { path: '/', redirect: '/login' },
-  { path: '/login', component: LoginView, meta: {requiresAuth: false}},
+  { path: '/', redirect: '/login/estudiantes' },
   {
-    path: '/dashboard',
-    component: DashboardView,
+    path: '/login',
+    component: AuthLayout,
+    meta: { requiresAuth: false },
     children: [
-      { path: '/inicio', component: HomeSection },
-      { path: '/inscrExamenes', component: MesasView },
-      { path: '/inscrMaterias', component: MateriasView },
-      { path: '/inscrCarreras', component: CarrerasView },
-      { path: '/reservas', component: ReservasView },
-
-    ],
+      { path: 'estudiantes', component: LoginEstudiantes },
+      //{ path: 'docentes', component: LoginDocentes },
+      //{ path: 'admin', component: LoginAdmin }
+    ]
   },
-];
+  estudiantesRoutes,
+ // docentesRoutes,
+  //adminRoutes
+]
 
 const router = createRouter({
   history: createWebHistory(),
-  routes,
-});
-
+  routes
+})
 router.beforeEach(async (to, from, next) => {
+  const requiresAuth = to.meta.requiresAuth !== false
+  console.log('➡️ Navegando a:', to.fullPath)
+
+  if (!requiresAuth) {
+    next()
+    return
+  }
+
+  try {
+    const r = await fetch(
+      'https://cjjc.edu.ar/api-v2/?entity=auth&action=checkSession',
+      { credentials: 'include' }
+    )
+
+    if (!r.ok) {
+      window.location.href = '/'
+      return
+    }
+
+    next()
+  } catch (e) {
+
+    window.location.href = '/'
+  }
+})
+/*
+router.isReady().then(() => {
+  if (!router.currentRoute.value.name) {
+    router.replace('/estudiantes/')
+  }
+})
+router.beforeEach(async (to, from, next) => {
+  const url = "https://cjjc.edu.ar/api-v2/?entity=auth&action=checkSession"
+  // ROOT siempre existe ahora
+  if (to.path === '/') {
+    const r = await fetch(url, {
+      credentials: 'include'
+    });
+    next(r.ok ? '/dashboard' : '/login')
+    return
+  }
   const requiresAuth = to.meta.requiresAuth !== false
   if (!requiresAuth) {
     next()
     return
   }
-  const url = "https://cjjc.edu.ar/api-v2/?entity=auth&action=checkSession";
   const r = await fetch(url, {
-      credentials: 'include'
+    credentials: 'include'
   });
-  if (r.ok) {
-    next()
-  } else {
-    next('/login')
-  }
+  next(r.ok ? undefined : '/login')
 })
-
-
+  */
 export default router;

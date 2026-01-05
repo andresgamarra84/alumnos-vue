@@ -299,6 +299,14 @@ select option:disabled {
 .btn:hover {
     background-color: var(--color-acento-hover);
 }
+.btn-primary {
+  background-color: var(--color-texto-principal); /* Gris oscuro */
+  color: #ffffff; /* Texto blanco */
+}
+
+.btn-primary:hover {
+  background-color: #444; /* Gris más oscuro */
+}
 
 .dark-mode .btn {
     background-color: var(--color-acento);

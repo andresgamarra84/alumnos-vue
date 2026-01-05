@@ -34,12 +34,11 @@ const request = async (options = {}) => {
         } else {
             data = await response.blob();
         }
-
-        /*if (!response.ok) {
-            throw new Error(data.message || 'Error en la solicitud');
-        }*/
         if (!data.ok) {
             showModal(data.message)
+        }
+        else if (!response.ok){
+            throw new Error(data.message || 'Error en la solicitud');
         }
         return {
             ...data,

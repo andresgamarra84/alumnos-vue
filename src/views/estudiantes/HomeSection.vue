@@ -17,61 +17,59 @@
   <div v-if="arrInscrMaterias.length > 0" class="margen-bottom">
     <!-- Inscripciones a Materias -->
     <h3 class="h3cabecera">Inscripciones a Materias</h3>
-    <template v-for="(item, key) in arrInscrMaterias">
-      <div :key="item.infoCurso.codigo" v-if="!item.infoCurso.deleted" class="row lista recuadro" style="padding:20px 10px;">
-        <div class="col-6 col-md-3">
-          <div class="titulo">{{ item.infoCurso.nombreCurso }} {{ item.infoInscripcion.esCondicional ? '(Condicional)' : '' }}</div>
-          <div>({{ item.infoInscripcion.nombreCarrera }})</div>
-        </div>
-        <div class="col-6 col-md-2">Prof. {{ item.infoCurso.nombreProf.apellido }}</div>
-        <div class="col-12 col-md-5">
-          <div v-for="it in item.infoCurso.horarios" :key="it.dia">{{ it.dia }} {{ it.horario }} Aula {{ it.aula }} - Sede {{ it.sede }}</div>
-        </div>
-        <div class="col-6">
-          Calif. 1º cuatrimestre: 
-          <template v-if="item.infoInscripcion.esConceptual">{{ item.infoInscripcion.notaConceptual1 }}</template>
-          <template v-else>{{ item.infoInscripcion.notaNumerica1[0] }} ({{ item.infoInscripcion.notaNumerica1[1] }})</template>
-        </div>
-        <div class="col-6">
-          Calif. 2º cuatrimestre: 
-          <template v-if="item.infoInscripcion.esConceptual">{{ item.infoInscripcion.notaConceptual2 }}</template>
-          <template v-else>{{ item.infoInscripcion.notaNumerica2[0] }} ({{ item.infoInscripcion.notaNumerica2[1] }})</template>
-        </div>
-        <div class="col-12 text-end" v-if="arrConfig.inscrMaterias || esAutoridad">
-          <a @click="updMateria(key)" style="color:var(--bs-danger);">Borrar inscripción</a>
-        </div>
+    <div class="row lista recuadro" style="padding:20px 10px;" v-for="(item, key) in materiasVigentes" :key="key">
+      <div class="col-6 col-md-3">
+        <div class="titulo">{{ item.infoCurso.nombreCurso }} {{ item.infoInscripcion.esCondicional ? '(Condicional)' : '' }}</div>
+        <div>({{ item.infoInscripcion.nombreCarrera }})</div>
       </div>
+      <div class="col-6 col-md-2">Prof. {{ item.infoCurso.nombreProf.apellido }}</div>
+      <div class="col-12 col-md-5">
+        <div v-for="it in item.infoCurso.horarios" :key="it.dia">{{ it.dia }} {{ it.horario }} Aula {{ it.aula }} - Sede {{ it.sede }}</div>
+      </div>
+      <div class="col-6">
+        Calif. 1º cuatrimestre: 
+        <template v-if="item.infoInscripcion.esConceptual">{{ item.infoInscripcion.notaConceptual1 }}</template>
+        <template v-else>{{ item.infoInscripcion.notaNumerica1[0] }} ({{ item.infoInscripcion.notaNumerica1[1] }})</template>
+      </div>
+      <div class="col-6">
+        Calif. 2º cuatrimestre: 
+        <template v-if="item.infoInscripcion.esConceptual">{{ item.infoInscripcion.notaConceptual2 }}</template>
+        <template v-else>{{ item.infoInscripcion.notaNumerica2[0] }} ({{ item.infoInscripcion.notaNumerica2[1] }})</template>
+      </div>
+      <div class="col-12 text-end" v-if="arrConfig.inscrMaterias || esAutoridad">
+        <a @click="updMateria(key)" style="color:var(--bs-danger);">Borrar inscripción</a>
+      </div>
+    </div>
 
-      <!-- Eliminadas (solo autoridad) -->
-      <div class="mt-4" v-if="esAutoridad">
-        <div class="text-end">
-          <a @click="toggleDeleted(0)">{{ showDeleted[0] ? 'Ocultar eliminadas' : 'Mostrar eliminadas' }}</a>
-        </div>
-        <div v-show="showDeleted[0]">
-          <div v-for="(item, key) in arrInscrMaterias" :key="key" v-if="item.infoCurso.deleted" class="row lista recuadro" style="padding:20px 10px;opacity:0.5;">
-            <!-- Similar estructura arriba, con Recuperar -->
-            <div class="col-6 col-md-3">
-              <div class="titulo">{{ item.infoCurso.nombreCurso }} {{ item.infoInscripcion.esCondicional ? '(Condicional)' : '' }}</div>
-              <div>({{ item.infoInscripcion.nombreCarrera }})</div>
-            </div>
-            <div class="col-6 col-md-2">Prof. {{ item.infoCurso.nombreProf }}</div>
-            <div class="col-12 col-md-5">
-              <div v-for="it in item.infoCurso.horarios" :key="it.dia">{{ it.dia }} {{ it.horario }} Aula {{ it.aula }} - Sede {{ it.sede }}</div>
-            </div>
-            <!-- Notas similares -->
-            <div class="col-12 text-end">
-              <a @click="updMateria(key)">Recuperar inscripción</a>
-            </div>
+    <!-- Eliminadas (solo autoridad) -->
+    <div class="mt-4" v-if="materiasBorradas.length>0">
+      <div class="text-end">
+        <a @click="toggleDeleted(0)">{{ showDeleted[0] ? 'Ocultar eliminadas' : 'Mostrar eliminadas' }}</a>
+      </div>
+      <div v-show="showDeleted[0]">
+        <div v-for="(item, key) in materiasBorradas" :key="key" class="row lista recuadro" style="padding:20px 10px;opacity:0.5;">
+          <!-- Similar estructura arriba, con Recuperar -->
+          <div class="col-6 col-md-3">
+            <div class="titulo">{{ item.infoCurso.nombreCurso }} {{ item.infoInscripcion.esCondicional ? '(Condicional)' : '' }}</div>
+            <div>({{ item.infoInscripcion.nombreCarrera }})</div>
+          </div>
+          <div class="col-6 col-md-2">Prof. {{ item.infoCurso.nombreProf.apellido }}</div>
+          <div class="col-12 col-md-5">
+            <div v-for="it in item.infoCurso.horarios" :key="it.dia">{{ it.dia }} {{ it.horario }} Aula {{ it.aula }} - Sede {{ it.sede }}</div>
+          </div>
+          <!-- Notas similares -->
+          <div class="col-12 text-end">
+            <a @click="updMateria(key)">Recuperar inscripción</a>
           </div>
         </div>
       </div>
-  </template>
-</div>
+    </div>
+  </div>
   <!-- Mesas de Examen (similar patrón) -->
   <div v-if="arrMesas.length > 0" class="margen-bottom">
     <h3 class="h3cabecera">Inscripciones a Mesas de Examen</h3>
-    <template v-for="(item, key) in arrMesas">
-    <div :key="key" v-if="!item.deleted" class="row lista recuadro" style="padding:20px 10px;">
+    <template v-for="(item, key) in mesasVigentes" :key="key">
+    <div class="row lista recuadro" style="padding:20px 10px;">
       <div class="col-6 col-md-3"><span class="titulo">{{ item.Curso }} {{ item.nombreInstr }}</span><br>({{ item.nombreCarrera }})</div>
       <div class="col-6 col-md-4">Prof. {{ item.nombreProf }}</div>
       <div class="col-12 col-md-5">{{ item.fecha }}</div>
@@ -80,13 +78,13 @@
       </div>
     </div>
     </template>
-    <div class="mt-4" v-if="esAutoridad">
+    <div class="mt-4" v-if="mesasBorradas.length>0">
       <div class="text-end">
         <a @click="toggleDeleted(1)">{{ showDeleted[1] ? 'Ocultar inscripciones eliminadas' : 'Mostrar inscripciones eliminadas' }}</a>
       </div>
       <div v-show="showDeleted[1]">
-        <template v-for="(item, key) in arrMesas">
-        <div :key="key" v-if="item.deleted" class="row lista recuadro" style="padding:20px 10px;opacity:0.5">
+        <template v-for="(item, key) in mesasBorradas" :key="key">
+        <div class="row lista recuadro" style="padding:20px 10px;opacity:0.5">
           <div class="col-6 col-md-3"><span class="titulo">{{ item.Curso }} {{ item.nombreInstr }}</span><br>({{ item.nombreCarrera }})</div>
           <div class="col-6 col-md-4">Prof. {{ item.nombreProf }}</div>
           <div class="col-12 col-md-5">{{ item.fecha }}</div>
@@ -98,10 +96,11 @@
         
       </div>
     </div>
+
   </div>
   <div v-if='arrReservas.length>0' class='margen-bottom'>
     <h3 class='h3cabecera'>Reservas de vacante</h3>
-    <div v-for='(item, key) in arrReservas' v-if='!item.deleted' class='lista row recuadro' style="padding:20px 10px;">
+    <div v-for='(item, key) in reservasVigentes' :key="key" class='lista row recuadro' style="padding:20px 10px;">
       <div class='col-12 col-md-3 titulo'>
         <template v-if='item.materia'>{{item.materia}}</template></div>
       <div class='col-12 col-md-4'>
@@ -115,17 +114,16 @@
         <a @click='updReserva(key)'  style='color:var(--bs-danger);'>Borrar reserva</a>
       </div>
     </div>
-    <div class="mt-4" v-if='esAutoridad'>
+    <div class="mt-4" v-if='reservasBorradas.length>0'>
       <div class='text-end'>
         <a @click="toggleDeleted(2)">{{ showDeleted[2] ? 'Ocultar eliminadas' : 'Mostrar eliminadas' }}</a>
       </div>
       <div v-show="showDeleted[2]">
-        <div v-for='(item, key) in arrReservas' v-if='item.deleted' class='lista row recuadro' style="padding:20px 10px;opacity:0.5">
+        <div v-for='(item, key) in reservasBorradas' :key="key" class='lista row recuadro' style="padding:20px 10px;opacity:0.5">
           <div class='col-12 col-md-3 titulo'>
             <template v-if='item.materia'>{{item.materia}}</template></div>
           <div class='col-12 col-md-4'>
             <template v-if='item.nombreProf'> (Prof. {{item.nombreProf}})</template>
-            
           </div>
           <div class='col-12 col-md-5'>
             {{item.carrera}} ({{item.instrumento}})<template v-if='item.cambio'>- ({{item.cambio}})</template>
@@ -171,9 +169,11 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed} from 'vue';
 import { api } from '../../api/api.js'; // Ajusta path a tu api.js
+import { showModal } from '@/services/uiBus'
 
+//import { showModal } from '@/services/uiBus'
 const arrNotif = ref([]);
 const arrInscrMaterias = ref([]);
 const arrCambios = ref([]);
@@ -184,13 +184,6 @@ const arrSolicitudes = ref([]);
 const arrConstancias = ref([]);
 const showDeleted = ref([false, false, false, false]);
 const esAutoridad = ref(true);
-
-// Modal placeholder (integra con Dashboard's showModal si compartido)
-const showModal = (message, type = 0) => {
-  // Ej: Usa parent prop o Pinia; aquí confirm simple
-  return Promise.resolve(window.confirm(message));
-};
-
 // Dark Mode Toggle
 const toggleDarkMode = () => {
   document.body.classList.toggle('dark-mode');
@@ -208,7 +201,25 @@ const getInscripcionesMaterias = async () => {
     console.error('Error listMaterias:', err);
   }
 };
+const materiasVigentes = computed(() =>
+  arrInscrMaterias.value.filter(i => !i.infoCurso.deleted)
+)
 
+const materiasBorradas = computed(() =>
+  arrInscrMaterias.value.filter(i => i.infoCurso.deleted)
+)
+const mesasVigentes = computed(() =>
+  arrMesas.value.filter(i => !i.deleted)
+)
+const mesasBorradas = computed(() =>
+  arrMesas.value.filter(i => i.deleted)
+)
+const reservasVigentes = computed(() =>
+  arrReservas.value.filter(i => !i.deleted)
+)
+const reservasBorradas = computed(() =>
+  arrReservas.value.filter(i => i.deleted)
+)
 const listNotif = async () => {
   arrNotif.value = [];
   try {
@@ -235,26 +246,19 @@ const updMateria = async (k) => {
       vLibresAl: item.infoCurso.codVlibre ?? false,
       deleted: item.infoCurso.deleted,
     };
-    try {
-      const r = await api.post({ entity: 'materias', action: 1, payload: d });
-      if (r.ok) {
-        item.infoCurso.deleted = !item.infoCurso.deleted;
-      }
-    } catch (err) {
-      console.error('Error updMateria:', err);
+    
+    const r = await api.post({ entity: 'materias', action: "updateInscripcion", payload: d });
+    if (r.ok) {
+      item.infoCurso.deleted = !item.infoCurso.deleted;
     }
   }
 };
 
 const listCambios = async () => {
   arrCambios.value = [];
-  try {
-    const r = await api.get({ entity: 'inicio', action: 1 });
-    if (r.ok) {
-      r.payload.forEach(value => arrCambios.value.push(value));
-    }
-  } catch (err) {
-    console.error('Error listCambios:', err);
+  const r = await api.get({ entity: 'inicio', action: 1 });
+  if (r.ok) {
+    r.payload.forEach(value => arrCambios.value.push(value));
   }
 };
 
@@ -262,13 +266,9 @@ const updCambio = async (k) => {
   const confirm = await showModal('¿Confirma que desea borrar esta solicitud?', 1);
   if (confirm) {
     const otherData = arrCambios.value[k][0];
-    try {
-      const r = await api.post({ entity: 'cambiocatedra', action: 1, payload: otherData });
-      if (r.ok) {
-        arrCambios.value.splice(k, 1);
-      }
-    } catch (err) {
-      console.error('Error updCambio:', err);
+    const r = await api.post({ entity: 'cambiocatedra', action: 1, payload: otherData });
+    if (r.ok) {
+      arrCambios.value.splice(k, 1);
     }
   }
 };
@@ -284,8 +284,7 @@ const updMesa = async (k) => {
   const confirm = await showModal(`¿Confirma que desea ${accion} esta inscripción?`, 1);
   if (confirm) {
     const d = { codigo: item.codigo, deleted: item.deleted };
-    
-    const r = await api.post({ entity: 'examenes', action: 1, payload: d });
+    const r = await api.post({ entity: 'examenes', action: 'updateInscripcion', payload: d });
     if (r.ok) {
       item.deleted = !item.deleted;
     }
@@ -344,12 +343,6 @@ const updSolicitud = async (k, i = false) => {
       }
     }
   }
-};
-
-// setActividades (si lo necesitas, ajusta 'cargar' función)
-const setActividades = (k) => {
-  localStorage.setItem('actividad', arrInscrMaterias.value[k].codigo); // Asume arrMaterias = arrInscrMaterias
-  // cargar('./actividades/'); // Implementa navegación o emitter
 };
 
 onMounted(async () => {

@@ -49,8 +49,8 @@
 import { ref, onMounted } from 'vue';
 import { api } from '@/api/api.js';
 import { useModal } from '@/composables/useModal'
-import CarrerasSelect from '../../../components/CarrerasSelect.vue';
-import MateriasSelect from '../../../components/MateriasSelect.vue';
+import CarrerasSelect from '@/components/CarrerasSelect.vue';
+import MateriasSelect from '@/components/MateriasSelect.vue';
 const carreras = ref([]);
 const materias = ref([]);
 const selectedCarrera = ref('');

@@ -9,7 +9,7 @@
         />
     </div>
     <div class="col-12">
-      <div v-show="opciones">
+      <div v-show="Object.keys(opciones).length>0">
         <div v-if="opciones.nombreProf">Profesor: {{ opciones.nombreProf }}</div>
         <div v-else>Profesor: A designar</div>
         <div v-show="opciones.cambioProfDisponible" class="m-2 d-flex align-items-baseline">
@@ -50,12 +50,13 @@
 import { ref, onMounted } from 'vue';
 import { api } from '@/api/api.js';
 import { useModal } from '@/composables/useModal'
-import CarrerasSelect from '../../components/CarrerasSelect.vue';
-import InstrumentosSelect from '../../components/InstrumentosSelect.vue';
-const selectedIndexCarrera = ref(0);
+import CarrerasSelect from '@/components/CarrerasSelect.vue';
+import InstrumentosSelect from '@/components/InstrumentosSelect.vue';
+const selectedIndexCarrera = ref(null);
 const carreras = ref([]);
-const opciones = ref(null);
+const opciones = ref({});
 const setCambioProf = ref(false);
+const setCambioInstr = ref(false);
 const arrInstrumentos = ref([]);
 const nuevoInstr = ref('');
 onMounted(() => {

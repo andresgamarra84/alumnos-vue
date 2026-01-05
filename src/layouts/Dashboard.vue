@@ -1,6 +1,5 @@
 <template>
   <Spinner :class="{ 'd-none': !isLoading }" />
-  <Modal />
   <!-- Contenedor Principal -->
   <div id="contenedor_T" class="container-fluid fondo1">
     <header>
@@ -15,9 +14,8 @@
 
 <script setup>
 import Spinner from '@/components/Spinner.vue'
-import Modal from '@/components/Modal.vue';
 import { useLoading } from '@/composables/useLoading'
-import Navbar from '../components/Navbar.vue';
+import Navbar from '@/components/Navbar.vue';
 const { isLoading } = useLoading()
 </script>
 

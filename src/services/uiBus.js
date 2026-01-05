@@ -6,17 +6,19 @@ export const uiState = reactive({
     title: '',
     message: '',
     type: 0,
-    resolver: null
+    resolver: null,
+    inputValue: '',
   }
 })
 
-export function showModal(message, type = 0, title = 'Información') {
+export function showModal(message, type = 0, title = 'Información', inputValue='') {
   return new Promise((resolve) => {
     uiState.modal.visible = true
     uiState.modal.title = title
     uiState.modal.message = message
     uiState.modal.type = type
     uiState.modal.resolver = resolve
+    uiState.modal.inputValue = inputValue
   })
 }
 

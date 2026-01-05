@@ -28,7 +28,7 @@ const login = async () => {
         const r = await api.post({ 
             entity: 'login', 
             action: 'login',
-            type: 0,
+            type: 1,
             payload: { nrodoc: user.value, pwd: pass.value } 
         });
         if (r.payload == "OK") router.push('/dashboard');

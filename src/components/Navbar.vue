@@ -24,6 +24,7 @@ const navigate = (item) => {
   } else if (item.external) {
     window.open(item.path, '_blank')
   } else {
+    //router.push(`/${area}/${item.path}`)
     router.push(item.path)
   }
 }
@@ -48,7 +49,6 @@ const populateNavbar = async () => {
         : [],
     }
   })
-  console.log(menu);
 };
 
 // Logout
@@ -71,7 +71,6 @@ onMounted(() => {
     collections.value = Array.from(liElements).map(li => li.id);
   }
   populateNavbar();
-  router.push('/inicio'); // Internal SPA navigation
 });
 defineProps({
   menu: Array,
