@@ -47,5 +47,10 @@ export default {
       component: () =>
         import('@/views/shared/PlanesProgramasView.vue')
     },
+    {
+      path: 'envioDocumentacion',
+      component: () =>
+        import("@/views/estudiantes/sections/tramites/DocumentacionView.vue")
+    },
   ]
 }

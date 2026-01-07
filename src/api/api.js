@@ -1,6 +1,5 @@
 import { useLoading } from '@/composables/useLoading'
 import { showModal } from '@/services/uiBus'
-
 const { start, stop } = useLoading()
 const BASE_URL = "https://cjjc.edu.ar/api-v2/";
 
