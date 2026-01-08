@@ -52,5 +52,15 @@ export default {
       component: () =>
         import("@/views/estudiantes/sections/tramites/DocumentacionView.vue")
     },
+    {
+      path: 'trayectoriaAcademica',
+      component: () =>
+        import("@/views/estudiantes/sections/constancias/TrayectoriaAcademicaView.vue")
+    },
+    {
+      path: 'materiasAprobadas',
+      component: () =>
+        import("@/views/estudiantes/sections/constancias/MateriasAprobadasView.vue")
+    },
   ]
 }
