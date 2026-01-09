@@ -62,5 +62,10 @@ export default {
       component: () =>
         import("@/views/estudiantes/sections/constancias/MateriasAprobadasView.vue")
     },
+    {
+      path: 'novedadesDiarias',
+      component: () =>
+        import("@/views/estudiantes/NovedadesDiariasView.vue")
+    },
   ]
 }

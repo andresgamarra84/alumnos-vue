@@ -6,12 +6,13 @@ import estudiantesRoutes from './estudiantes.routes'
 //import adminRoutes from './admin.routes'
 
 const routes = [
-  { path: '/', redirect: '/login/estudiantes' },
+  //{ path: '/', redirect: '/login/estudiantes' },
   {
     path: '/login',
     component: AuthLayout,
     meta: { requiresAuth: false },
     children: [
+      { path: '', redirect: 'estudiantes' }, // 👈
       { path: 'estudiantes', component: LoginEstudiantes },
       //{ path: 'docentes', component: LoginDocentes },
       //{ path: 'admin', component: LoginAdmin }
@@ -23,11 +24,11 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory('/panel/'),
   routes
 })
 router.beforeEach(async (to, from, next) => {
-  const requiresAuth = to.meta.requiresAuth !== false
+  const requiresAuth = to.meta.requiresAuth === true
   console.log('➡️ Navegando a:', to.fullPath)
 
   if (!requiresAuth) {
