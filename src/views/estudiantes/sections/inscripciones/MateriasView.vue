@@ -48,15 +48,14 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { api } from '@/api/api.js';
-import { useModal } from '@/composables/useModal'
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import MateriasSelect from '@/components/MateriasSelect.vue';
+import { showModal } from '@/services/uiBus';
 const carreras = ref([]);
 const materias = ref([]);
 const selectedCarrera = ref('');
 const selectedMateria = ref('');
 const esCondicional = ref(false);
-const selectedCurso = ref('');
 const cursosDisponibles = ref([]);
 
 /* ---------- lifecycle ---------- */
@@ -108,14 +107,14 @@ const onSelectMateria = async () => {
     });
     cursosDisponibles.value = r.payload.cursos ?? [];
     esCondicional.value = r.payload.esCondicional ?? false;
-    if (esCondicional.value) modal.show("La inscripción a esta materia se tomará como Condicional por no tener acreditadas las correlativas necesarias.");
+    if (esCondicional.value) showModal("La inscripción a esta materia se tomará como Condicional por no tener acreditadas las correlativas necesarias.");
   } catch (e) {
     console.log(e);
   }
 };
 const onSelectCurso = async (codPlHorarios) => {
   const modal = useModal()
-  const ok = await modal.show('¿Confirma inscripción?', 1);
+  const ok = await showModal('¿Confirma inscripción?', 1);
   if (!ok) return;
   const codAlC = carreras.value[selectedCarrera.value].codigo;
   const response = await api.post({

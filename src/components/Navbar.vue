@@ -12,6 +12,8 @@ const collections = ref([
   "consultas",
   "actividades",
   "notif",
+  //
+  "Cursos",
 ]);
 const userName = ref([]);
 
@@ -33,8 +35,8 @@ const navigate = (item) => {
 
 const populateNavbar = async () => {
   const r = await api.get({ entity: 'menu', action: 'getMenu' })
-  const payload = r.payload.menu
-  userName.value = r.payload.datosPersonales
+  const payload = r.payload.menu ?? {}
+  userName.value = r.payload.datosPersonales ?? {}
   menu.value = Object.entries(payload).map(([key, item]) => {
     return {
       key,
@@ -125,7 +127,7 @@ defineProps({
 
       <div class="text-end">
         <div class="py-2">
-          {{ userName.nombreEdad || 'Cargando...' }}
+          {{ userName.nombreEdad || userName.nombre || 'Cargando...' }}
         </div>
 
         <button 
