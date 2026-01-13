@@ -1,7 +1,11 @@
 <template>
+  <div style="background-color: white; position: fixed; z-index: 999;">
+    {{valor}}
+  </div>
   <div 
     ref='gridWrapper' 
     class="horarios-layout m-2"
+   
     :style="{
       maxWidth: gridConfig.maxWidth + 'px'
     }"
@@ -40,7 +44,7 @@
       @mousemove="onMouseMove"
       @mouseleave="clearHover"
       :style="{
-          width: TOTAL_COLUMNS * gridConfig.unitWidth + gridConfig.padding * 2 + 'px',
+          width: TOTAL_COLUMNS * gridConfig.unitWidth + (gridConfig.padding * 2) + 'px',
           height: gridHeight + 'px'
       }"
     >
@@ -49,6 +53,9 @@
         :key="curso.codHorario"
         :curso="curso"
         :config="gridConfig"
+        @drag-start="onDragStart"
+        @drag-end="onDragEnd"
+        @resize-end="onResizeEnd"
       />
     </div>
   </div>
@@ -61,6 +68,53 @@ import { api } from '@/api/api'
 import { showModal } from '@/services/uiBus'
 const TOTAL_COLUMNS = 27
 
+
+const valor = ref('')
+
+const dragContext = ref(null)
+
+function onDragStart(payload) {
+  dragContext.value = payload
+}
+function onDragEnd({ codHorario, endX, endY }) {
+  if (!dragContext.value) return
+
+  const startX = dragContext.value.startX
+  const startY = dragContext.value.startY
+  const oldL = dragContext.value.oldL
+  const oldT = dragContext.value.oldT
+
+  const dx = endX - startX
+  const dy = endY - startY
+
+  const deltaL = Math.round(dx / gridConfig.value.unitWidth)
+  const deltaT = Math.round(dy / gridConfig.value.unitHeight)
+
+  const newL = oldL + deltaL
+  const newT = oldT + deltaT
+
+  const curso = cursos.value.find(
+    c => c.codHorario === codHorario
+  )
+
+  if (curso) {
+    curso.posicion.l = newL < 0 ? 0 : newL
+    curso.posicion.t = newT < 0 ? 0 : newT
+  }
+
+  dragContext.value = null
+}
+const onResizeEnd = async (v) => { 
+  const curso = cursos.value.find(c=>c.codHorario === v.codHorario)
+  if (!curso) return
+  let oldW = curso.posicion.w
+  let newW = Math.floor(v.newW / gridConfig.value.unitWidth)
+  console.log(newW)
+  if (oldW === newW) return
+  curso.posicion.w = newW
+  console.log(v)
+}
+
 const containerWidth = ref(0)
 const layoutContainer = inject('layoutContainer')
 const hoverCol = ref(null) // índice horario
@@ -68,11 +122,6 @@ const hoverRow = ref(null) // índice aula
 const aulas = ref([])     // regla vertical (array del server)
 
 const cursos = ref([])
-//const cursosRaw = ref([])
-/*computed(() =>
-  //detectOverlaps(cursosRaw.value)
-  cursosRaw.value
-)*/
 
 const BASE_CONFIG = {
   startHour: 8,
@@ -163,6 +212,7 @@ const getAulas = async (sede = "S") => {
 onMounted(async () => {
   cursos.value = await getGrilla()
   aulas.value = await getAulas()
+  
   const observer = new ResizeObserver(entries => {
     containerWidth.value = entries[0].contentRect.width
   })
