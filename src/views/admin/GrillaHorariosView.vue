@@ -1,7 +1,146 @@
 <template>
-  <div style="background-color: white; position: fixed; z-index: 999;">
-    {{valor}}
+  <div
+    v-if="showModalCurso"
+    class="modal-backdrop-custom d-flex justify-content-center align-items-center"
+    @click.self="closeModal"
+  >
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-10 col-lg-6">
+          <div class="modal-card-bootstrap">
+
+            <h4>Editar curso</h4>
+
+            <!-- Código -->
+            <div><strong>Código:</strong> {{ cursoForm.codPlHorarios }}</div>
+
+            <!-- Curso -->
+            <label>Curso</label>
+            <select v-model="cursoForm.codCurso">
+              <option :value="null">Seleccionar</option>
+              <option v-for="c in cursos" :key="c.codigo" :value="c.codigo">
+                {{ c.nombre }}
+              </option>
+            </select>
+
+            <!-- Profesor -->
+            <label>Profesor</label>
+            <select v-model="cursoForm.codProfesor">
+              <option :value="null">Seleccionar</option>
+              <option v-for="p in profesores" :key="p.codigo" :value="p.codigo">
+                {{ p.nombre }}
+              </option>
+            </select>
+
+            <!-- Comisión / Cupo -->
+            <div class="row">
+              <div>
+                <label>Comisión</label>
+                <select v-model="cursoForm.comision">
+                  <option :value="0">Sin comisión</option>
+                  <option v-for="c in arrComision" :key="c" :value="c">{{ c }}</option>
+                </select>
+              </div>
+
+              <div>
+                <label>Cupo</label>
+                <input type="number" class='form-control' v-model="cursoForm.cupo" />
+              </div>
+            </div>
+
+            <!-- Horarios -->
+            <template v-if="!cursoForm.tipos.instrumento && !cursoForm.tipos.armonico">
+              <div v-for="(h, i) in cursoForm.horarios" :key="i">
+                {{ h.diaCurso }} de {{ h.horarioCurso[0] }} a {{ h.horarioCurso[1] }}
+                – Aula {{ h.aulaCurso }} ({{ h.sedeCurso }})
+                <button @click="delHorarioCurso(i)">X</button>
+              </div>
+
+              <label>Agregar día</label>
+              <select v-model="nuevoDia">
+                <option disabled value="">Seleccione</option>
+                <option v-for="(d, i) in arrDias" :key="i" :value="i + 2">
+                  {{ d }}
+                </option>
+              </select>
+
+              <button @click="addHorarioCurso()">Agregar día</button>
+            </template>
+
+            <!-- Flags -->
+            <div class="checks">
+              <label><input type="checkbox" v-model="cursoForm.inscrAbierta" /> Inscripción abierta</label>
+              <label><input type="checkbox" v-model="cursoForm.mostrar" /> Mostrar en planilla</label>
+              <label><input type="checkbox" v-model="cursoForm.semiPresencial" /> Semipresencial</label>
+            </div>
+
+            <div class="checks">
+              <label><input type="checkbox" v-model="cursoForm.tipos.normal" /> Materia normal</label>
+              <label><input type="checkbox" v-model="cursoForm.tipos.espacioInstitucional" /> Esp. Inst.</label>
+              <label><input type="checkbox" v-model="cursoForm.tipos.espacioAlternativo" /> Esp. Altern.</label>
+            </div>
+
+            <label>
+              <input type="checkbox" v-model="cursoForm.actividades" />
+              Actividades online
+            </label>
+
+            <!-- Materias asociadas -->
+            <div v-if="(cursoForm.materias.tipo & 6) === 0">
+              <label>Materia asociada</label>
+              <select @change="addMateriaAsociada">
+                <option disabled selected>Seleccione</option>
+                <option v-for="m in materias" :key="m.codigo" :value="m.codigo">
+                  {{ m.nombre }}
+                </option>
+              </select>
+
+              <div>
+                <div v-for="(m, i) in cursoForm.materiasAsociadas" :key="i">
+                  {{ m.nombre }}
+                  <button @click="delMateriaAsociada(i)">X</button>
+                </div>
+              </div>
+            </div>
+            <!-- Instrumento -->
+            <div>
+              <label>
+                <input type="checkbox" v-model="cursoForm.tipos.instrumento"/> Instrumento / Canto
+              </label>
+              <label>
+                <input type="checkbox" v-model="cursoForm.tipos.armonico"/> Instrumento armónico
+              </label>
+            </div>
+            <template v-if="cursoForm.tipos.instrumento || cursoForm.tipos.armonico">
+            <label>Instrumento asociado</label>
+            <select v-model="cursoForm.codInstrumento">
+              <option :value="null">(Ninguno)</option>
+              <option v-for="i in instrumentos" :key="i.codigo" :value="i.codigo">
+                {{ i.nombre }}
+              </option>
+            </select>
+            </template>
+            <!-- Color -->
+            <label>Color de fondo</label>
+            <input class='form-control w-100' type="color" v-model="cursoForm.bgColor" />
+
+            <!-- Observaciones -->
+            <label>Observaciones</label>
+            <textarea class='form-control w-100' v-model="cursoForm.obs" rows="4"></textarea>
+
+            <!-- Acciones -->
+            <div class="modal-actions">
+              <button @click="saveCurso">Guardar</button>
+              <button @click="closeModal">Cerrar</button>
+              <button class="danger" @click="borrarCurso">Borrar curso</button>
+            </div>
+        </div>
+      </div>
+    </div>
   </div>
+</div>
+
+
   <div 
     ref='gridWrapper' 
     class="horarios-layout m-2"
@@ -49,80 +188,222 @@
       }"
     >
       <CursoItem
-        v-for="curso in cursos"
-        :key="curso.codHorario"
+        v-for="curso in grillaHorarios"
+        :key="curso.codPlHorarios"
         :curso="curso"
         :config="gridConfig"
         @drag-start="onDragStart"
         @drag-end="onDragEnd"
         @resize-end="onResizeEnd"
+        @select="openCursoModal"
       />
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed, inject } from 'vue'
+import { ref, onMounted, onUnmounted, computed, inject } from 'vue'
 import CursoItem from '@/views/admin/components/CursoItem.vue'
 import { api } from '@/api/api'
 import { showModal } from '@/services/uiBus'
-const TOTAL_COLUMNS = 27
+onMounted(async () => {
+  grillaHorarios.value = await getGrilla()
+  cursos.value = await getCursos()
+  aulas.value = await getAulas()
+  materias.value = await getMaterias()
+  profesores.value = await getProfesores()
+  instrumentos.value = await getInstrumentos()
+  //Observer para el resize de la página principal  
+  const observer = new ResizeObserver(entries => {
+    containerWidth.value = entries[0].contentRect.width
+  })
+  observer.observe(layoutContainer.value)
+})
+//Obtener datos de materias, profesores, cursos y aulas
+const grillaHorarios = ref([])
+const aulas = ref([])     // regla vertical (array del server)
+const cursos = ref([])
+const profesores = ref([])
+const materias = ref([])
+const instrumentos = ref([])
+const getInstrumentos = async ()=>{
+  const r = await api.get({
+    entity: "instrumentos",
+    action: 'getInstrumentos',
+  })
+  return r.payload
+}
+const getMaterias = async () => {
+  const r = await api.get({
+    entity: "materias",
+    action: "getMaterias"
+  })
+  return r.payload
+}
+const getProfesores = async () => {
+  const r = await api.get({
+    entity: 'profesores',
+    action: 'getProfesores'
+  })
+  return r.payload
+}
+const getAulas = async (sede = "S") => {
+  const r = await api.get({
+    entity: "aulas",
+    action: "getAulas",
+    payload: {
+      sede: sede
+    }
+  })
+  return r.payload
+}
+const getCursos = async () => {
+  const r = await api.get({
+    entity: "cursos",
+    action: "getCursos"
+  })
+  return r.payload
+}
+//-----------------MODAL DE EDICION DE CURSO--------------------//
+import { CURSO_TIPOS } from '@/domain/cursotipos'
+const hydrateTiposFromMask = (mask) => ({
+  normal: Boolean(mask & CURSO_TIPOS.normal),
+  instrumento: Boolean(mask & CURSO_TIPOS.instrumento),
+  armonico: Boolean(mask & CURSO_TIPOS.armonico),
+  espacioInstitucional: Boolean(mask & CURSO_TIPOS.espacioInstitucional),
+  espacioAlternativo: Boolean(mask & CURSO_TIPOS.espacioAlternativo)
+})
 
+const showModalCurso = ref(false)
+const cursoForm = ref({})
+const arrComision = ref([])
+const arrDias = ref([])
+const nuevoDia = ref(null)
+const openCursoModal = async (codPlHorarios) => {
+  const r = await api.get({
+    entity: "cursoshorarios",
+    action: "getInfoCursoHorario",
+    payload: {codigo: codPlHorarios}
+  })
+  cursoForm.value = r.payload
+  cursoForm.value.tipos = hydrateTiposFromMask(cursoForm.value.materias.tipo)
+  showModalCurso.value = true
+}
 
-const valor = ref('')
+const saveCurso = async () => {
+  const ok = await showModal('¿Confirma que desea guardar los cambios?', 1)
+  if (ok) {
+    const tipos = cursoForm.value.tipos
+    const c = cursoForm.value
+    const tipoMateria = (tipos.normal ? 1: 0) + (tipos.instrumento ? 2 : 0) + (tipos.armonico ? 4 : 0) + (tipos.espacioInstitucional ? 8 : 0) + (tipos.espacioAlternativo ? 16 : 0)
+    const curso = grillaHorarios.value.find(ch=>ch.codPlHorarios === c.codPlHorarios)
+    const profesor = profesores.value.find(p=>p.codigo === c.codProfesor)
+    c.materias.tipo = tipoMateria
+    c.nombreProf = profesor.nombre
+    c.codCH = curso.codCH 
+    const r = await api.post({
+      entity: "cursoshorarios",
+      action: "updCursoHorario",
+      payload: c
+    })
+    if (r.ok) {
+      if (curso) {
+        const newCurso = {
+          bgColor: c.bgColor,
+          codCH: curso.codCH,
+          codCurso: c.codCurso,
+          codPlHorarios: c.codPlHorarios,
+          nombreCurso: c.nombreCurso,
+          nombreProf: profesor.nombre,
+          posicion: curso.posicion,
+          tipoMateria: tipoMateria
+        }
+        Object.assign(curso, newCurso)
+      }
+    }
+  }
+  closeModal()
+}
+
+const closeModal = () => {
+  showModalCurso.value = false
+ // selectedCodHorario.value = null
+}
+const getDias = async () => {
+  const r = await api.get({
+    entity: "data",
+    action: 'getDias'
+  })
+  return r.payload
+}
+const getComisiones = async () => {
+  const r = await api.get({
+    entity: "data",
+    action: 'getComisiones'
+  })
+}
+
+onMounted(async () => {
+  arrDias.value = await getDias()
+  arrComision.value = await getComisiones()
+  window.addEventListener('keydown', onKey)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('keydown', onKey)
+})
+
+const onKey = (e) => {
+  if (e.key === 'Escape') closeModal()
+}
+
+//-----------------CODIGO DE DRAG-DROP-------------------------------------//
 
 const dragContext = ref(null)
-
 function onDragStart(payload) {
   dragContext.value = payload
 }
-function onDragEnd({ codHorario, endX, endY }) {
+function onDragEnd({ codPlHorarios, endX, endY }) {
   if (!dragContext.value) return
-
   const startX = dragContext.value.startX
   const startY = dragContext.value.startY
   const oldL = dragContext.value.oldL
   const oldT = dragContext.value.oldT
-
   const dx = endX - startX
   const dy = endY - startY
-
   const deltaL = Math.round(dx / gridConfig.value.unitWidth)
   const deltaT = Math.round(dy / gridConfig.value.unitHeight)
-
   const newL = oldL + deltaL
   const newT = oldT + deltaT
-
-  const curso = cursos.value.find(
-    c => c.codHorario === codHorario
+  const curso = grillaHorarios.value.find(
+    c => c.codPlHorarios === codPlHorarios
   )
-
   if (curso) {
     curso.posicion.l = newL < 0 ? 0 : newL
     curso.posicion.t = newT < 0 ? 0 : newT
   }
-
   dragContext.value = null
 }
+
+
+//--------------CODIGO DE RESIZE----------------------//
+
 const onResizeEnd = async (v) => { 
-  const curso = cursos.value.find(c=>c.codHorario === v.codHorario)
+  const curso = grillaHorarios.value.find(c=>c.codPlHorario === v.codPlHorarios)
   if (!curso) return
   let oldW = curso.posicion.w
-  let newW = Math.floor(v.newW / gridConfig.value.unitWidth)
-  console.log(newW)
-  if (oldW === newW) return
-  curso.posicion.w = newW
-  console.log(v)
+  if (oldW === v.newW) return
+  curso.posicion.w = v.newW
 }
+
+//-----------------------------------------------------------------------------
+
 
 const containerWidth = ref(0)
 const layoutContainer = inject('layoutContainer')
 const hoverCol = ref(null) // índice horario
 const hoverRow = ref(null) // índice aula
-const aulas = ref([])     // regla vertical (array del server)
-
-const cursos = ref([])
-
+const TOTAL_COLUMNS = 27
 const BASE_CONFIG = {
   startHour: 8,
   endHour: 21.5,
@@ -133,14 +414,11 @@ const BASE_CONFIG = {
 }
 const unitWidth = computed(() => {
   if (!containerWidth.value) return BASE_CONFIG.minUnitWidth
-
   const availableWidth =
     containerWidth.value - BASE_CONFIG.padding * 2
-
   const calculated = Math.floor(
     availableWidth / TOTAL_COLUMNS
   )
-
   return Math.max(calculated, BASE_CONFIG.minUnitWidth)
 })
 
@@ -179,7 +457,6 @@ const generarHorarios = (config) => {
 }
 
 const horarios = ref(generarHorarios(BASE_CONFIG))
-//const gridWidth = horarios.value.length * gridConfig.unitWidth + gridConfig.padding * 2
 
 const gridHeight = computed(() => {
   const rows = aulas.value.length
@@ -189,8 +466,8 @@ const gridHeight = computed(() => {
 
 const getGrilla = async (sede = "S", dia = 2) => {
   const r = await api.get({
-    entity:"horarios",
-    action: "getGrilla",
+    entity:"cursoshorarios",
+    action: "getCursosHorarios",
     payload: {
       dia: dia,
       sede: sede
@@ -199,25 +476,9 @@ const getGrilla = async (sede = "S", dia = 2) => {
   return r.payload
 }
 
-const getAulas = async (sede = "S") => {
-  const r = await api.get({
-    entity: "aulas",
-    action: "getAulas",
-    payload: {
-      sede: sede
-    }
-  })
-  return r.payload
-}
-onMounted(async () => {
-  cursos.value = await getGrilla()
-  aulas.value = await getAulas()
-  
-  const observer = new ResizeObserver(entries => {
-    containerWidth.value = entries[0].contentRect.width
-  })
-  observer.observe(layoutContainer.value)
-})
+
+
+
 const onMouseMove = (event) => {
   const rect = event.currentTarget.getBoundingClientRect()
   const x = event.clientX - rect.left - gridConfig.value.padding
@@ -232,105 +493,27 @@ const clearHover = () => {
   hoverCol.value = null
   hoverRow.value = null
 }
-/*
-function detectOverlaps(cursos) {
-  // Clonar para no mutar el original
-  const result = cursos.map(c => ({
-    ...c,
-    overlapIndex: 0,
-    overlapCount: 1
-  }))
-
-  // Agrupar por aula (t)
-  const porAula = {}
-
-  result.forEach(curso => {
-    const aula = curso.posicion.t
-    if (!porAula[aula]) porAula[aula] = []
-    porAula[aula].push(curso)
-  })
-
-  // Procesar cada aula
-  Object.values(porAula).forEach(cursosAula => {
-    // Ordenar por inicio
-    cursosAula.sort(
-      (a, b) => a.posicion.l - b.posicion.l
-    )
-
-    // Comparar overlaps
-    for (let i = 0; i < cursosAula.length; i++) {
-      const a = cursosAula[i]
-      const aStart = a.posicion.l
-      const aEnd = a.posicion.l + a.posicion.w
-
-      let overlaps = [a]
-
-      for (let j = i + 1; j < cursosAula.length; j++) {
-        const b = cursosAula[j]
-        const bStart = b.posicion.l
-        const bEnd = b.posicion.l + b.posicion.w
-
-        if (bStart < aEnd && bEnd > aStart) {
-          overlaps.push(b)
-        }
-      }
-
-      // Si hay superposición real
-      if (overlaps.length > 1) {
-        overlaps.forEach((curso, idx) => {
-          curso.overlapIndex = idx
-          curso.overlapCount = overlaps.length
-        })
-      }
-    }
-  })
-  return result
-}
-*/
-/*
-const onDragEnd = async ({ codHorario, newL, newT }) => {
-  const curso = cursosRaw.value.find(
-    c => c.codHorario === codHorario
-  )
-  const ok = showModal('¿Guardar nueva ubicación?', 1)
-  if (ok) {
-    curso.posicion.l = newL
-    curso.posicion.t = newT
-    postDrag(codHorario)
-  }
-}
-const onResizeEnd = async ({ codHorario, newW }) => {
-  const curso = cursosRaw.value.find(
-    c => c.codHorario === codHorario
-  )
-  const ok = await showModal('¿Guardar nueva duración?', 1)
-  if (ok) {
-    curso.posicion.w = newW
-    postDrag(codHorario)
-  }
-}
-*/
 </script>
-<style>
 
+<style>
 .horarios-layout {
   display: grid;
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr;
 }
 .corner {
-  background: #111;
+ /* background: #111;*/
 }
 .regla-horarios {
   display: flex;
-  background: #111;
+ /*background: #111;*/
   position: sticky;
   top: 0;
   z-index: 2;
 }
 .hora.active,
 .aula.active {
-  background-color: rgba(255, 255, 255, 0.15);
+ background-color: rgba(10, 169, 222, 0.347);
 }
 
 .hora,
@@ -341,12 +524,12 @@ const onResizeEnd = async ({ codHorario, newW }) => {
 .hora {
   text-align: center;
   font-size: 11px;
-  color: #aaa;
+  /*color: #aaa;*/
   border-left: 1px solid rgba(255,255,255,0.05);
   line-height: 32px;
 }
 .regla-aulas {
-  background: #111;
+ /* background: #111;*/
 }
 
 .aula {
@@ -354,17 +537,13 @@ const onResizeEnd = async ({ codHorario, newW }) => {
   align-items: center;
   padding-left: 6px;
   font-size: 12px;
-  color: #aaa;
+ /* color: #aaa;*/
   border-top: 1px solid rgba(255,255,255,0.05);
 }
 
 .grilla-horarios {
   position: relative;          /* 👈 FUNDAMENTAL */
-  background-color: #1e1e1e;   /* fondo oscuro */
-/*  border-radius: 6px;*/
-
-  /* referencia visual */
-  /*box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);*/
+  /*background-color: #1e1e1e;   /* fondo oscuro */
 }
 
 .grilla {
@@ -372,29 +551,20 @@ const onResizeEnd = async ({ codHorario, newW }) => {
 }
 
 
-.curso-item {
-  position: absolute;
-  border-radius: 6px;
-  padding: 6px;
-  /*color: #fff;*/
-  font-size: 12px;
-  box-sizing: border-box;
-
-  /* transición suave */
-  transition:
-    transform 0.15s ease,
-    box-shadow 0.15s ease;
-
-  /* estado base */
-  box-shadow: 0 1px 2px rgba(0,0,0,0.25);
-  transform: translateZ(0); /* fuerza capa GPU */
+.modal-backdrop-custom {
+  position: fixed;
+  inset: 0;
+  background: rgba(247, 246, 246, 0.65);
+  z-index: 1050;
 }
-.curso-item:hover {
-  z-index: 10; /* se eleva sobre los demás */
-  transform: translateY(-3px) scale(1.02);
-  box-shadow:
-    0 6px 14px rgba(0,0,0,0.35),
-    0 2px 4px rgba(0,0,0,0.25);
+
+.modal-card-bootstrap {
+  background: #fcfcfc; /* o blanco si preferís */
+  border-radius: 10px;
+  padding: 1.5rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
 }
 
 </style>
