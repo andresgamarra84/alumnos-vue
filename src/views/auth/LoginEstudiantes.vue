@@ -96,6 +96,7 @@ const login = async () => {
   }
 
   if (r.payload.state === "OK") {
+    sessionStorage.setItem("CJJC_USER", r.payload.token)
     router.replace('/estudiantes')
   }
 }

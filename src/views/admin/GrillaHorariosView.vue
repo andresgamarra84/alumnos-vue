@@ -64,7 +64,7 @@
                 </option>
               </select>
 
-              <button @click="addHorarioCurso()">Agregar día</button>
+              <button @click="addDiaToCursoHorario()">Agregar día</button>
             </template>
 
             <!-- Flags -->
@@ -134,12 +134,43 @@
               <button @click="closeModal">Cerrar</button>
               <button class="danger" @click="borrarCurso">Borrar curso</button>
             </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
-
+  <h3 class="cabecera">Grilla de horarios de cursos</h3>
+  <div class="row">
+    <div class="col-4">
+      <label>Dia:</label>
+      <select v-model="diaSeleccionado">
+        <option
+          v-for="(dia, index) in arrDias"
+          :key="index"
+          :value="index"
+        >
+          {{ dia }}
+        </option>
+      </select>
+    </div>  
+    <div class="col-4">
+      <label>Sede:</label>
+      <select v-model="sedeSeleccionada">
+        <option value="S">Santa Fe</option>
+        <option value="A">Anchorena</option>
+      </select>
+    </div>
+    <div class="col-4">
+      <label>Profesor:</label>
+      <select v-model="profesorSeleccionado">
+        <option :value="null">(Todos)</option>
+        <option v-for="p in profesores" :key="p.codigo" :value="p.codigo">
+          {{ p.nombre }}
+        </option>
+      </select>
+    </div>
+  </div>
+  
 
   <div 
     ref='gridWrapper' 
@@ -169,7 +200,7 @@
     <!-- regla vertical (aulas) -->
     <div class="regla-aulas">
       <div
-        v-for="(aula, i) in aulas"
+        v-for="(aula, i) in aulas[sedeSeleccionada]"
         :key="i"
         class="aula"
         :class="{ active: hoverRow === i }"
@@ -192,6 +223,7 @@
         :key="curso.codPlHorarios"
         :curso="curso"
         :config="gridConfig"
+        v-show="curso.show"
         @drag-start="onDragStart"
         @drag-end="onDragEnd"
         @resize-end="onResizeEnd"
@@ -202,17 +234,21 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted, computed, inject } from 'vue'
+import { ref, onMounted, watch, computed, inject } from 'vue'
 import CursoItem from '@/views/admin/components/CursoItem.vue'
 import { api } from '@/api/api'
 import { showModal } from '@/services/uiBus'
+/* estados */
+const diaSeleccionado = ref(2)   // Lunes
+const sedeSeleccionada = ref('S') // Santa Fe
+const profesorSeleccionado = ref(null)
 onMounted(async () => {
-  grillaHorarios.value = await getGrilla()
   cursos.value = await getCursos()
   aulas.value = await getAulas()
   materias.value = await getMaterias()
   profesores.value = await getProfesores()
   instrumentos.value = await getInstrumentos()
+  updGrilla()
   //Observer para el resize de la página principal  
   const observer = new ResizeObserver(entries => {
     containerWidth.value = entries[0].contentRect.width
@@ -226,6 +262,39 @@ const cursos = ref([])
 const profesores = ref([])
 const materias = ref([])
 const instrumentos = ref([])
+
+watch(
+  [diaSeleccionado, sedeSeleccionada],
+  () => {
+    updGrilla()
+  }
+)
+watch(
+  profesorSeleccionado,
+  (nuevoProfesor) => {
+    grillaHorarios.value.forEach(v=>{
+      v.show = (nuevoProfesor === v.codProfesor || nuevoProfesor === null)
+    })
+  }
+)
+
+const updGrilla = async () => {
+  const dia = diaSeleccionado.value
+  const sede = sedeSeleccionada.value
+  grillaHorarios.value = await getGrilla(dia, sede)
+}
+const getGrilla = async () => {
+  const r = await api.get({
+    entity:"cursoshorarios",
+    action: "getCursosHorarios",
+    payload: {
+      dia: diaSeleccionado.value,
+      sede: sedeSeleccionada.value
+    }
+  })
+  return r.payload
+}
+
 const getInstrumentos = async ()=>{
   const r = await api.get({
     entity: "instrumentos",
@@ -247,12 +316,12 @@ const getProfesores = async () => {
   })
   return r.payload
 }
-const getAulas = async (sede = "S") => {
+const getAulas = async () => {
   const r = await api.get({
     entity: "aulas",
     action: "getAulas",
     payload: {
-      sede: sede
+      sede: sedeSeleccionada.value
     }
   })
   return r.payload
@@ -264,6 +333,7 @@ const getCursos = async () => {
   })
   return r.payload
 }
+
 //-----------------MODAL DE EDICION DE CURSO--------------------//
 import { CURSO_TIPOS } from '@/domain/cursotipos'
 const hydrateTiposFromMask = (mask) => ({
@@ -289,13 +359,27 @@ const openCursoModal = async (codPlHorarios) => {
   cursoForm.value.tipos = hydrateTiposFromMask(cursoForm.value.materias.tipo)
   showModalCurso.value = true
 }
-
+/*
+const addDiaToCursoHorario = async () => {
+  const ok = await showModal("¿Confirma que desea agregar el día al curso?", 1)
+  if (ok) {
+    const r = api.post({
+      entity: "cursoshorarios",
+      action: "addDiaToCursoHorario",
+      payload: {
+        codCH: cursoForm.codCH,
+        dia: 
+      },
+    })
+  }
+}*/
 const saveCurso = async () => {
   const ok = await showModal('¿Confirma que desea guardar los cambios?', 1)
   if (ok) {
     const tipos = cursoForm.value.tipos
     const c = cursoForm.value
     const tipoMateria = (tipos.normal ? 1: 0) + (tipos.instrumento ? 2 : 0) + (tipos.armonico ? 4 : 0) + (tipos.espacioInstitucional ? 8 : 0) + (tipos.espacioAlternativo ? 16 : 0)
+    if (!tipos.instrumento && !tipos.armonico) c.codInstrumento = null;
     const curso = grillaHorarios.value.find(ch=>ch.codPlHorarios === c.codPlHorarios)
     const profesor = profesores.value.find(p=>p.codigo === c.codProfesor)
     c.materias.tipo = tipoMateria
@@ -303,7 +387,7 @@ const saveCurso = async () => {
     c.codCH = curso.codCH 
     const r = await api.post({
       entity: "cursoshorarios",
-      action: "updCursoHorario",
+      action: "updPlHorarios",
       payload: c
     })
     if (r.ok) {
@@ -327,7 +411,6 @@ const saveCurso = async () => {
 
 const closeModal = () => {
   showModalCurso.value = false
- // selectedCodHorario.value = null
 }
 const getDias = async () => {
   const r = await api.get({
@@ -349,10 +432,6 @@ onMounted(async () => {
   window.addEventListener('keydown', onKey)
 })
 
-onUnmounted(() => {
-  window.removeEventListener('keydown', onKey)
-})
-
 const onKey = (e) => {
   if (e.key === 'Escape') closeModal()
 }
@@ -363,24 +442,40 @@ const dragContext = ref(null)
 function onDragStart(payload) {
   dragContext.value = payload
 }
-function onDragEnd({ codPlHorarios, endX, endY }) {
+const onDragEnd = async ({ codPlHorarios, endX, endY }) => {
   if (!dragContext.value) return
-  const startX = dragContext.value.startX
-  const startY = dragContext.value.startY
-  const oldL = dragContext.value.oldL
-  const oldT = dragContext.value.oldT
-  const dx = endX - startX
-  const dy = endY - startY
-  const deltaL = Math.round(dx / gridConfig.value.unitWidth)
-  const deltaT = Math.round(dy / gridConfig.value.unitHeight)
-  const newL = oldL + deltaL
-  const newT = oldT + deltaT
-  const curso = grillaHorarios.value.find(
-    c => c.codPlHorarios === codPlHorarios
-  )
-  if (curso) {
-    curso.posicion.l = newL < 0 ? 0 : newL
-    curso.posicion.t = newT < 0 ? 0 : newT
+  const ok = await showModal("¿Confirma la nueva ubicación del curso?", 1)
+  if (ok) {
+    const startX = dragContext.value.startX
+    const startY = dragContext.value.startY
+    const oldL = dragContext.value.oldL
+    const oldT = dragContext.value.oldT
+    const dx = endX - startX
+    const dy = endY - startY
+    const deltaL = Math.round(dx / gridConfig.value.unitWidth)
+    const deltaT = Math.round(dy / gridConfig.value.unitHeight)
+    const newL = oldL + deltaL
+    const newT = oldT + deltaT
+    const curso = grillaHorarios.value.find(
+      c => c.codPlHorarios === codPlHorarios
+    )
+    if (curso) {
+      newL = newL < 0 ? 0 : newL
+      newT = newT < 0 ? 0 : newT
+      const r = await api.post({
+        entity: "cursoshorarios",
+        action: "updPosicionCH",
+        payload: {
+          codCH: c.codCH,
+          newL: newL,
+          newT: newT,
+        }
+      })
+      if (r.ok) {
+        curso.posicion.l = newL
+        curso.posicion.t = newT
+      }
+    }
   }
   dragContext.value = null
 }
@@ -389,11 +484,25 @@ function onDragEnd({ codPlHorarios, endX, endY }) {
 //--------------CODIGO DE RESIZE----------------------//
 
 const onResizeEnd = async (v) => { 
-  const curso = grillaHorarios.value.find(c=>c.codPlHorario === v.codPlHorarios)
-  if (!curso) return
-  let oldW = curso.posicion.w
-  if (oldW === v.newW) return
-  curso.posicion.w = v.newW
+  const ok = showModal("¿Confirma la nueva duración del curso?", 1)
+  if (ok) {
+    const curso = grillaHorarios.value.find(c=>c.codPlHorarios === v.codPlHorarios)
+    if (!curso) return
+    let oldW = curso.posicion.w
+    if (oldW === v.newW) return
+    const r = await api.post({
+      entity: "cursoshorarios",
+      action: "updWidthCH",
+      payload: {
+        codCH: curso.codCH,
+        w: v.newW,
+      }
+    })
+    if (r.ok) {
+      curso.posicion.w = v.newW
+    }
+  }
+  
 }
 
 //-----------------------------------------------------------------------------
@@ -464,17 +573,7 @@ const gridHeight = computed(() => {
 })
 
 
-const getGrilla = async (sede = "S", dia = 2) => {
-  const r = await api.get({
-    entity:"cursoshorarios",
-    action: "getCursosHorarios",
-    payload: {
-      dia: dia,
-      sede: sede
-    }
-  })
-  return r.payload
-}
+
 
 
 

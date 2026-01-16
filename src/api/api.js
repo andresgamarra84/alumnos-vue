@@ -6,6 +6,10 @@ const BASE_URL = "https://cjjc.edu.ar/api-v2/";
 const request = async (options = {}) => {
     try {
         let url = BASE_URL;
+        const token = sessionStorage.getItem("CJJC_USER")
+        if (token) {
+            options.headers.Authorization = `Bearer ${token}`
+        }
         if (options.method === "GET" || !options.method) {
             // Convierte body a query params automáticamente para GET
             if (options.body && typeof options.body === 'object') {

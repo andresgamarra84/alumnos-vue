@@ -15,62 +15,49 @@ const router = createRouter({
   history: createWebHistory('/panel/'),
   routes
 })
-/*
 router.beforeEach(async (to, from, next) => {
-  const requiresAuth = to.meta.requiresAuth === true
-  console.log('➡️ Navegando a:', to.fullPath)
-
-  if (!requiresAuth) {
-    next()
-    return
-  }
-
-  try {
-    const r = await fetch(
-      'https://cjjc.edu.ar/api-v2/?entity=auth&action=checkSession',
-      { credentials: 'include' }
-    )
-
-    if (!r.ok) {
-      window.location.href = '/'
-      return
+  //if (to.meta.requiresAuth !== true) {
+    return next()
+  //}
+  /*try {
+    // --- ADMIN ---
+    if (to.path.startsWith('/admin')) {
+      /*const r = await fetch(
+        'https://cjjc.edu.ar/api-v2/?entity=auth&action=checkSessionAdm',
+        { credentials: 'include' }
+      )
+      
+      return r.ok
+        ? next()
+        : next('/admin/login')
     }
-
-    next()
-  } catch (e) {
-
-    window.location.href = '/'
-  }
-})
-  */
- router.beforeEach(async (to, from, next) => {
-  if (to.meta.requiresAuth !== true) {
-    next()
-    return
-  }
-
-  try {
+    const token = sessionStorage.getItem('CJJC_USER')
+    if (!token) {
+      return next(
+        to.path.startsWith('/docentes')
+          ? '/docentes/login'
+          : '/estudiantes/login'
+      )
+    }
     const r = await fetch(
-      'https://cjjc.edu.ar/api-v2/?entity=auth&action=checkSession',
-      { credentials: 'include' }
-    )
-
-    if (!r.ok) {
-      // 👇 redirige al login correcto
-      if (to.path.startsWith('/admin')) {
-        next('/admin/login')
-      } else if (to.path.startsWith('/docentes')) {
-        next('/docentes/login')
-      } else {
-        next('/estudiantes/login')
+      'https://cjjc.edu.ar/api-v2/?entity=auth&action=checkSessionUsr',
+      {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
       }
-      return
+    )
+    if (!r.ok) {
+      return next(
+        to.path.startsWith('/docentes')
+          ? '/docentes/login'
+          : '/estudiantes/login'
+      )
     }
-
-    next()
-  } catch {
-    next('/estudiantes/login')
-  }
+    return next()
+  } catch (e) {
+    return next('/estudiantes/login')
+  }*/
 })
 
 export default router;
