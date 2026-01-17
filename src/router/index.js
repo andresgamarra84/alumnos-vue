@@ -1,13 +1,11 @@
 import { createRouter, createWebHistory } from 'vue-router'
-//import AuthLayout from '@/layouts/AuthLayout.vue'
-//import LoginEstudiantes from '@/views/auth/LoginEstudiantes.vue'
 import estudiantesRoutes from './estudiantes.routes'
-//import docentesRoutes from './docentes.routes'
+import docentesRoutes from './docentes.routes'
 import adminRoutes from './admin.routes'
 
 const routes = [
   ...estudiantesRoutes,
- // docentesRoutes,
+  ...docentesRoutes,
   ...adminRoutes
 ]
 

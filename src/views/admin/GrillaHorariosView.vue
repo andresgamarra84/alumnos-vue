@@ -51,20 +51,18 @@
             <!-- Horarios -->
             <template v-if="!cursoForm.tipos.instrumento && !cursoForm.tipos.armonico">
               <div v-for="(h, i) in cursoForm.horarios" :key="i">
-                {{ h.diaCurso }} de {{ h.horarioCurso[0] }} a {{ h.horarioCurso[1] }}
-                – Aula {{ h.aulaCurso }} ({{ h.sedeCurso }})
-                <button @click="delHorarioCurso(i)">X</button>
+                {{ h.dia }} de {{ h.horario[0] }} a {{ h.horario[1] }}
+                – Aula {{ h.aula }} ({{ h.sede }})
+                <button @click="delCHFromPlHorarios(i)">X</button>
               </div>
 
               <label>Agregar día</label>
-              <select v-model="nuevoDia">
+              <select v-model="nuevoDia" @change="addCHToPlHorarios">
                 <option disabled value="">Seleccione</option>
-                <option v-for="(d, i) in arrDias" :key="i" :value="i + 2">
+                <option v-for="(d, i) in arrDias" :key="i" :value="i">
                   {{ d }}
                 </option>
               </select>
-
-              <button @click="addDiaToCursoHorario()">Agregar día</button>
             </template>
 
             <!-- Flags -->
@@ -350,6 +348,7 @@ const arrComision = ref([])
 const arrDias = ref([])
 const nuevoDia = ref(null)
 const openCursoModal = async (codPlHorarios) => {
+  if (dragContext.value) return
   const r = await api.get({
     entity: "cursoshorarios",
     action: "getInfoCursoHorario",
@@ -359,20 +358,41 @@ const openCursoModal = async (codPlHorarios) => {
   cursoForm.value.tipos = hydrateTiposFromMask(cursoForm.value.materias.tipo)
   showModalCurso.value = true
 }
-/*
-const addDiaToCursoHorario = async () => {
+
+const addCHToPlHorarios = async () => {
+  const curso = grillaHorarios.value.find(ch=>ch.codPlHorarios === cursoForm.value.codPlHorarios)
   const ok = await showModal("¿Confirma que desea agregar el día al curso?", 1)
-  if (ok) {
+  if (ok.ok) {
     const r = api.post({
       entity: "cursoshorarios",
-      action: "addDiaToCursoHorario",
+      action: "addCHToPlHorarios",
       payload: {
-        codCH: cursoForm.codCH,
-        dia: 
+        codPlHorarios: curso.codPlHorarios,
+        posicion: curso.posicion,
+        dia: nuevoDia.value,
+        sede: sedeSeleccionada.value
       },
     })
   }
-}*/
+  nuevoDia.value = null;
+}
+const delCHFromPlHorarios = async (i) => {
+  let horario = cursoForm.value.horarios[i];
+  const c = await showModal("¿Confirma que desea borrar este horario del curso?", 1)
+  if (c.ok) {
+    const r = await api.post({
+      entity: "cursoshorarios",
+      action: "delCHFromPlHorarios",
+      payload: {
+        codCH: horario.codCH
+      }
+    })
+    if (r.ok) {
+      cursoForm.value.horarios.splice(i, 1)
+    }
+  }
+
+}
 const saveCurso = async () => {
   const ok = await showModal('¿Confirma que desea guardar los cambios?', 1)
   if (ok) {
@@ -424,6 +444,7 @@ const getComisiones = async () => {
     entity: "data",
     action: 'getComisiones'
   })
+  return r.payload
 }
 
 onMounted(async () => {
@@ -444,65 +465,68 @@ function onDragStart(payload) {
 }
 const onDragEnd = async ({ codPlHorarios, endX, endY }) => {
   if (!dragContext.value) return
+  const curso = grillaHorarios.value.find(
+    c => c.codPlHorarios === codPlHorarios
+  )
+  if (!curso) return   
+  const startX = dragContext.value.startX
+  const startY = dragContext.value.startY
+  const oldL = dragContext.value.oldL
+  const oldT = dragContext.value.oldT
+  dragContext.value = null
+  const dx = endX - startX
+  const dy = endY - startY
+  const deltaL = Math.round(dx / gridConfig.value.unitWidth)
+  const deltaT = Math.round(dy / gridConfig.value.unitHeight)
+  const newL = oldL + deltaL
+  const newT = oldT + deltaT
+  let l = newL < 0 ? 0 : newL
+  let t = newT < 0 ? 0 : newT
+  curso.posicion.l = l
+  curso.posicion.t = t
   const ok = await showModal("¿Confirma la nueva ubicación del curso?", 1)
-  if (ok) {
-    const startX = dragContext.value.startX
-    const startY = dragContext.value.startY
-    const oldL = dragContext.value.oldL
-    const oldT = dragContext.value.oldT
-    const dx = endX - startX
-    const dy = endY - startY
-    const deltaL = Math.round(dx / gridConfig.value.unitWidth)
-    const deltaT = Math.round(dy / gridConfig.value.unitHeight)
-    const newL = oldL + deltaL
-    const newT = oldT + deltaT
-    const curso = grillaHorarios.value.find(
-      c => c.codPlHorarios === codPlHorarios
-    )
-    if (curso) {
-      newL = newL < 0 ? 0 : newL
-      newT = newT < 0 ? 0 : newT
-      const r = await api.post({
-        entity: "cursoshorarios",
-        action: "updPosicionCH",
-        payload: {
-          codCH: c.codCH,
-          newL: newL,
-          newT: newT,
-        }
-      })
-      if (r.ok) {
-        curso.posicion.l = newL
-        curso.posicion.t = newT
+  if (ok.ok) {
+    const r = await api.post({
+      entity: "cursoshorarios",
+      action: "updPositionCH",
+      payload: {
+        codCH: curso.codCH,
+        newL: l,
+        newT: t,
       }
+    })
+    if (r.ok) {
+      return
     }
   }
-  dragContext.value = null
+  curso.posicion.l = oldL
+  curso.posicion.t = oldT
 }
 
 
 //--------------CODIGO DE RESIZE----------------------//
 
 const onResizeEnd = async (v) => { 
-  const ok = showModal("¿Confirma la nueva duración del curso?", 1)
-  if (ok) {
-    const curso = grillaHorarios.value.find(c=>c.codPlHorarios === v.codPlHorarios)
-    if (!curso) return
-    let oldW = curso.posicion.w
-    if (oldW === v.newW) return
+  const curso = grillaHorarios.value.find(c=>c.codPlHorarios === v.codPlHorarios)
+  if (!curso) return
+  let oldW = curso.posicion.w
+  if (oldW === v.newW) return
+  curso.posicion.w = v.newW
+  const ok = await showModal("¿Confirma la nueva duración del curso?", 1)
+  if (ok.ok) {
     const r = await api.post({
       entity: "cursoshorarios",
       action: "updWidthCH",
       payload: {
         codCH: curso.codCH,
-        w: v.newW,
+        newW: v.newW,
       }
     })
     if (r.ok) {
-      curso.posicion.w = v.newW
+      return
     }
   }
-  
+  curso.posicion.w = oldW
 }
 
 //-----------------------------------------------------------------------------

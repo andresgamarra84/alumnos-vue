@@ -27,6 +27,7 @@ const props = defineProps({
   curso: Object,
   config: Object
 })
+let isDragging = false
 let isResizing = false
 let startX = 0
 let startWidthPx = 0
@@ -75,13 +76,15 @@ function onResizeUp() {
   )
   el.value.style.width = newW * unitWidth - padding
   emit('resize-end', {
-    codHorario: props.curso.codHorario,
+    codPlHorarios: props.curso.codPlHorarios,
     newW
   })
 
   isResizing = false
 }
-function onClick() {
+function onClick(e) {
+  if (isOnResizeHandle(e)) return
+  console.log(isResizing)
   emit('select', props.curso.codPlHorarios)
 }
 const emit = defineEmits(['drag-start', 'drag-end', 'resize-end', 'select'])
@@ -91,6 +94,7 @@ const draggedEl = ref(null)
 
 function onDragStart(event) {
   if (isResizing) return
+  isDragging = true
   event.preventDefault()
   draggedEl.value = event.currentTarget
 
@@ -121,7 +125,7 @@ function onMouseMove(event) {
 
 function onMouseUp(event) {
   if (!draggedEl.value) return
-
+  isDragging = false
   document.removeEventListener('mousemove', onMouseMove)
   document.removeEventListener('mouseup', onMouseUp)
 
@@ -135,6 +139,7 @@ function onMouseUp(event) {
   })
 
   // reset visual
+  
   draggedEl.value.style.transform = 'translate(0,0)'
   draggedEl.value = null
 }
