@@ -5,18 +5,18 @@
     </div>
 
     <div
-      v-for="info in curso.infoCurso.horarios"
+      v-for="info in curso.horarios"
       class="col-12 text-muted"
     >
       {{ info.dia }} de {{ info.horario[0] }} a {{ info.horario[1] }},
       Aula {{ info.aula }} – Sede {{ info.sede }}
     </div>
-    <template v-if="curso.infoCurso.inscriptos.length > 0">
+    <template v-if="curso.cantInscriptos > 0">
       <ListaAlumnos
         v-if="abierto"
       >
         <AlumnoItem
-          v-for="alumno in curso.infoCurso.inscriptos"
+          v-for="alumno in alumnos"
           :alumno="alumno"
         />
       </ListaAlumnos>
@@ -39,4 +39,14 @@ const abierto = ref(false)
 const props = defineProps({
   curso: Object,
 })
+const showHideList = async () => {
+  const r = await api.get({
+    entity:"cursos",
+    action:"getEstudiantesInscriptos",
+    payload:{
+      codPlHorarios:curso.value.codPlHorarios,
+      tipoMateria:curso.value.tipoMateria,
+    },
+})
+}
 </script>

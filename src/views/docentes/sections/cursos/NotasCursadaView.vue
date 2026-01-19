@@ -48,7 +48,7 @@
     const listEstudiantes = async ()=> {
       const r = await api.get({
         entity:"cursos",
-        action:"getListaEstudiantes",
+        action:"getEstudiantesParaCalificar",
         payload:{
           codPlHorarios: cursoSeleccionado.value,
           anio : anioSeleccionado.value,

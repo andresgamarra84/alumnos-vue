@@ -4,7 +4,7 @@
 		<div v-for="(item,key) in cursos" class='row lista recuadro'>
 			<div class='col-12 col-md-6 titulo'>{{item.nombreCurso}}</div>
 			<div style='padding-left:20px' class='col-12 col-md-6'>
-				<div v-for='info in item.infoCurso.horarios' style='padding:5px 0;'>
+				<div v-for='info in item.horarios' style='padding:5px 0;'>
 					<div>{{info.dia}} {{info.horario[0]}} a {{info.horario[1]}}</div>
 					<div>Aula {{info.aula}}, Sede {{info.sede}}</div>
 				</div>
