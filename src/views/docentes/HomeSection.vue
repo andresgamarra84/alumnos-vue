@@ -2,10 +2,10 @@
     <div id='divCursos' v-if='cursos.length>0' class='margen-bottom'>
 		<h3 class='h3cabecera'>Cursos</h3>
 		<div v-for="(item,key) in cursos" class='row lista recuadro'>
-			<div class='col-12 col-md-6 titulo'>{{item.nombre}}</div>
+			<div class='col-12 col-md-6 titulo'>{{item.nombreCurso}}</div>
 			<div style='padding-left:20px' class='col-12 col-md-6'>
-				<div v-for='info in item.infoMateria' style='padding:5px 0;'>
-					<div>{{info.dia}} {{info.hora[0]}} a {{info.hora[1]}}</div>
+				<div v-for='info in item.infoCurso.horarios' style='padding:5px 0;'>
+					<div>{{info.dia}} {{info.horario[0]}} a {{info.horario[1]}}</div>
 					<div>Aula {{info.aula}}, Sede {{info.sede}}</div>
 				</div>
 			</div>
@@ -30,9 +30,12 @@
     import { ref, onMounted } from 'vue'
     import { api } from '@/api/api'
     const cursos = ref([])
+	const totalHoras = ref(0)
     const reservas = ref([])
-    onMounted(() => {
-        cursos.value = getCursos()
+    onMounted(async () => {
+		const infoCursos = await getCursos()
+        cursos.value = infoCursos.cursos
+		totalHoras.value = infoCursos.totalHoras
         reservas.value = getReservas()
     })
     const getCursos = async () => {

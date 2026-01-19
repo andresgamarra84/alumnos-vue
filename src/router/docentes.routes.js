@@ -17,6 +17,14 @@ export default [
         path: 'inicio',
         component: () => import('@/views/docentes/HomeSection.vue')
       },
+      {
+        path: 'listaEstudiantes',
+        component: () => import('@/views/docentes/sections/cursos/ListaEstudiantesView.vue')
+      },
+      {
+        path: 'notasCursada',
+        component: () => import('@/views/docentes/sections/cursos/NotasCursadaView.vue')
+      },
       /*{
         path: 'mensajes',
         component: () => import('@/views/docentes/MensajesView.vue')
@@ -25,12 +33,12 @@ export default [
         path: 'datosPersonales',
         component: () =>
           import('@/views/docentes/sections/tramites/DatosPersonalesView.vue')
-      },
+      },*/
       {
         path: 'planes_programas',
         component: () =>
           import('@/views/shared/PlanesProgramasView.vue')
-      },*/
+      },
 
     ]
   }
