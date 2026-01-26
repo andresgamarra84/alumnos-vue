@@ -94,7 +94,7 @@ const onSelectCarrera = async () => {
 };
 
 const onSelectMateria = async () => {
-  const modal = useModal()
+  cursosDisponibles.value = [];
   const codAlC = carreras.value[selectedCarrera.value].codigo;
   try {
     const r = await api.get({
@@ -113,9 +113,8 @@ const onSelectMateria = async () => {
   }
 };
 const onSelectCurso = async (codPlHorarios) => {
-  const modal = useModal()
   const ok = await showModal('¿Confirma inscripción?', 1);
-  if (!ok) return;
+  if (!ok.ok) return;
   const codAlC = carreras.value[selectedCarrera.value].codigo;
   const response = await api.post({
     entity: "materias",
@@ -129,7 +128,7 @@ const onSelectCurso = async (codPlHorarios) => {
   });
 
   if (response.ok) {
-    modal.show(
+    showModal(
       'La inscripción ha sido realizada y ya puede visualizarse en la página de inicio'
     );
   }

@@ -7,7 +7,11 @@ export default [
   {
     path: '/estudiantes',
     component: () => import('@/layouts/Dashboard.vue'),
-    meta: { requiresAuth: true, area: 'estudiantes' },
+    meta: { 
+      requiresAuth: true, 
+      area: 'estudiantes',
+      title: "Panel de Estudiantes",
+    },
     children: [
       {
         path: '',
@@ -47,7 +51,7 @@ export default [
           import('@/views/estudiantes/sections/tramites/ReservasView.vue')
       },
       {
-        path: 'planes_programas',
+        path: 'planesProgramas',
         component: () =>
           import('@/views/shared/PlanesProgramasView.vue')
       },
@@ -70,6 +74,11 @@ export default [
         path: 'novedadesDiarias',
         component: () =>
           import("@/views/estudiantes/NovedadesDiariasView.vue")
+      },
+      {
+        path: 'constanciaEstudianteRegular',
+        component: () =>
+          import("@/views/estudiantes/sections/constancias/EstudianteRegularView.vue")
       },
     ]
   }

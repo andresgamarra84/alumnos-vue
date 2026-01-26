@@ -17,18 +17,17 @@
 
       <select
         v-else
-        v-model="alumno.notanumerica1"
+        v-model="nota1"
         :disabled="disabled1"
-        @change="update(1, alumno.notanumerica1)"
+        @change="update(1, nota1)"
       >
-        <option disabled value="">Seleccione...</option>
-        <!--<option
-          v-for="op in alumno.esConceptual ? alumno.conceptuales : alumno.numericas"
-          :key="op.value"
-          :value="op.value"
+        <option disabled :value="null">Sin Calificar</option>
+        <option
+          v-for="(op,k) in alumno.esConceptual ? parametros.codConceptuales : parametros.notaNumerica"
+          :value="k"
         >
-          {{ op.label }}
-        </option>-->
+          {{ op }}
+        </option>
       </select>
     </div>
 
@@ -40,36 +39,40 @@
 
       <select
         v-else
-        v-model="alumno.notanumerica2"
+        v-model="nota2"
         :disabled="disabled2"
-        @change="update(2, alumno.notanumerica2)"
+        @change="update(2, nota2)"
       >
-        <option disabled value="">Seleccione...</option>
-        <!--<option
-          v-for="op in alumno.esConceptual ? alumno.conceptuales : alumno.numericas"
-          :key="op.value"
-          :value="op.value"
+        <option disabled :value="null">Sin calificar</option>
+        <option
+          v-for="(op,k) in alumno.esConceptual ? parametros.codConceptuales : parametros.notaNumerica"
+          :value="k"
         >
-          {{ op.label }}
-        </option>-->
+          {{ op }}
+        </option>
       </select>
     </div>
   </div>
 </template>
 <script setup>
-import { computed } from 'vue'
+import { onMounted, ref } from 'vue'
 
 const props = defineProps({
   alumno: Object,
+  parametros:Object,
   allowCalif: Array
 })
 
 const disabled1 = false//computed(() => !props.allowCalif[0] && !props.allowCalif[2])
 const disabled2 = false//computed(() => !props.allowCalif[1] && !props.allowCalif[2])
-
+const nota1 = ref(null)
+const nota2 = ref(null)
 const emit = defineEmits(['update'])
-
+onMounted(()=>{
+  nota1.value = props.alumno.esConceptual ? props.alumno.notaconceptual1 : props.alumno.notanumerica1
+  nota2.value = props.alumno.esConceptual ? props.alumno.notaconceptual2 : props.alumno.notanumerica2
+})
 function update(cuatri, value) {
-  emit('update', props.alumno.codcursosalumnos, cuatri, value)
+  emit('update', props.alumno, cuatri, value)
 }
 </script>

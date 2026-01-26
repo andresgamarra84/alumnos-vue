@@ -9,7 +9,11 @@ export default [
     {  
         path: '/admin',
         component: DashboardView,
-        meta: { requiresAuth: true, area: 'admin' },
+        meta: { 
+            requiresAuth: true, 
+            area: 'admin',
+            title: "Panel de Administración"
+        },
         children: [
             {
             path: '',
@@ -26,6 +30,10 @@ export default [
             {
             path: 'mensajes',
             component: () => import('@/views/admin/MensajesView.vue')
+            },
+            {
+            path: 'config',
+            component: () => import('@/views/admin/config/ConfiguracionView.vue')
             },
             /*
             {

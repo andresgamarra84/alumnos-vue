@@ -15,9 +15,9 @@
 		<div class='col-12 offset-1'>
 			<div class='col' v-if='arrAusentes.length==0'><i>No hay ausentes para informar</i></div>
 			<div v-for='(item,key) in arrAusentes' class='col-12 row' style='margin: 20px 0;'>
-				<div class='col-12'>{{item.fecha}}</div>
+				<div class='col-12'>{{key}}</div>
 				<div class='row'>
-					<div class='col-12' v-for='i in item.ausentes'>
+					<div class='col-12' v-for='i in item'>
 						<template v-if=i.nombre>{{i.nombre}}</template>
 						<template v-else>{{i.comentarios}}</template>
 					</div>
@@ -26,6 +26,7 @@
 		</div>
 	</div>
 </template>
+
 <script setup>
     import {ref, onMounted} from 'vue'
     import {api} from '@/api/api'

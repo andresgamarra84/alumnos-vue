@@ -160,14 +160,14 @@ const ocultarConversacion = () => {
 
 const sendMsg = async (mensaje) => {
   if (!mensaje) {
-    await showModal('Error', 'El mensaje no puede estar vacío', 0)
+    await showModal('El mensaje no puede estar vacío', 0, 'Error')
     return
   }
 
   const rta = await showModal(
-    'Confirmación',
     '¿Confirma que desea enviar este mensaje?',
-    1
+    1,
+    'Confirmación'
   )
 
   if (!rta.ok) return
@@ -182,7 +182,7 @@ const sendMsg = async (mensaje) => {
   })
 
   if (r.ok) {
-    await showModal('Información', 'Mensaje enviado', 0)
+    await showModal('Mensaje enviado')
     ocultarConversacion()
     list()
   }
@@ -190,31 +190,29 @@ const sendMsg = async (mensaje) => {
 
 const newMsg = async (asunto, mensaje) => {
   if (!asunto || !mensaje) {
-    await showModal('Error', 'Asunto y mensaje son obligatorios', 0)
+    await showModal('Asunto y mensaje son obligatorios', 0, 'Error')
     return
   }
 
   const rta = await showModal(
-    'Confirmación',
     '¿Confirma que desea enviar este mensaje?',
-    1
+    1,
+    'Confirmación'
   )
 
   if (!rta.ok) return
 
   const r = await api.post({
     entity: 'mensajes',
-    action: 'addMessageToThread',
+    action: 'createThread',
     payload: { asunto, mensaje }
   })
 
   if (r.ok) {
-    await showModal('Información', 'Mensaje enviado', 0)
-
+    await showModal('Mensaje enviado')
     nuevoAsunto.value = ''
     nuevoMensaje.value = ''
     showNewMsg.value = false
-
     list()
   }
 }

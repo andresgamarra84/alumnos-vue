@@ -22,9 +22,18 @@
         />
       </div>
 
-      <button class="btn btn-primary w-100">
+      <button class="btn w-100">
         Ingresar
       </button>
+      <div class="forgot-password">
+        <button
+          type="button"
+          class="btn btn-primary w-100"
+          @click="showRecovery = true"
+        >
+          ¿Olvidaste tu contraseña?
+        </button>
+      </div>
     </form>
 
     <!-- ===== CAMBIO DE PASSWORD ===== -->
@@ -59,7 +68,36 @@
         Guardar contraseña
       </button>
     </form>
+  <!-- MODAL RECUPERAR CONTRASEÑA -->
+    <div v-if="showRecovery" class="recovery-backdrop">
+      <div class="recovery-modal">
+        <h3>Recuperar contraseña</h3>
 
+        <p>
+          Ingrese su Nombre de usuario y le enviaremos las instrucciones.
+        </p>
+
+        <input
+          type="text"
+          class="form-control"
+          placeholder="Nombre de usuario"
+          v-model="recoveryUsr"
+        />
+
+        <div class="modal-actions">
+          <button
+            class="btn btn-secondary"
+            @click="showRecovery = false"
+          >
+            Cancelar
+          </button>
+
+          <button @click='askRecover' class="btn btn-primary">
+            Enviar
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 <script setup>
@@ -67,7 +105,8 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/api/api'
 import { showModal } from '@/services/uiBus'
-
+const showRecovery = ref(false)
+const recoveryUsr = ref('')
 const router = useRouter()
 
 const step = ref('login')
@@ -121,5 +160,51 @@ const changePassword = async () => {
     router.replace('/docentes')
   }
 }
+const askRecover = async () =>{
+  if (!recoveryUsr.value) {
+    showModal("El campo no puede estar vacío")
+    return
+  }
+  const r = await api.post({
+    entity:"login",
+    action:"recoverUsr",
+    type:2,
+    payload:{
+      usr: recoveryUsr.value,
+    }
+  })
+  showRecovery.value = false
+  if (r.ok) showModal("Se ha enviado un correo al email registrado con la información necesaria para acceder.")
+}
 </script>
+<style>
+  .recovery-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1050;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.recovery-modal {
+  background: #fff;
+  padding: 1.5rem;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 400px;
+  z-index: 1060;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+</style>
+
 

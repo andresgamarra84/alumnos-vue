@@ -7,7 +7,11 @@ export default [
   {
     path: '/docentes',
     component: () => import('@/layouts/Dashboard.vue'),
-    meta: { requiresAuth: true, area: 'docentes' },
+    meta: { 
+      requiresAuth: true, 
+      area: 'docentes',
+      title: "Panel de Docentes",
+    },
     children: [
       {
         path: '',

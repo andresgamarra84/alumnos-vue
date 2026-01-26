@@ -40,7 +40,7 @@
             </div>  
         </div>
         <div class='col-12 text-end'>
-          <input type="button" class="btn btn-primary" v-on:click="confirmReserva()" value="Confirmar Reserva" />
+          <input type="button" class="btn btn-primary" v-on:click="confirmReserva" value="Confirmar Reserva" />
         </div>
       </div>
     </div>
@@ -52,13 +52,14 @@ import { api } from '@/api/api.js';
 import { useModal } from '@/composables/useModal'
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import InstrumentosSelect from '@/components/InstrumentosSelect.vue';
+import { showModal } from '@/services/uiBus';
 const selectedIndexCarrera = ref(null);
 const carreras = ref([]);
 const opciones = ref({});
 const setCambioProf = ref(false);
 const setCambioInstr = ref(false);
 const arrInstrumentos = ref([]);
-const nuevoInstr = ref('');
+const nuevoInstr = ref(null);
 onMounted(() => {
   getCarrerasAlumno();
 })
@@ -102,6 +103,7 @@ const onChangeCambioProf = async () => {
 }
 const onChangeCambioInstr = async () => {
     if (setCambioInstr.value) {
+      const carrera = carreras.value[selectedIndexCarrera.value].n
       const ok = modal.show("Al solicitar cambio de instrumento pierde la inscripción a , reemplazándola por el instrumento que seleccione a continuación. ¿Desea continuar?", 1)
       const r = await api.get({
         entity: "instrumentos",
@@ -115,27 +117,28 @@ const onChangeCambioInstr = async () => {
     }
 }
 const confirmReserva = async () => {
-  const modal = useModal()
-  const ok = await modal.show('¿Confirma reserva?', 1);
-  if (ok) {
+  const c = await showModal('¿Confirma reserva?', 1);
+  if (c.ok) {
+    const carrera = carreras.value[selectedIndexCarrera.value];
     try {
-      const r = await api.get({
+      const r = await api.post({
         entity: 'reservas',
         action: 'confirmReserva',
         payload: {
-          codAlC : selectedCarrera.value,
+          codAlC : carrera.codigo,
           nuevoInstr: nuevoInstr.value,
+          codProfesor: opciones.value.datosPrevios.codProfesor ?? null,
           cambioProf: setCambioProf.value,
           cambioInstr: setCambioInstr.value,
         },
       });
-      opciones.value = r.payload ?? [];
+      if (r.ok) showModal("La reserva ha sido ingresada y puede visualizarse en la página de inicio.")
     } catch (e) {
       console.log(e);
     }
   }
   nuevoInstr.value = '';
-  selectedCarrera.value = '';
+  selectedIndexCarrera.value = null;
   opciones.value = [];
   setCambioProf.value = false;
 }

@@ -102,13 +102,13 @@
     <h3 class='h3cabecera'>Reservas de vacante</h3>
     <div v-for='(item, key) in reservasVigentes' :key="key" class='lista row recuadro' style="padding:20px 10px;">
       <div class='col-12 col-md-3 titulo'>
-        <template v-if='item.materia'>{{item.materia}}</template></div>
+        <template v-if='item.materia'>{{item.materia}}</template>
+      </div>
       <div class='col-12 col-md-4'>
-        <template v-if='item.nombreProf'> (Prof. {{item.nombreProf}})</template>
-        
+        {{item.nombreProf}}
       </div>
       <div class='col-12 col-md-5'>
-        {{item.carrera}} ({{item.instrumento}})<template v-if='item.cambio'>- ({{item.cambio}})</template>
+        {{item.carrera}}    ({{item.instrumento}})<template v-if='item.leyenda'>- ({{item.leyenda}})</template>
       </div>
       <div class='col-12 text-end'>
         <a @click='updReserva(key)'  style='color:var(--bs-danger);'>Borrar reserva</a>
@@ -159,10 +159,10 @@
       </div>
     </div>
   </div>
-  <div v-if='arrConstancias.length>0' class='margen-bottom'>
+  <div v-if='arrSolicConstancias.length>0' class='margen-bottom'>
     <h3 class='h3cabecera'>Solicitudes de constancia</h3>
-    <div v-for='(item, key) in arrConstancias' class='lista row recuadro' style='opacity:1;padding:20px 10px;'>
-      <div class='col-12 col-md-5 titulo'>{{item.destino}} {{item.dato}}</div>
+    <div v-for='(item, key) in arrSolicConstancias' class='lista row recuadro' style='opacity:1;padding:20px 10px;'>
+      <div class='col-12 col-md-5 titulo'>{{item.destino}} {{item.info}}</div>
       <div class='col-12 col-md-2 text-end'><a v-on:click='updSolicitud(key, true)'  style='color:var(--bs-danger);'>Borrar solicitud</a></div>
     </div>
   </div>
@@ -181,7 +181,7 @@ const arrMesas = ref([]);
 const arrConfig = ref({});
 const arrReservas = ref([]);
 const arrSolicitudes = ref([]);
-const arrConstancias = ref([]);
+const arrSolicConstancias = ref([]);
 const showDeleted = ref([false, false, false, false]);
 const esAutoridad = ref(true);
 // Dark Mode Toggle
@@ -313,13 +313,13 @@ const updReserva = async (k) => {
 };
 
 const listSolicitudes = async () => {
-  arrSolicitudes.value = [];
-  arrConstancias.value = [];
-  const r = await api.get({ entity: 'inicio', action: 5 });
-  if (r.ok) {
-    r.payload.mesa.forEach(value => arrSolicitudes.value.push(value));
-    r.payload.constancia.forEach(value => arrConstancias.value.push(value));
-  }
+  //arrSolicitudes.value = [];
+  arrSolicConstancias.value = [];
+  const r = await api.get({ 
+    entity: 'constancias', 
+    action: 'getSolicitudes', 
+  });
+  arrSolicConstancias.value = r.payload
 };
 
 const updSolicitud = async (k, i = false) => {
@@ -355,7 +355,7 @@ onMounted(async () => {
     //listCambios(),
     getInscripcionesMesas(),
     listReservas(),
-    //listSolicitudes(),
+    listSolicitudes(),
     //listNotif()
   ]);
 });

@@ -16,17 +16,16 @@
 			<option v-for='curso in cursos' :value='curso.codPlHorarios'>{{curso.nombreCurso}}</option>
 		</select>
 	</div>
-    <template>
-      <ListaAlumnos>
-        <AlumnoCursadaItem
-          v-for="alumno in alumnos"
-          :key="alumno.codcursosalumnos"
-          :alumno="alumno"
-          :allow-calif="allowCalif"
-          @update="updCursada"
-        />
-      </ListaAlumnos>
-    </template>
+  <ListaAlumnos v-if="alumnos.length>0">
+    <AlumnoCursadaItem
+      v-for="alumno in alumnos"
+      :key="alumno.codcursosalumnos"
+      :alumno="alumno"
+      :parametros="parametros"
+      :allow-calif="allowCalif"
+      @update="updCursada"
+    />
+  </ListaAlumnos>
 </template>
 <script setup>
     import {ref, onMounted} from 'vue'
@@ -37,15 +36,21 @@
     const cursoSeleccionado = ref(null) 
     const anioSeleccionado = ref(null)
     const alumnos = ref([])
+    const parametros = ref({})
     const allowCalif = ref([true,true,true])
     onMounted(async()=>{
-        const r = await api.get({
-            entity:"cursos",
-            action: "getCursos",
-        })
-        cursos.value = r.payload.cursos
+        cursos.value = await getCursos()
+        parametros.value = await getParametrosCalificacion()
     })
+    const getCursos = async () => {
+      const r = await api.get({
+          entity:"cursos",
+          action: "getCursos",
+      })
+      return r.payload.cursos
+    }
     const listEstudiantes = async ()=> {
+      alumnos.value= []
       const r = await api.get({
         entity:"cursos",
         action:"getEstudiantesParaCalificar",
@@ -56,5 +61,23 @@
       })
       alumnos.value = r.payload
     }
-    const updCursada = async ()=>{}
+    const getParametrosCalificacion = async () => {
+      const r = await api.get({
+        entity:"cursos",
+        action:"getParametrosCalificacion",
+      })
+      return r.payload
+      
+    }
+    const updCursada = async (alumno, cuatri, calif)=>{
+      const r = await api.post({
+        entity:"cursos",
+        action:"updCalificacionCursada",
+        payload: {
+          cursada:alumno,
+          cuatrimestre:cuatri,
+          calificacion:calif
+        }
+      })
+    }
 </script>
