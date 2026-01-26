@@ -32,5 +32,5 @@ jobs:
           key: ${{ secrets.CPANEL_SSH_KEY }}
           port: 46464
           source: "dist/*"
-          target: "/home/${{ secrets.CPANEL_USER }}/public_html/panel"
+          target: "/home/${{ secrets.CPANEL_USER }}/public_html/panel" 
           strip_components: 1
