@@ -24,19 +24,11 @@ jobs:
       - name: Build Vue
         run: npm run build
 
-      - name: Clean old build (safe)
+      - name: Deploy with rsync
         run: |
-          ssh ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }} \
-          "rm -rf /home/${{ secrets.CPANEL_USER }}/public_html/panel/assets \
-                  /home/${{ secrets.CPANEL_USER }}/public_html/panel/index.html"
+          rsync -avz --delete \
+            --exclude='.htaccess' \
+            -e "ssh -p 46464" \
+            dist/ \
+            ${{ secrets.CPANEL_USER }}@${{ secrets.CPANEL_HOST }}:/home/${{ secrets.CPANEL_USER }}/public_html/panel/
 
-      - name: Deploy dist to cPanel
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.CPANEL_HOST }}
-          username: ${{ secrets.CPANEL_USER }}
-          key: ${{ secrets.CPANEL_SSH_KEY }}
-          port: 46464
-          source: "dist/*"
-          target: "/home/${{ secrets.CPANEL_USER }}/public_html/panel"
-          strip_components: 1
