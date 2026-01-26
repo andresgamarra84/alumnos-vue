@@ -23,6 +23,12 @@ jobs:
 
       - name: Build Vue
         run: npm run build
+        
+      - name: Setup SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.CPANEL_SSH_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
 
       - name: Deploy with rsync
         run: |
