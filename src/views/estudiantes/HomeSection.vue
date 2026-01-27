@@ -2,9 +2,14 @@
   <div class="text-end">
     <input type="button" class="btn" @click="toggleDarkMode" value="Modo oscuro" />
   </div>
-  <h3 class="h3cabecera">Notificaciones</h3>
-  <div>
-    <p v-for="item in arrNotif" :key="item.id" v-html="item.texto"></p>
+  
+  <div v-if="arrNotif.length>0">
+    <h3 class="h3cabecera">Notificaciones</h3>
+    <p v-for="item in arrNotif" :key="item.codigo">
+      {{ item.before }}
+      <a v-if="item.linkText" :href="item.link">{{ item.linkText }}</a>
+      {{ item.after }}
+    </p>
   </div>
   <h3 class="h3cabecera">Trámites habilitados</h3>
   <div>
@@ -163,7 +168,7 @@
     <h3 class='h3cabecera'>Solicitudes de constancia</h3>
     <div v-for='(item, key) in arrSolicConstancias' class='lista row recuadro' style='opacity:1;padding:20px 10px;'>
       <div class='col-12 col-md-5 titulo'>{{item.destino}} {{item.info}}</div>
-      <div class='col-12 col-md-2 text-end'><a v-on:click='updSolicitud(key, true)'  style='color:var(--bs-danger);'>Borrar solicitud</a></div>
+      <div class='col-12 col-md-2 text-end'><a @click='updSolicitud(key, true)'  style='color:var(--bs-danger);'>Borrar solicitud</a></div>
     </div>
   </div>
 </template>
@@ -220,16 +225,22 @@ const reservasVigentes = computed(() =>
 const reservasBorradas = computed(() =>
   arrReservas.value.filter(i => i.deleted)
 )
-const listNotif = async () => {
-  arrNotif.value = [];
-  try {
-    const r = await api.get({ entity: 'notificaciones', action: 'getAll' });
-    if (r.ok) {
-      r.payload.forEach(v => arrNotif.value.push(v));
+const listNotificaciones = async () => {
+  const r = await api.get({ entity: 'notificaciones', action: 'getAll' });
+  let notif = r.payload
+  arrNotif.value = notif.map(a => {
+    const match = a.texto.match(/\{\{(.*?)\}\}/)
+    if (!match) return { ...a, before: a.texto }
+    const [full, linkText] = match
+    const [before, after] = a.texto.split(full)
+    return {
+      ...a,
+      before,
+      linkText,
+      after,
     }
-  } catch (err) {
-    console.error('Error listNotif:', err);
-  }
+  })
+  console.log(arrNotif.value)
 };
 
 const toggleDeleted = (k = 0) => {
@@ -305,7 +316,11 @@ const updReserva = async (k) => {
   const confirm = await showModal(`¿Confirma que desea ${accion} esta reserva?`, 1);
   if (confirm) {
     const d = { codigo: item.codigo, deleted: item.deleted };
-    const r = await api.post({ entity: 'reserva', action: 1, payload: d });
+    const r = await api.post({ 
+      entity: 'reservas', 
+      action: 'updReserva', 
+      payload: d 
+    });
     if (r.ok) {
       item.deleted = !item.deleted;
     }
@@ -323,40 +338,40 @@ const listSolicitudes = async () => {
 };
 
 const updSolicitud = async (k, i = false) => {
-  const confirm = await showModal('¿Confirma que desea borrar esta solicitud?', 1);
-  if (confirm) {
-    let d;
+  const c = await showModal('¿Confirma que desea borrar esta solicitud?', 1);
+  if (c.ok) {
+    let d = {}
     if (i) {
-      d = { codigo: arrConstancias.value[k].codigo, deleted: false };
+      d = { codigo: arrSolicConstancias.value[k].codigo, deleted: false };
     } else {
       d = { codigo: arrSolicitudes.value[k].codigo, deleted: arrSolicitudes.value[k].deleted };
     }
-    const entity = i ? 'constancias' : 'mesas';
-    const action = i ? 8 : 1;
+    const entity = i ? 'constancias' : 'mesas'
+    const action = "updSolicitud"
     
-    const r = await api.post({ entity, action, payload: d });
+    const r = await api.post({ entity: entity, action: action, payload: d });
     if (r.ok) {
       if (i) {
-        arrConstancias.value.splice(k, 1);
+        arrSolicConstancias.value.splice(k, 1);
       } else {
         arrSolicitudes.value[k].deleted = !arrSolicitudes.value[k].deleted;
       }
     }
   }
-};
+}
 
 onMounted(async () => {
   const configRes = await api.get({ entity: 'config', action: 'getConfig' }); // Action 0 default
   arrConfig.value = configRes.payload || {};
   /*const authRes = await api.get({ entity: 'config', action: 'authCheck' });
-  esAutoridad.value = authRes.payload || false;*/
+  esAutoridad.value = authRes.payload || false;*/ 
   await Promise.all([
     getInscripcionesMaterias(),
     //listCambios(),
     getInscripcionesMesas(),
     listReservas(),
     listSolicitudes(),
-    //listNotif()
+    listNotificaciones()
   ]);
 });
 </script>
