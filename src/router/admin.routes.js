@@ -24,6 +24,20 @@ export default [
             component: () => import('@/views/admin/HomeSection.vue')
             },
             {
+            path: 'busquedaEstudiantes',
+            component: () => import ('@/views/admin/sections/BusquedaView.vue'),
+            meta: {
+                area: 'estudiantes'
+                },
+            },
+            {
+            path: 'busquedaDocentes',
+            component: () => import ('@/views/admin/sections/BusquedaView.vue'),
+            meta: {
+                area: 'docentes',
+                },
+            },
+            {
             path: 'grillaHorarios',
             component: () => import('@/views/admin/GrillaHorariosView.vue')
             },

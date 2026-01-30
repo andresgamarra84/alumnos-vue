@@ -1,12 +1,12 @@
 import { useLoading } from '@/composables/useLoading'
 import { showModal } from '@/services/uiBus'
 const { start, stop } = useLoading()
-const BASE_URL = "https://cjjc.edu.ar/api-v2/";
+import { BASE_URL, SESSION_NAME } from '@/config/app.config'
 
 const request = async (options = {}) => {
     try {
         let url = BASE_URL;
-        const token = sessionStorage.getItem("CJJC_USER")
+        const token = sessionStorage.getItem(SESSION_NAME)
         if (token) {
             options.headers.Authorization = `Bearer ${token}`
         }
@@ -26,7 +26,7 @@ const request = async (options = {}) => {
                 ...options.headers,
             },
             body: options.method !== 'GET' ? JSON.stringify(options.body) : null,
-            credentials: 'include', // Incluir cookies
+           // credentials: 'include', // Incluir cookies
         });
 
         // Manejo inteligente de response type

@@ -53,7 +53,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { api } from '@/api/api.js';
-import { useModal } from '@/composables/useModal.js';
+import { showModal } from '@/services/uiBus';
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import MateriasSelect from '@/components/MateriasSelect.vue';
 const carreras = ref([]);
@@ -133,15 +133,15 @@ const onSelectMesa = mesa => {
   condicionShow.value = true;
 };
 const confirmarInscripcion = async () => {
-  const modal = new useModal();
   const codAlC = carreras.value[selectedCarrera.value].codigo;
-  if (!selectedCondicion.value) {
-    modal.show('Debe seleccionar una condición de examen');
+  console.log(selectedCondicion.value)
+  if (selectedCondicion.value === null) {
+    showModal('Debe seleccionar una condición de examen');
     return;
   }
 
-  const ok = await modal.show('¿Confirma inscripción?', 1);
-  if (!ok) return;
+  const c = await showModal('¿Confirma inscripción?', 1);
+  if (!c.ok) return;
 
   const r = await api.post({
     entity: "mesas",
@@ -155,7 +155,7 @@ const confirmarInscripcion = async () => {
   });
 
   if (r.ok) {
-    modal.show(
+    showModal(
       'La inscripción ha sido realizada y ya puede visualizarse en la página de inicio'
     );
   }

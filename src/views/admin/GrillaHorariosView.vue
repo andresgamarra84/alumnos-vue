@@ -249,7 +249,7 @@ onMounted(async () => {
   updGrilla()
   //Observer para el resize de la página principal  
   const observer = new ResizeObserver(entries => {
-    containerWidth.value = entries[0].contentRect.width
+    containerWidth.value = entries[0].contentRect.width - unitWidth.value
   })
   observer.observe(layoutContainer.value)
 })

@@ -20,7 +20,7 @@
     const arrAllExamenes = ref([])
     onMounted (async () => {
         const r = await api.get({
-            entity: 'constancias',
+            entity: 'calificaciones',
             action: 'getTrayectoriaExamenes'
         })
         arrAllExamenes.value = r.payload

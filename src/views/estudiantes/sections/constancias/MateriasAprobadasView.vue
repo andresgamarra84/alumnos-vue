@@ -7,23 +7,72 @@
   />
   <MateriaList
     v-if="selectedCarrera !== null"
-    :materias="arrExamenes"
-    :codAlC="codAlC"
-    :showSinCarrera="showSinCarrera"
-    @reload="listExamenes"
+    :materiasCarrera="arrExamenes"
+    :materias="arrMaterias"
+    @delete ="delExamen"
+    @nuevo-examen="showFormNuevoExamen"
+    @update-espacio="updEspacioExamen"
   />
+  <Teleport to="body">
+  <div
+    v-if="showModalExamen"
+    class="modal-overlay"
+    @click.self="cerrarModal"
+  >
+    <div class="modal-content">
+        <ExamenForm
+            @save-examen="saveExamen"
+            @close = "closeFormNuevoExamen"
+        />
+    </div>
+  </div>
+</Teleport>
 </template>
 <script setup>
 import { ref, onMounted } from 'vue';
-import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import { api } from '@/api/api'
+import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import MateriaList from '@/components/MateriaList.vue';
-
+import ExamenForm from '../../components/ExamenForm.vue';
+import { showModal } from '@/services/uiBus';
 const arrCarreras = ref([])
+const codAlC = ref(null)
 const arrExamenes = ref([])
 const selectedCarrera = ref(null)
-const codAlC = ref(null)
-const showSinCarrera = ref(false)
+const codMCNuevoExamen = ref(null)
+const showModalExamen = ref(false)
+const arrMaterias = ref([])
+const updEspacioExamen=async(codMateria, k) => {
+    const r = await api.post({
+        entity:"examenes",
+        action:"updEspacioExamen",
+        payload:{
+            codMateria:codMateria,
+            codExamen:arrExamenes.value[k].infoExamen.codigo,
+        }
+    })
+}
+
+const delExamen = async (k) => {
+  const ok = await showModal("¿Confirma que desea borrar este examen?", 1, "Atención")
+  if (!ok) return
+  const r = await api.post({
+    entity: "examenes",
+    action: "deleteExamen",
+    payload: {
+      codExamen: arrExamenes.value[k].infoExamen.codigo,
+    }
+  })
+  if (r.ok) arrExamenes.value[k].esAprobada = false;
+}
+const showFormNuevoExamen = async (k) =>{
+    codMCNuevoExamen.value = arrExamenes.value[k].codigo
+    showModalExamen.value = true
+}
+const closeFormNuevoExamen = () => {
+    codMCNuevoExamen.value = null
+    showModalExamen.value = false
+}
 
 const listCarreras = async () => {
     arrCarreras.value = [];
@@ -52,14 +101,51 @@ const listExamenes = async () => {
     })
     arrExamenes.value = r.payload
 }
+const saveExamen = async (d) => {
+    const r = await api.post({
+        entity:"examenes",
+        action:"addExamen",
+        payload:{
+            codMC: codMCNuevoExamen.value,
+            codAlC:codAlC.value,
+            d:d
+        }
+    })
+    listExamenes()
+    closeFormNuevoExamen()
+}
+const listMaterias = async () => {
+    const r = await api.get({
+        entity:"materias",
+        action:"getMateriasAll",
+    })
+    arrMaterias.value = r.payload
 
+}
 onMounted(() => {
     listCarreras();
-/*
-    apiData.setData("constancias", 8);
-    api.get().then(r => r.payload.forEach(v => arrMateriasAll.value.push(v)));
-
-    apiData.setData("constancias", 2);
-    api.get().then(r => r.payload.forEach(v => arrInst.value.push(v)));*/
+    listMaterias();
 });
+
 </script>
+<style>
+.modal-overlay {
+  position: fixed;
+  inset: 0;               /* top, right, bottom, left = 0 */
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 8px;
+  min-width: 300px;
+  max-width: 90vw;
+  max-height: 90vh;
+  overflow: auto;
+}
+</style>

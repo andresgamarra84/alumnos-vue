@@ -80,6 +80,16 @@ export default [
         component: () =>
           import("@/views/estudiantes/sections/constancias/EstudianteRegularView.vue")
       },
+      {
+        path: 'historialCursadas',
+        component: () =>
+          import('@/views/estudiantes/sections/constancias/HistorialCursadasView.vue')
+      },
+      {
+        path: 'notasCursadas',
+        component: () =>
+          import('@/views/estudiantes/sections/constancias/CursadasAprobadasView.vue')
+      }
     ]
   }
 ]

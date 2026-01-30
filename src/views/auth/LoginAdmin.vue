@@ -72,6 +72,7 @@ import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/api/api'
 import { showModal } from '@/services/uiBus'
+import { SESSION_NAME } from '@/config/app.config'
 
 const router = useRouter()
 
@@ -107,7 +108,7 @@ const login = async () => {
   }
 
   if (r.payload.state === "OK") {
-    sessionStorage.setItem("CJJC_USER", r.payload.token)
+    sessionStorage.setItem(SESSION_NAME, r.payload.token)
     router.replace('/admin')
   }
 }
