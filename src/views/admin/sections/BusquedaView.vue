@@ -157,7 +157,7 @@ const toggleMsgForm = (k) => {
 const sendMsg = async ({asunto, mensaje, codAlumno}) => {
     const r = await api.post({
         entity: "mensajes",
-        action: "createMsg",
+        action: "createThread",
         payload: {
             asunto:asunto,
             mensaje:mensaje,

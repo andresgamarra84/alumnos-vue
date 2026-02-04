@@ -1,222 +1,126 @@
 <template>
-  <div class="row">
-    <!-- Nuevo mensaje -->
-      <div class="col-12 mb-3 text-end">
-        <button
-            class="btn btn-primary"
-            @click="showNewMsg = true"
-        >
-            Nuevo mensaje
-        </button>
-      </div>
-
-    <div v-if="showNewMsg" class="col-12 recuadro mt-3">
-
-    <div class="mb-2">
-        <label>Asunto</label>
-        <input
-        type="text"
-        class="form-control"
-        v-model="nuevoAsunto"
-        />
-    </div>
-
-    <div class="mb-2">
-        <label>Mensaje</label>
-        <textarea
-        class="form-control"
-        rows="4"
-        v-model="nuevoMensaje"
-        ></textarea>
-    </div>
-
-    <div class="text-end">
-        <button
-        class="btn btn-secondary me-2"
-        @click="showNewMsg = false"
-        >
-        Cancelar
-        </button>
-
-        <button
-        class="btn btn-success"
-        @click="newMsg(nuevoAsunto, nuevoMensaje)"
-        >
-        Enviar mensaje
-        </button>
-    </div>
-
-    </div>
-
-    <!-- Bandeja -->
-    <div class="col-12" id="msg_lista">
-      <div
-        v-for="(item, k) in arrBandeja"
-        :key="item.codHilo"
-        class="row carrera-item"
-        style="margin: 20px 0; cursor:pointer"
+  <div class="row">    
+    <NuevoMensaje
+      v-if="showMsgModal"
+      @send-msg="newMsg"
+      @close="closeMsgModal"
+    />
+    <div class="col-12">
+      <HiloItem
+        v-for="(item, k) in arrHilos"
+        :item="item"
         @click="getMsg(k)"
       >
-        <div class="col-6">{{ item.asunto }}</div>
-        <div class="col-6 text-end">{{ item.fechaIngreso }}</div>
-      </div>
+        <Conversacion
+          v-if="item.mensajes.length>0"
+          :mensajes="item.mensajes"
+          :txtRespuesta="txtRespuesta"
+          @send-msg="sendMsg(k)"
+          @close-chat="closeChat(k)"
+          @update:txt-respuesta="updateTxtRespuesta"
+        />
+      </HiloItem>
     </div>
-
-    <!-- Conversación -->
-    <div v-if="showCuerpo" id="msg_cuerpo" class="col-12 recuadro">
-      <div
-        v-for="(m, i) in arrMensajes"
-        :key="i"
-        :class="m.clase"
-        style="white-space: pre-line; margin-bottom: 10px"
-      >
-        {{ m.mensaje }}
-      </div>
-
-      <button class="btn btn-secondary mt-2" @click="ocultarConversacion">
-        Cerrar conversación
-      </button>
-    </div>
-
-    <!-- Respuesta -->
-    <div v-if="showRta" class="col-12 mt-3">
-      <textarea
-        id="tAreaRta"
-        class="form-control"
-        rows="4"
-        v-model="respuesta"
-      />
-      <button class="btn btn-primary mt-2" @click="sendMsg(respuesta)">
-        Enviar respuesta
-      </button>
-    </div>
-
   </div>
 </template>
 <script setup>
 import { ref, onMounted } from 'vue'
 import { api } from '@/api/api'
 import { showModal } from '@/services/uiBus'
+import Conversacion from '@/views/shared/Conversacion.vue'
+import HiloItem from '@/views/shared/HiloItem.vue'
+import NuevoMensaje from '../shared/NuevoMensaje.vue'
 
 /* ---------- state ---------- */
-const showCuerpo = ref(false)
-const showRta = ref(false)
-const showNewMsg = ref(false)
+const showMsgModal = ref(false)
 const nuevoAsunto = ref('')
 const nuevoMensaje = ref('')
-
-const hilo = ref(null)
-
-const arrBandeja = ref([])
-const arrMensajes = ref([])
+const arrHilos = ref([])
+const txtRespuesta = ref('')
 
 /* ---------- methods ---------- */
 const list = async () => {
-  arrBandeja.value = []
-  const r = await api.get({
+  const {payload} = await api.get({
     entity: 'mensajes',
     action: 'getAllThreads'
   })
-
-  if (r.ok) {
-    arrBandeja.value = r.payload ?? []
-  }
+  arrHilos.value = payload ?? []
 }
 
 const getMsg = async (index) => {
-  const item = arrBandeja.value[index]
-  hilo.value = item.codHilo
-  arrMensajes.value = []
-
-  const r = await api.get({
+  if (arrHilos.value[index].mensajes.length>0) return
+  const item = arrHilos.value[index]
+  const codHilo = item.codHilo
+  const { payload } = await api.get({
     entity: 'mensajes',
     action: 'getMessageFromThread',
-    payload: { codHilo: hilo.value }
+    payload: { codHilo }
   })
-
-  if (r.ok) {
-    r.payload.forEach(v => {
-      arrMensajes.value.push({
-        mensaje: v.mensaje,
-        fechaIngreso: v.fechaIngreso,
-        clase:
-          v.codTipo === 0 || v.codTipo === 1
-            ? 'col-10 fondoAlumno text-left'
-            : 'col-10 offset-2 fondoAdmin text-right',
-      })
-    })
-
-    showCuerpo.value = true
-    showRta.value = !r.payload[r.payload.length - 1]?.estado
-  }
+  item.mensajes = payload.map(v => ({
+    mensaje: v.mensaje,
+    fechaIngreso: v.fechaIngreso,
+    clase : v.codTipo
+  })) ?? []
+}
+const closeChat = (k) => {
+  arrHilos.value[k].mensajes = []
 }
 
-const ocultarConversacion = () => {
-  arrMensajes.value = []
-  hilo.value = null
-  showCuerpo.value = false
-  showRta.value = false
+const closeMsgModal = () => {
+  showMsgModal.value = false
 }
 
-const sendMsg = async (mensaje) => {
-  if (!mensaje) {
-    await showModal('Error', 'El mensaje no puede estar vacío', 0)
+const sendMsg = async (k) => {
+  if (!txtRespuesta.value) {
+    await showModal('El mensaje no puede estar vacío')
     return
   }
-
-  const rta = await showModal(
-    'Confirmación',
+  const {ok} = await showModal(
     '¿Confirma que desea enviar este mensaje?',
     1
   )
-
-  if (!rta.ok) return
-
+  if (!ok) return
+  const codHilo = arrHilos.value[k].codHilo
+  const mensaje = txtRespuesta.value
   const r = await api.post({
     entity: 'mensajes',
     action: 'addMessageToThread',
     payload: {
-      codHilo: hilo.value,
-      mensaje
+      codHilo,
+      mensaje,
+      codAlumno: arrHilos.value[k].codAlumno
     }
   })
-
   if (r.ok) {
-    await showModal('Información', 'Mensaje enviado', 0)
-    ocultarConversacion()
-    list()
+    await showModal('Mensaje enviado')
   }
+  txtRespuesta.value = ''
+  closeChat(k)
+  list()
 }
 
 const newMsg = async (asunto, mensaje) => {
-  if (!asunto || !mensaje) {
-    await showModal('Error', 'Asunto y mensaje son obligatorios', 0)
-    return
-  }
-
-  const rta = await showModal(
-    'Confirmación',
+  const c = await showModal(
     '¿Confirma que desea enviar este mensaje?',
     1
   )
-
-  if (!rta.ok) return
-
+  if (!c.ok) return
   const r = await api.post({
     entity: 'mensajes',
     action: 'addMessageToThread',
     payload: { asunto, mensaje }
   })
-
   if (r.ok) {
-    await showModal('Información', 'Mensaje enviado', 0)
-
-    nuevoAsunto.value = ''
-    nuevoMensaje.value = ''
-    showNewMsg.value = false
-
-    list()
+    showModal('Mensaje enviado')
   }
+  showMsgModal.value = false
+  nuevoAsunto.value = ""
+  nuevoMensaje.value = ""
+  list()
+}
+
+const updateTxtRespuesta = (str) => {
+  txtRespuesta.value = str
 }
 
 /* ---------- lifecycle ---------- */

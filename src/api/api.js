@@ -22,7 +22,7 @@ const request = async (options = {}) => {
         const response = await fetch(url, {
             method: options.method || 'GET',
             headers: {
-                'Content-Type': 'application/json',
+                'Content-Type': 'application/' + options.type,
                 ...options.headers,
             },
             body: options.method !== 'GET' ? JSON.stringify(options.body) : null,
@@ -36,6 +36,9 @@ const request = async (options = {}) => {
             data = await response.json();
         } else {
             data = await response.blob();
+            if (data.size) {
+                return data
+            }
         }
         if (!data.ok) {
             showModal(data.message)
@@ -51,7 +54,7 @@ const request = async (options = {}) => {
             ...data,
             serverOk:response.ok,
             serverStatus:response.status
-        };
+        }
     } catch (error) {
         throw new Error(error.message || 'Error de conexión. Intenta de nuevo.');
     }
@@ -61,6 +64,7 @@ const request = async (options = {}) => {
 };
 
 export const api = {
-    post: (body, headers = {}) => request({ method: 'POST', body, headers }),
-    get: (params, headers = {}) => request({ method: 'GET', body: params, headers }),
+    post: (body, headers = {}) => request({ type:'json', method: 'POST', body, headers }),
+    get: (params, headers = {}) => request({ type:'json', method: 'GET', body: params, headers }),
+    getPDF: (params, headers = {}) => request({ type: 'pdf', method: 'GET', body: params, headers }),
 };

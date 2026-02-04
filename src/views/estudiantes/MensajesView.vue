@@ -10,46 +10,10 @@
         </button>
       </div>
 
-    <div v-if="showNewMsg" class="col-12 recuadro mt-3">
-
-    <div class="mb-2">
-        <label>Asunto</label>
-        <input
-        type="text"
-        class="form-control"
-        v-model="nuevoAsunto"
-        />
-    </div>
-
-    <div class="mb-2">
-        <label>Mensaje</label>
-        <textarea
-        class="form-control"
-        rows="4"
-        v-model="nuevoMensaje"
-        ></textarea>
-    </div>
-
-    <div class="text-end">
-        <button
-        class="btn btn-secondary me-2"
-        @click="showNewMsg = false"
-        >
-        Cancelar
-        </button>
-
-        <button
-        class="btn btn-success"
-        @click="newMsg(nuevoAsunto, nuevoMensaje)"
-        >
-        Enviar mensaje
-        </button>
-    </div>
-
-    </div>
+    <NuevoMensaje />
 
     <!-- Bandeja -->
-    <div class="col-12" id="msg_lista">
+    <div class="col-12">
       <div
         v-for="(item, k) in arrBandeja"
         :key="item.codHilo"
@@ -59,132 +23,86 @@
       >
         <div class="col-6">{{ item.asunto }}</div>
         <div class="col-6 text-end">{{ item.fechaIngreso }}</div>
+        <Conversacion
+          :arrMensajes="item.mensajes"
+          :respuesta="respuesta"
+          @send-msg="sendMsg(k)"
+          @close-chat="closeChat(k)"
+          @update:respuesta="updateRespuesta"
+        />
       </div>
     </div>
-
-    <!-- Conversación -->
-    <div v-if="showCuerpo" id="msg_cuerpo" class="col-12 recuadro">
-      <div
-        v-for="(m, i) in arrMensajes"
-        :key="i"
-        :class="m.clase"
-        style="white-space: pre-line; margin-bottom: 10px"
-      >
-        {{ m.mensaje }}
-      </div>
-
-      <button class="btn btn-secondary mt-2" @click="ocultarConversacion">
-        Cerrar conversación
-      </button>
-    </div>
-
-    <!-- Respuesta -->
-    <div v-if="showRta" class="col-12 mt-3">
-      <textarea
-        id="tAreaRta"
-        class="form-control"
-        rows="4"
-        v-model="respuesta"
-      />
-      <button class="btn btn-primary mt-2" @click="sendMsg(respuesta)">
-        Enviar respuesta
-      </button>
-    </div>
-
   </div>
 </template>
 <script setup>
 import { ref, onMounted } from 'vue'
 import { api } from '@/api/api'
 import { showModal } from '@/services/uiBus'
+import { Conversacion } from '@/views/shared/Conversacion.vue'
 
 /* ---------- state ---------- */
-const showCuerpo = ref(false)
-const showRta = ref(false)
 const showNewMsg = ref(false)
 const nuevoAsunto = ref('')
 const nuevoMensaje = ref('')
-
-const hilo = ref(null)
-
+const respuesta = ref('')
 const arrBandeja = ref([])
-const arrMensajes = ref([])
-
 /* ---------- methods ---------- */
 const list = async () => {
   arrBandeja.value = []
-  const r = await api.get({
+  const {payload} = await api.get({
     entity: 'mensajes',
     action: 'getAllThreads'
   })
-
-  if (r.ok) {
-    arrBandeja.value = r.payload ?? []
-  }
+  arrBandeja.value = payload ?? []
 }
 
 const getMsg = async (index) => {
-  const item = arrBandeja.value[index]
-  hilo.value = item.codHilo
-  arrMensajes.value = []
-
-  const r = await api.get({
+  if (arrBandeja.value[index].mensajes.length>0) return
+  let codHilo = arrBandeja.value[index].codHilo
+  const {payload} = await api.get({
     entity: 'mensajes',
     action: 'getMessageFromThread',
-    payload: { codHilo: hilo.value }
+    payload: { codHilo }
   })
-
-  if (r.ok) {
-    r.payload.forEach(v => {
-      arrMensajes.value.push({
-        mensaje: v.mensaje,
-        fechaIngreso: v.fechaIngreso,
-        clase:
-          v.codTipo === 0 || v.codTipo === 1
-            ? 'col-10 fondoAlumno text-left'
-            : 'col-10 offset-2 fondoAdmin text-right',
-      })
-    })
-
-    showCuerpo.value = true
-    showRta.value = !r.payload[r.payload.length - 1]?.estado
-  }
+  arrBandeja.value[index].mensajes = payload.map(v => ({
+    mensaje: v.mensaje,
+    fechaIngreso: v.fechaIngreso,
+    clase: v.codTipo 
+  }))
 }
 
-const ocultarConversacion = () => {
-  arrMensajes.value = []
-  hilo.value = null
-  showCuerpo.value = false
-  showRta.value = false
+const closeChat = (k) => {
+  arrBandeja.value[k].mensajes = []
 }
-
-const sendMsg = async (mensaje) => {
-  if (!mensaje) {
-    await showModal('El mensaje no puede estar vacío', 0, 'Error')
+const updateRespuesta = (t) => {
+  respuesta.value = t
+}
+const sendMsg = async (k) => {
+  if (!respuesta.value) {
+    showModal('El mensaje no puede estar vacío')
     return
   }
-
-  const rta = await showModal(
+  const {ok} = await showModal(
     '¿Confirma que desea enviar este mensaje?',
     1,
     'Confirmación'
   )
-
-  if (!rta.ok) return
-
+  if (!ok) return
+  const codHilo = arrBandeja.value[k].codHilo
+  const mensaje = respuesta.value
   const r = await api.post({
     entity: 'mensajes',
     action: 'addMessageToThread',
     payload: {
-      codHilo: hilo.value,
+      codHilo,
       mensaje
     }
   })
 
   if (r.ok) {
     await showModal('Mensaje enviado')
-    ocultarConversacion()
-    list()
+    arrBandeja.value[k].mensajes.push({mensaje, clase:"alumno"})
+    respuesta.value = ''
   }
 }
 

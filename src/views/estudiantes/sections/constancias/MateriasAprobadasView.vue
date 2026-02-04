@@ -5,6 +5,10 @@
     v-model="selectedCarrera"
     @change="listExamenes"
   />
+    <input type="button" 
+        class="btn btn-primary" 
+        @click="getAnalitico"
+        value="Descargar analítico">
   <MateriaList
     v-if="selectedCarrera !== null"
     :materiasCarrera="arrExamenes"

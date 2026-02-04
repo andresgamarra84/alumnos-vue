@@ -49,58 +49,11 @@ export default [
             path: 'config',
             component: () => import('@/views/admin/config/ConfiguracionView.vue')
             },
-            /*
             {
-            path: 'inscrExamenes',
-            component: () =>
-                import('@/views/estudiantes/sections/inscripciones/MesasView.vue')
-            },
-            {
-            path: 'inscrMaterias',
-            component: () =>
-                import('@/views/estudiantes/sections/inscripciones/MateriasView.vue')
-            },
-            {
-            path: 'inscrCarreras',
-            component: () =>
-                import('@/views/estudiantes/sections/inscripciones/CarrerasView.vue')
-            },
-            {
-            path: 'datosPersonales',
-            component: () =>
-                import('@/views/estudiantes/sections/tramites/DatosPersonalesView.vue')
-            },
-            {
-            path: 'reservas',
-            component: () =>
-                import('@/views/estudiantes/sections/tramites/ReservasView.vue')
-            },
-            {
-            path: 'planes_programas',
-            component: () =>
-                import('@/views/shared/PlanesProgramasView.vue')
-            },
-            {
-            path: 'envioDocumentacion',
-            component: () =>
-                import("@/views/estudiantes/sections/tramites/DocumentacionView.vue")
-            },
-            {
-            path: 'trayectoriaAcademica',
-            component: () =>
-                import("@/views/estudiantes/sections/constancias/TrayectoriaAcademicaView.vue")
-            },
-            {
-            path: 'materiasAprobadas',
-            component: () =>
-                import("@/views/estudiantes/sections/constancias/MateriasAprobadasView.vue")
-            },
-            {
-            path: 'novedadesDiarias',
-            component: () =>
-                import("@/views/estudiantes/NovedadesDiariasView.vue")
-            },
-            */
+            path: 'solicitudesConstancias',
+            component: () => import ('@/views/admin/sections/estudiantes/SolicitudesConstanciasView.vue')
+            }
+
         ]
     }
 ]
