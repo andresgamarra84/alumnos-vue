@@ -29,13 +29,16 @@
     arrSolicitudes.value = payload
   }
   const getConstancia = async (key) => {
+    const {ok} = await showModal("¿Desea enviar el aviso por mail al estudiante?", 1)
+    const sendMail = ok
     const fileName = `constancia_${arrSolicitudes.value[key].apellido}.pdf`
     const blob = await api.getPDF({
       entity:"solicitudes",
       action: "getPDFConstancia",
       payload: {
         codigo:arrSolicitudes.value[key].codigo,
-        codAlumno:arrSolicitudes.value[key].codalumno
+        codAlumno:arrSolicitudes.value[key].codalumno,
+        sendMail
       }
     })
     downloadBlob(blob, fileName)

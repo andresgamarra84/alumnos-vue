@@ -52,7 +52,23 @@ export default [
             {
             path: 'solicitudesConstancias',
             component: () => import ('@/views/admin/sections/estudiantes/SolicitudesConstanciasView.vue')
-            }
+            },
+            {
+                path: 'carreras',
+                component: () => import ('@/views/admin/sections/configuracion/CarrerasView.vue')
+            },
+            {
+                path: 'materias',
+                component: () => import ('@/views/admin/sections/configuracion/MateriasView.vue')
+            },
+            {
+                path: 'cursos',
+                component: () => import ('@/views/admin/sections/configuracion/CursosView.vue')
+            },
+            {
+                path: 'planesProgramas',
+                component: () => import('@/views/admin/sections/configuracion/PlanesEstudioView.vue')
+            },
 
         ]
     }

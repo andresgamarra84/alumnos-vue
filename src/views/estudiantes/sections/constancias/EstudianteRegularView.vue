@@ -1,7 +1,6 @@
 <template>
 	<h3 class='h3cabecera'>Solicitud de constancia de estudiante regular</h3>
 	<div class='col-12'>
-		<label>Solicitud de constancia de Alumno regular</label>
 		<select v-model='indiceOpcion' @change='verificar'>
 			<option v-for="(opcion, k) in opciones" :value="k">{{ opcion }}</option>
 		</select>

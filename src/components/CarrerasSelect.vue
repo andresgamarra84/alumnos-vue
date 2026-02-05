@@ -7,6 +7,10 @@ defineProps({
   modelValue: {
     type: [String, Number],
     default: ''
+  },
+  showLabel: {
+    type: Boolean,
+    default: true
   }
 })
 
@@ -20,7 +24,7 @@ function onChange(event) {
 
 <template>
   <div v-if="carreras.length">
-    <label>Carrera:</label>
+    <label v-if="showLabel">Carrera:</label>
     <select :value="modelValue" @change="onChange">
       <option disabled selected value="">Seleccione una carrera</option>
 

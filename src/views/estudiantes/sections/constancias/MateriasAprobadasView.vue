@@ -5,10 +5,13 @@
     v-model="selectedCarrera"
     @change="listExamenes"
   />
-    <input type="button" 
+  <div class="text-end">
+    <button 
         class="btn btn-primary" 
-        @click="getAnalitico"
-        value="Descargar analítico">
+        @click="getAnalitico">
+            Descargar analítico
+    </button>
+  </div>
   <MateriaList
     v-if="selectedCarrera !== null"
     :materiasCarrera="arrExamenes"
@@ -38,6 +41,9 @@ import { api } from '@/api/api'
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import MateriaList from '@/components/MateriaList.vue';
 import ExamenForm from '../../components/ExamenForm.vue';
+import { useFileDownload } from '@/composables/useFileDownload';
+const { downloadBlob } = useFileDownload()
+
 import { showModal } from '@/services/uiBus';
 const arrCarreras = ref([])
 const codAlC = ref(null)
@@ -124,7 +130,25 @@ const listMaterias = async () => {
         action:"getMateriasAll",
     })
     arrMaterias.value = r.payload
+}
 
+const getAnalitico = async () => {
+    const carrera = arrCarreras.value[selectedCarrera.value];
+    let input = await showModal("Lugar de nacimiento:", 2)
+    const lugarNac = input.value
+    input = await showModal("Para presentar ante:", 2)
+    const lugarPresenta = input.value
+    const blob = await api.getPDF({
+        entity: "analiticos",
+        action: "getAnaliticoEstudiante",
+        payload: {
+            codAlC: codAlC.value,
+            codCarrera: carrera.codCarrera,
+            lugarNac,
+            lugarPresenta
+        },
+    })
+    downloadBlob(blob, `analitico.pdf`)
 }
 onMounted(() => {
     listCarreras();
