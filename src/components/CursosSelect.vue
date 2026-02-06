@@ -1,23 +1,22 @@
 <template>
-  <template v-if="materias.length">
-    <label v-if="showLabel">Materia:</label>
+  <template v-if="cursos.length">
+    <label v-if="showLabel">Curso:</label>
     <select :value="modelValue" @change="onChange">
-      <option disabled value="">Seleccione una materia</option>
+      <option disabled value="">Seleccione un curso</option>
 
       <option
-        v-for="item in materias"
+        v-for="item in cursos"
         :key="item.codigo"
         :value="item.codigo"
-        :disabled="item.disabled"
       >
-        {{ item.nombre }} <span v-if="showCiclo"> - ({{ item.codigoasignado }})</span>
+        {{ item.nombre }}
       </option>
     </select>
   </template>
 </template>
 <script setup>
 const props = defineProps({
-  materias: {
+  cursos: {
     type: Array,
     required: true
   },
@@ -29,10 +28,6 @@ const props = defineProps({
     type:Boolean,
     default:true
   },
-  showCiclo:{
-    type:Boolean,
-    default:false
-  }
 })
 
 const emit = defineEmits(['update:modelValue', 'change'])

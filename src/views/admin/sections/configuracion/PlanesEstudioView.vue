@@ -339,25 +339,30 @@ const delMateriaCarrera = async (m) => {
 }
 const addPrograma = async (m) => {
     let input = await showModal("Ingrese el link al programa de la materia",2)
+    if (!input.value) return
     const linkPrograma = input.value
-    await api.post({
+    const {ok} = await api.post({
         entity: "materias",
-        action: "addPrograma",
+        action: "updPrograma",
         payload: {
-            codMC: m.codigo,
+            action:"add",
+            codMateria: m.codMateria,
             linkPrograma
         }
     })
-    m.linkPrograma = linkPrograma
+    if (ok) {
+        m.linkPrograma = linkPrograma
+    }
 }
 const delPrograma = async (m) => {
     const {ok} = await showModal("¿Confirma que desea borrar el link del programa?",1)
     if (!ok) return
     await api.post({
         entity: "materias",
-        action: "delPrograma",
+        action: "updPrograma",
         payload: {
-            codMC: m.codigo
+            action: "delete",
+            codMateria: m.codMateria
         }
     })
     m.linkPrograma = null

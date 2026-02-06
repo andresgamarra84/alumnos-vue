@@ -69,7 +69,10 @@ export default [
                 path: 'planesProgramas',
                 component: () => import('@/views/admin/sections/configuracion/PlanesEstudioView.vue')
             },
-
+            {
+                path: 'mesasExamen',
+                component: () => import ('@/views/admin/sections/MesasExamenView.vue')
+            }
         ]
     }
 ]
