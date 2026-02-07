@@ -55,14 +55,21 @@
         })
         arrCursadas.value = r.payload
     } 
-    const delCursada = async (k) => {
+    const delCursada = async (key) => {
+        const codigo = arrCursadas.value[key].codcursosalumnos
+        if (!codigo) return
         const r = await api.post({
             entity: "calificaciones",
             action: "borrarCursada",
             payload: {
-                codigo: arrCarreras.value[k].codigo
+                codigo
             }
         })
-        if (r.ok) arrCarreras.value[k].splice(k,1)
+        if (r.ok) {
+                arrCursadas.value[key].calificacion1 = null
+                arrCursadas.value[key].calificacion2 = null
+                arrCursadas.value[key].calificacionFinal = null
+                arrCursadas.value[key].deleted = true
+        }
     }
 </script>
