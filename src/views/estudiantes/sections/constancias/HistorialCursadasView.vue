@@ -1,9 +1,9 @@
 <template>
 <h3 class='h3cabecera'>Histórico de cursadas</h3>
 <label>Ciclo lectivo</label>
-<select class='w-100' @change="listAllCursadas()" v-model="anio">
+<select class='w-100' @change="listAllCursadas()" v-model="ciclolectivo">
     <option selected disabled>Seleccione el año...</option>
-    <option v-for="n in 5" :value="n+2021">{{n + 2021}}</option>
+    <option v-for="anio in arrAnios" :value="anio.codciclolectivo">{{anio.anio}}</option>
 </select>
 <div v-for='item in arrAllCursadas' style='padding-bottom:30px;'>
     <h3>{{item.nombreCarrera}} <template v-if='item.instrumento'>({{item.instrumento}})</template></h3>
@@ -19,18 +19,29 @@
 </div>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
 import { api } from '@/api/api';
 const arrAllCursadas = ref([])
-const anio = ref(null)
+const ciclolectivo = ref("")
+const arrAnios = ref([])
+onMounted(async ()=>{
+    arrAnios.value = await getAniosCursados()
+})
+const getAniosCursados = async () => {
+    const {payload} = await api.get({
+        entity: "calificaciones",
+        action: "getAniosCursados",
+    })
+    return payload
+}
 const listAllCursadas = async () => {
     const r = await api.get({
         entity: "calificaciones",
         action: "getHistoricoCursadas",
         payload: {
-            anio : anio.value
+            codciclolectivo: ciclolectivo.value
         }
     })
     arrAllCursadas.value = r.payload
-};
+}
 </script>

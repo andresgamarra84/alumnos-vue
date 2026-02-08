@@ -1,242 +1,255 @@
 <template>
-  <div class="container mt-4">
 
-    <!-- ========================= -->
-    <!-- NUEVA MESA -->
-    <!-- ========================= -->
+  <!-- ========================= -->
+  <!-- NUEVA MESA -->
+  <!-- ========================= -->
 
-    <h3 class="mb-3">Nueva mesa de examen</h3>
+  <h3 class="mb-3">Nueva mesa de examen</h3>
 
-    <!-- Curso -->
-    <div class="mb-3">
-      <CursosSelect
-        :cursos="arrCursos"
-        :show-label="true"
-        @change="getProfesoresCurso"
-        />
-    </div>
+  <!-- Curso -->
+  <div class="mb-3">
+    <CursosSelect
+      :cursos="arrCursos"
+      :show-label="true"
+      @change="getProfesoresCurso"
+      />
+  </div>
 
-    <!-- Profesor + Fecha/Hora -->
-    <div v-if="arrProfCurso.length > 0" class="row g-3 mb-4">
+  <!-- Profesor + Fecha/Hora -->
+  <div v-if="arrProfCurso.length > 0" class="row g-3 mb-4">
 
-      <!-- Profesor -->
-      <div class="col-12 col-md-6">
-        <label class="form-label fw-bold">Profesor:</label>
+    <!-- Profesor -->
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-bold">Profesor:</label>
 
-        <select class="form-select" v-model="formMesa.codProfesor">
-          <option disabled value="">
-            -- Seleccione el docente --
-          </option>
-          <option
-            v-for="p in arrProfCurso"
-            :key="p.codigo"
-            :value="p.codigo"
-          >
-            {{ p.nombre }}
-          </option>
-        </select>
-      </div>
-
-      <!-- Fecha y hora -->
-      <div class="col-12 col-md-6">
-        <label class="form-label fw-bold">Fecha:</label>
-        <input
-          type="date"
-          class="form-control mb-2"
-          v-model="formMesa.fecha"
-        />
-
-        <label class="form-label fw-bold">Hora:</label>
-        <input
-          type="time"
-          class="form-control"
-          v-model="formMesa.hora"
-        />
-      </div>
-
-      <!-- Botón -->
-      <div class="col-12 text-end">
-        <button class="btn btn-primary" @click="addMesa">
-          Agregar mesa
-        </button>
-      </div>
-    </div>
-
-    <hr class="my-4" />
-
-    <!-- ========================= -->
-    <!-- LISTADO -->
-    <!-- ========================= -->
-
-    <h3 class="mb-3">Listado de mesas de examen</h3>
-
-    <!-- Filtros -->
-    <div class="row g-3 mb-3">
-
-      <div class="col-12 col-md-6">
-        <label>Desde:</label>
-        <input
-          type="date"
-          class="form-control"
-          v-model="filtro.desde"
-        />
-      </div>
-
-      <div class="col-12 col-md-6">
-        <label>Hasta:</label>
-        <input
-          type="date"
-          class="form-control"
-          v-model="filtro.hasta"
-        />
-      </div>
-
-      <div class="col-12 text-end">
-        <button class="btn btn-primary" @click="listMesas(0)">
-          Buscar
-        </button>
-      </div>
-    </div>
-
-    <!-- Encabezado -->
-    <div v-if="arrMesas.length > 0" class="row fw-bold text-center border-bottom py-2">
-      <div class="col-md-1" @click="listMesas(0)">Mesa</div>
-      <div class="col-md-2" @click="listMesas(2)">Fecha</div>
-      <div class="col-md-2" @click="listMesas(1)">Curso</div>
-      <div class="col-md-3" @click="listMesas(3)">Presidente</div>
-      <div class="col-md-2">Vocales</div>
-      <div class="col-md-2">Suplentes</div>
-    </div>
-
-    <!-- Mesas -->
-    <div
-      v-for="(mesa, key) in arrMesas"
-      :key="mesa.codigo"
-      class="row text-center border rounded py-3 my-2"
-    >
-      <!-- Código -->
-      <div class="col-md-1">
-        <a href="#" @click.prevent="downloadActa(key)">
-          {{ mesa.codigo }}
-        </a>
-
-        <div class="small mt-1">
-          <span v-if="mesa.cantAlumnos > 0">
-            {{ mesa.cantAlumnos }} inscriptos
-          </span>
-
-          <a
-            v-else
-            href="#"
-            class="text-danger"
-            @click.prevent="borrarMesa(key)"
-          >
-            Borrar
-          </a>
-        </div>
-      </div>
-
-      <!-- Fecha -->
-      <div class="col-md-2">
-        <a href="#" @click.prevent="openEditDate(key)">
-          {{ mesa.fecha }}
-        </a>
-      </div>
-
-      <!-- Curso -->
-      <div class="col-md-2">
-        {{ mesa.nombre }}
-      </div>
-
-      <!-- Presidente -->
-      <div class="col-md-3">
-        <div
-          v-for="a in mesa.autoridades.filter(x => x.codCondicion === 1)"
-          :key="a.codigo"
+      <select class="form-select" v-model="formMesa.codProfesor">
+        <option disabled value="">
+          -- Seleccione el docente --
+        </option>
+        <option
+          v-for="p in arrProfCurso"
+          :key="p.codigo"
+          :value="p.codigo"
         >
-          {{ a.nombreProf }}
-          <a href="#" @click.prevent="borrarProfesor(key, a)">
-            (X)
-          </a>
-        </div>
-
-        <a href="#" @click.prevent="showListProf(key, 1)">
-          Elegir Presidente
-        </a>
-      </div>
-
-      <!-- Vocales -->
-      <div class="col-md-2">
-        <div
-          v-for="a in mesa.autoridades.filter(x => x.codCondicion === 2)"
-          :key="a.codigo"
-        >
-          {{ a.nombreProf }}
-          <a href="#" @click.prevent="borrarProfesor(key, a)">
-            (X)
-          </a>
-        </div>
-
-        <a href="#" @click.prevent="showListProf(key, 2)">
-          Agregar vocal
-        </a>
-      </div>
-
-      <!-- Suplentes -->
-      <div class="col-md-2">
-        <div
-          v-for="a in mesa.autoridades.filter(x => x.codCondicion >= 3)"
-          :key="a.codigo"
-        >
-          {{ a.nombreProf }}
-          <a href="#" @click.prevent="borrarProfesor(key, a)">
-            (X)
-          </a>
-        </div>
-
-        <a href="#" @click.prevent="showListProf(key, 3)">
-          Agregar suplente
-        </a>
-      </div>
-
-      <!-- Tipos materia (bitmask) -->
-      <div class="col-12 mt-3 text-start">
-        <label class="me-3">
-          <input
-            type="checkbox"
-            :checked="mesa.tipoMateria & 1"
-            @change="toggleTipoMateria(key, 1)"
-          />
-          Normal
-        </label>
-
-        <label class="me-3">
-          <input
-            type="checkbox"
-            :checked="mesa.tipoMateria & 2"
-            @change="toggleTipoMateria(key, 2)"
-          />
-          Instrumento
-        </label>
-
-        <label class="me-3">
-          <input
-            type="checkbox"
-            :checked="mesa.tipoMateria & 4"
-            @change="toggleTipoMateria(key, 4)"
-          />
-          Armónico
-        </label>
-      </div>
+          {{ p.nombre }}
+        </option>
+      </select>
     </div>
 
-    <!-- Descargar todas -->
-    <div v-if="arrMesas.length > 0" class="text-end mt-3">
-      <button class="btn btn-outline-primary" @click="downloadActaAll">
-        Descargar actas
+    <!-- Fecha y hora -->
+    <div class="col-12 col-md-6">
+      <label class="form-label fw-bold">Fecha:</label>
+      <input
+        type="date"
+        class="form-control mb-2"
+        v-model="formMesa.fecha"
+      />
+
+      <label class="form-label fw-bold">Hora:</label>
+      <input
+        type="time"
+        class="form-control"
+        v-model="formMesa.hora"
+      />
+    </div>
+
+    <!-- Botón -->
+    <div class="col-12 text-end">
+      <button class="btn btn-primary" @click="addMesa">
+        Agregar mesa
       </button>
     </div>
+  </div>
 
+  <hr class="my-4" />
+
+  <!-- ========================= -->
+  <!-- LISTADO -->
+  <!-- ========================= -->
+
+  <h3 class="mb-3">Listado de mesas de examen</h3>
+
+  <!-- Filtros -->
+  <div class="row g-3 mb-3">
+
+    <div class="col-12 col-md-6">
+      <label>Desde:</label>
+      <input
+        type="date"
+        class="form-control"
+        v-model="filtro.desde"
+      />
+    </div>
+
+    <div class="col-12 col-md-6">
+      <label>Hasta:</label>
+      <input
+        type="date"
+        class="form-control"
+        v-model="filtro.hasta"
+      />
+    </div>
+
+    <div class="col-12 text-end">
+      <button class="btn btn-primary" @click="listMesas(0)">
+        Buscar
+      </button>
+    </div>
+  </div>
+
+  <!-- Encabezado -->
+  <div v-if="arrMesas.length > 0" class="row fw-bold text-center border-bottom py-2">
+    <div class="col-md-1" @click="listMesas(0)">Mesa</div>
+    <div class="col-md-2" @click="listMesas(2)">Fecha</div>
+    <div class="col-md-2" @click="listMesas(1)">Curso</div>
+    <div class="col-md-3" @click="listMesas(3)">Presidente</div>
+    <div class="col-md-2">Vocales</div>
+    <div class="col-md-2">Suplentes/Pianistas</div>
+  </div>
+
+  <!-- Mesas -->
+  <div
+    v-for="(mesa, key) in arrMesas"
+    :key="mesa.codigo"
+    class="row text-center border rounded py-3 my-2"
+  >
+    <!-- Código -->
+    <div class="col-md-1">
+      <a href="#" @click.prevent="downloadActa(key)">
+        {{ mesa.codigo }}
+      </a>
+
+      <div class="small mt-1">
+        <span v-if="mesa.cantAlumnos > 0">
+          {{ mesa.cantAlumnos }} inscriptos
+        </span>
+
+        <a
+          v-else
+          href="#"
+          class="text-danger"
+          @click.prevent="borrarMesa(key)"
+        >
+          Borrar
+        </a>
+      </div>
+    </div>
+
+    <!-- Fecha -->
+    <div class="col-md-2">
+      <a href="#" @click.prevent="openEditDate(key)">
+        {{ mesa.fecha }}
+      </a>
+    </div>
+
+    <!-- Curso -->
+    <div class="col-md-2">
+      {{ mesa.nombre }}
+    </div>
+
+    <!-- Presidente -->
+    <div class="col-md-3">
+      <div
+        v-for="a in mesa.autoridades.filter(x => x.tipoAutoridad === 'Presidente')"
+        :key="a.codigo"
+      >
+        {{ a.nombreProf }}
+        <a href="#" @click.prevent="borrarProfesor(key, a)">
+          (X)
+        </a>
+      </div>
+
+      <a @click="showListProf(key, 'Presidente')">
+        Elegir Presidente
+      </a>
+    </div>
+
+    <!-- Vocales -->
+    <div class="col-md-2">
+      <div
+        v-for="a in mesa.autoridades.filter(x => x.tipoAutoridad === 'Vocal')"
+        :key="a.codigo"
+      >
+        {{ a.nombreProf }}
+        <a href="#" @click.prevent="borrarProfesor(key, a)">
+          (X)
+        </a>
+      </div>
+
+      <a href="#" @click.prevent="showListProf(key, 'Vocal')">
+        Agregar vocal
+      </a>
+    </div>
+
+    <!-- Suplentes -->
+    <div class="col-md-2">
+      <div
+        v-for="a in mesa.autoridades.filter(x => ['Suplente', 'Pianista'].includes(x.tipoAutoridad))"
+        :key="a.codigo"
+      >
+        {{ a.nombreProf }}
+        <a href="#" @click.prevent="borrarProfesor(key, a)">
+          (X)
+        </a>
+      </div>
+
+      <a href="#" @click.prevent="showListProf(key, 'Suplente')">
+        Agregar suplente
+      </a>
+      <a href="#" @click.prevent="showListProf(key, 'Pianista')">
+        Agregar pianista
+      </a>
+    </div>
+
+    <!-- Tipos materia (bitmask) -->
+    <div class="col-12 mt-3 text-start">
+      <label class="me-3">
+        <input
+          type="checkbox"
+          :checked="mesa.tipoMateria & 1"
+          @change="toggleTipoMateria(key, 1)"
+        />
+        Normal
+      </label>
+
+      <label class="me-3">
+        <input
+          type="checkbox"
+          :checked="mesa.tipoMateria & 2"
+          @change="toggleTipoMateria(key, 2)"
+        />
+        Instrumento
+      </label>
+
+      <label class="me-3">
+        <input
+          type="checkbox"
+          :checked="mesa.tipoMateria & 4"
+          @change="toggleTipoMateria(key, 4)"
+        />
+        Armónico
+      </label>
+    </div>
+  </div>
+
+  <!-- Descargar todas -->
+  <div v-if="arrMesas.length > 0" class="text-end mt-3">
+    <button class="btn btn-outline-primary" @click="downloadActaAll">
+      Descargar actas
+    </button>
+  </div>
+  <!-- MODAL DE SELECCION DE PROFESOR PARA MESA -->
+  <div v-if="showModalProf" class="modal-backdrop-custom">
+    <div class="modal-card">
+      <label>Docente:</label>
+      <select v-model="selectedProf">
+        <option :value="null" disabled>Seleccione un docente...</option>
+        <option v-for="profesor in arrProf" :value="profesor.codigo">{{ profesor.nombre }}</option>
+      </select>
+      <button class='btn btn-primary' @click="closeModalProf">Cancelar</button>
+      <button class='btn' @click="addProf">Agregar docente</button>
+    </div>
+    
   </div>
 </template>
 <script setup>
@@ -252,7 +265,10 @@ const arrCursos = ref([])
 const arrProf = ref([])
 const arrProfCurso = ref([])
 const arrMesas = ref([])
-
+const showModalProf = ref(false)
+const selectedProf = ref("")
+const arrMesaKey = ref(null)
+const tipoAutoridadProf = ref(null)
 /* FORM NUEVA MESA */
 const formMesa = ref({
   codCurso: "",
@@ -275,7 +291,7 @@ onMounted(() => {
 })
 const getCursos = async () => {
     const { payload } = await api.get({
-        entity: "cursoshorarios",
+        entity: "planillahorarios",
         action: "getCursosVigentes",
     })
     arrCursos.value = payload
@@ -289,8 +305,8 @@ const getProfesores = async () => {
 }
 const getProfesoresCurso = async (codCurso) => {
     const { payload } = await api.get({
-        entity: "cursoshorarios",
-        action: "getProfesoresCurso",
+        entity: "planillahorarios",
+        action: "getProfesoresByCurso",
         payload: { codCurso },
     })
     arrProfCurso.value = payload
@@ -306,7 +322,6 @@ const  addMesa = async () => {
 }
 
 const listMesas = async (criterio=0) => {
-  console.log(criterio)
   filtro.value.criterio = criterio
   const {payload} = await api.get({
     entity: "mesasexamen",
@@ -357,34 +372,50 @@ const downloadActaAll = async () => {
   })
   downloadPDF(blob, "ActasMesas.pdf")
 }
-/*
-function showListProf(key, condicion) {
-  console.log("Elegir prof:", key, condicion)
-  this.indexArr=key;
-			this.condicionProf=i;
-			if (this.indexId) this.indexId.style.visibility = "visible";
-			this.indexId = event.target;
-			this.indexId.style.visibility='hidden';
-			document.getElementById("selProf").selectedIndex = 0;
-			this.indexId.parentElement.appendChild(document.getElementById("selProf"));
-			this.showList=true;
+
+const showListProf = (key, tipo) =>{
+  showModalProf.value = true
+  arrMesaKey.value = key
+  tipoAutoridadProf.value = tipo
 }
 
-function borrarProfesor(key, autoridad) {
+const addProf = async () => {
+    const mesa = arrMesas.value[arrMesaKey.value]
+		const r = await api.post({
+      entity:"mesasexamen",
+      action:"addProfesor",
+      payload: {
+        codMesa:mesa.codigo,
+        codProfesor:selectedProf.value,
+        tipoAutoridadProf:tipoAutoridadProf.value,
+      }
+    })
+    if (r.ok) mesa.autoridades = r.payload
+    closeModalProf()
+}
+const closeModalProf = () => {
+  arrMesaKey.value = null
+  tipoAutoridadProf.value = null
+  selectedProf.value = null
+  showModalProf.value = false
+}
+const borrarProfesor= async (key, autoridad) => {
   console.log("Borrar profesor:", key, autoridad)
-  modal.show("¿Confirma que desea borrar este profesor de la mesa de exámen?",1).then(r=>{
-				if (r) {
-					let d={
-						codMesaAutoridad:this.arrMesas[key].autoridades[i].codigo,
-					};
-					apiData.setData("mesas",1,d);
-					api.post().then(r=>{
-						if (api.r.ok) this.arrMesas[key].autoridades.splice(i, 1);
-					});
-				}	
-			});
+  const mesa = arrMesas.value[key]
+  const {ok} = await showModal("¿Confirma que desea borrar este profesor de la mesa de examen?",1)
+  if (ok) {
+    const r = await api.post({
+      entity:"mesasexamen",
+      action:"borrarProfesor",
+      payload:{
+        codMesa:mesa.codigo,
+        codMesaAutoridad: autoridad.codigo
+      }
+    })
+    mesa.autoridades = r.payload
+  }
 }
-
+/*
 const openEditDate = async (key) => {
   console.log("Editar fecha mesa:", key)
   if (document.getElementById("newDate").value == "" || document.getElementById("newTime").value == ""){
@@ -427,28 +458,5 @@ const  toggleTipoMateria = async (key, bit) => {
 }
 
 
-		addProf:function(){
-			select = event.target;
-			let d = {
-				"codMesa":this.arrMesas[this.indexArr].datosMesa.codigo,
-				"codProfesor":select.value,
-				"condicion":this.condicionProf,
-			};
-			apiData.setData("mesas",2,d);
-			api.post().then(r=>{
-				if (api.r.ok) {
-					let i = this.condicionProf - 1;
-					this.arrMesas[this.indexArr].autoridades.push({
-						"codigo":r.payload, 
-						"nombreProf":select.options[select.selectedIndex].text,
-						"codCondicion":this.condicionProf,
-					});
-					this.showList = false;
-					select.selectedIndex = 0;
-				}
-				else modal.show("No se pudo incorporar el docente a la mesa");
-				this.indexId.style.visibility = 'visible';
-				this.indexId = false;
-			});
-		},*/
+		*/
 </script>

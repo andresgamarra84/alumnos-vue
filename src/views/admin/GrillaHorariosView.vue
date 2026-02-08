@@ -280,11 +280,12 @@ const updGrilla = async () => {
   const dia = diaSeleccionado.value
   const sede = sedeSeleccionada.value
   grillaHorarios.value = await getGrilla(dia, sede)
+  console.log(grillaHorarios.value)
 }
 const getGrilla = async () => {
   const r = await api.get({
     entity:"cursoshorarios",
-    action: "getCursosHorarios",
+    action: "getGrilla",
     payload: {
       dia: diaSeleccionado.value,
       sede: sedeSeleccionada.value
@@ -406,7 +407,7 @@ const saveCurso = async () => {
     c.nombreProf = profesor.nombre
     c.codCH = curso.codCH 
     const r = await api.post({
-      entity: "cursoshorarios",
+      entity: "planillahorarios",
       action: "updPlHorarios",
       payload: c
     })

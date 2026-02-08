@@ -402,25 +402,5 @@ const updateMateriaCarrera = async (m) => {
     })
 }
 </script>
-<style>
-.modal-backdrop-custom {
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
 
-  display: flex;
-  justify-content: center;
-  align-items: center;
-
-  z-index: 2000;
-}
-
-.modal-card {
-  background: white;
-  padding: 25px;
-  border-radius: 15px;
-  width: 500px;
-  max-width: 95%;
-}
-</style>
 
