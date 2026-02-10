@@ -49,7 +49,7 @@
             v-if="showData"
             :item="item"
             :area="area"
-            @delete="emit('del-user', item.codigo)"
+            @delete="emit('del-user')"
             />
         </transition>
     </div>

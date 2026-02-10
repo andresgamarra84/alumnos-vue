@@ -16,13 +16,13 @@ const emit = defineEmits(['delete'])
 
 const isEstudiante = computed(() => props.area === 'estudiantes')
 
-const confirmDelete = () => {
+const confirmDelete = async () => {
   const msg = isEstudiante.value
     ? 'Se borrarán TODOS los datos del alumno. ¿Continuar?'
     : '¿Confirma que desea borrar este profesor del listado?'
-
-  if (showModal(msg,1)) {
-    emit('delete', props.item)
+  const {ok} = await showModal(msg,1)
+  if (ok) {
+    emit('delete')
   }
 }
 </script>

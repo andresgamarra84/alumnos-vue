@@ -1,16 +1,15 @@
 <template>
-    <div id="horariolibre">
   <div class="row">
     <h3>Carga de vacantes de Instrumento / Instrumento Armónico</h3>
 
     <div class="d-flex justify-content-around">
       <label>
-        <input type="radio" v-model="tipoCurso" :value="2" />
+        <input type="radio" v-model="tipoMateria" :value="instrumento" />
         Instrumento
       </label>
 
       <label>
-        <input type="radio" v-model="tipoCurso" :value="4" />
+        <input type="radio" v-model="tipoMateria" :value="armonico" />
         Instrumento Armónico
       </label>
     </div>
@@ -75,7 +74,7 @@
         <label>Cupo:</label>
         <select v-model="cupo">
           <option
-            v-if="tipoCurso === 2"
+            v-if="tipoMateria === 2"
             v-for="n in 4"
             :key="n"
             :value="n * 3"
@@ -84,7 +83,7 @@
           </option>
 
           <option
-            v-if="tipoCurso === 4"
+            v-if="tipoMateria === 4"
             v-for="n in 3"
             :key="n"
             :value="n * 4"
@@ -181,54 +180,55 @@
       </div>
     </div>
   </div>
-</div>
 </template>
 <script setup>
-import { ref, watch, onMounted } from "vue";
-import { api } from "@/api/api";
-import { showModal } from "@/services/uiBus";
+import { ref, watch, onMounted } from "vue"
+import { api } from "@/api/api"
+import { showModal } from "@/services/uiBus"
 
 /* ===============================
    STATE
 ================================= */
 
-const tipoCurso = ref(2);
+const tipoMateria = ref(2)
 
-const selectedProf = ref("");
-const selectedCursoIndex = ref("");
+const selectedProf = ref("")
+const selectedCursoIndex = ref("")
 
-const codPlHorarios = ref(0);
+const codPlHorarios = ref(0)
 
-const arrProfesores = ref([]);
-const arrCursos = ref([]);
-const arrHorarios = ref([]);
+const arrProfesores = ref([])
+const arrCursos = ref([])
+const arrHorarios = ref([])
 
-const arrHoras = ref([]);
-const arrSpans = ref([]);
+const arrHoras = ref([])
+const arrSpans = ref([])
 
-const desde = ref(0);
-const hasta = ref(0);
+const desde = ref(0)
+const hasta = ref(0)
 
-const cupo = ref("");
-const destino = ref("0");
+const cupo = ref("")
+const destino = ref("0")
 
 /* ===============================
    HELPERS
 ================================= */
 
-function getHoras(fromTo) {
-  arrHoras.value = [];
+const getHoras = (fromTo) => {
+  arrHoras.value = []
 
-  let inicio = fromTo[0];
-  let bloques = fromTo[1];
+  const inicio = fromTo[0]
+  const bloques = fromTo[1]
 
-  for (let i = inicio; i <= inicio + bloques; i++) {
-    let segundos = i * 1800 + 8 * 3600;
+  let i = inicio
+  while (i <= inicio + bloques) {
+    const segundos = i * 1800 + 8 * 3600
 
-    let h = Math.floor(segundos / 3600);
-    let m = Math.floor(((segundos / 3600) - h) * 60);
+    const h = Math.floor(segundos / 3600)
+    const m = Math.floor(((segundos / 3600) - h) * 60)
 
-    arrHoras.value.push(`${h}:${m < 10 ? "0" + m : m}`);
+    arrHoras.value.push(`${h}:${m < 10 ? "0" + m : m}`)
+    i += 1
   }
 }
 
@@ -236,128 +236,133 @@ function getHoras(fromTo) {
    API CALLS
 ================================= */
 
-function getProfesores() {
-  arrProfesores.value = [];
-  arrCursos.value = [];
-  arrHorarios.value = [];
-  const {payload} = api.get({
-    entity: 'profesores',
-    action: 'getProfesores',
+const getProfesores = async () => {
+  const r = await api.get({
+    entity: "planillahorarios",
+    action: "getProfesoresByTipoCurso",
+    payload: {
+      tipoMateria: tipoMateria.value,
+    },
   })
-  apiData.setData("horarios", 9, {
-    tipoMateria: tipoCurso.value,
-  });
-
-  api.get().then((r) => {
-    r.payload.forEach((v) => arrProfesores.value.push(v));
-  });
+  arrProfesores.value = r.payload
 }
 
-function getCursos() {
-  arrCursos.value = [];
-  arrHorarios.value = [];
+const getCursos = async () => {
+  arrCursos.value = []
+  arrHorarios.value = []
 
   arrSpans.value =
-    tipoCurso.value === 'instrumento'
+    tipoMateria.value === "instrumento"
       ? [[1, 15], [2, 30], [3, 45], [4, 60]]
-      : [[1, 20], [2, 40], [3, 60]];
+      : [[1, 20], [2, 40], [3, 60]]
 
-  apiData.setData("horarios", 5, {
-    tipoMateria: tipoCurso.value,
-    codProfesor: selectedProf.value,
-  });
+  const r = await api.get({
+    entity: "",
+    action: "",
+    payload: {
+      tipoMateria: tipoMateria.value,
+      codProfesor: selectedProf.value,
+    },
+  })
 
-  api.get().then((r) => {
-    arrCursos.value = r.payload.cursos;
-    arrHorarios.value = r.payload.horarios;
-  });
+  arrCursos.value = r.payload.cursos
+  arrHorarios.value = r.payload.horarios
 }
 
-function setCurso() {
-  const curso = arrCursos.value[selectedCursoIndex.value];
+const setCurso = () => {
+  const curso = arrCursos.value[selectedCursoIndex.value]
 
-  codPlHorarios.value = curso.codigo;
-  getHoras(curso.fromTo);
+  codPlHorarios.value = curso.codigo
+  getHoras(curso.fromTo)
 }
 
 /* ===============================
    CRUD HORARIOS
 ================================= */
 
-function addHorario() {
-  const curso = arrCursos.value[selectedCursoIndex.value];
+const addHorario = async () => {
+  const curso = arrCursos.value[selectedCursoIndex.value]
 
-  let inicio = curso.fromTo[0] * 2;
+  const inicio = curso.fromTo[0] * 2
 
-  let posicion = {
+  const posicion = {
     l: desde.value * 2 + inicio,
     w: hasta.value * 2 + inicio,
-  };
+  }
 
-  apiData.setData("horarios", 4, {
-    codPlHorarios: codPlHorarios.value,
-    posicion,
-    cupo: cupo.value,
-    destino: destino.value,
-  });
+  const r = await api.post({
+    entity: "",
+    action: "",
+    payload: {
+      codPlHorarios: codPlHorarios.value,
+      posicion,
+      cupo: cupo.value,
+      destino: destino.value,
+    },
+  })
 
-  api.post().then(() => {
-    if (api.r.ok) globalMsg("Datos actualizados", true);
-  });
+  if (r.ok) showModal("Datos actualizados", 0)
 }
 
-function updHorario(key, k, clave, j, ev) {
-  const idx = ev.target.value;
-  const span = arrSpans.value[idx];
+const updHorario = async (key, k, clave, j, ev) => {
+  const idx = ev.target.value
+  const span = arrSpans.value[idx]
 
   const codigo =
-    arrHorarios.value[key].instrumentos[k].franja[clave][2][j].codigo;
+    arrHorarios.value[key].instrumentos[k].franja[clave][2][j].codigo
 
-  apiData.setData("horarios", 9, {
-    nuevoCupo: span[0],
-    codigo,
-  });
+  const r = await api.post({
+    entity: "",
+    action: "",
+    payload: {
+      nuevoCupo: span[0],
+      codigo,
+    },
+  })
 
-  api.post().then(() => {
-    if (api.r.ok) {
-      arrHorarios.value[key].instrumentos[k].franja[clave][2][j].cupo = span;
-    }
-  });
+  if (r.ok) {
+    arrHorarios.value[key].instrumentos[k].franja[clave][2][j].cupo = span
+  }
 }
 
-function delHorario(key, k, clave, j) {
-  if (!confirm("¿Confirma que desea borrar este horario?")) return;
+const delHorario = async (key, k, clave, j) => {
+  const confirm = await showModal("¿Confirma que desea borrar este horario?", 1)
+  if (!confirm) return
 
   const codigo =
-    arrHorarios.value[key].instrumentos[k].franja[clave][2][j].codigo;
+    arrHorarios.value[key].instrumentos[k].franja[clave][2][j].codigo
 
-  apiData.setData("horarios", 5, { codigo });
+  const r = await api.post({
+    entity: "",
+    action: "",
+    payload: { codigo },
+  })
 
-  api.post().then(() => {
-    if (api.r.ok) {
-      arrHorarios.value[key].instrumentos[k].franja[clave][2].splice(j, 1);
-    }
-  });
+  if (r.ok) {
+    arrHorarios.value[key].instrumentos[k].franja[clave][2].splice(j, 1)
+  }
 }
 
-function showNames(key, k, clave, j) {
-  console.log(arrHorarios.value[key].instrumentos[k].franja[clave][2][j]);
+const showNames = (key, k, clave, j) => {
+  console.log(arrHorarios.value[key].instrumentos[k].franja[clave][2][j])
 }
 
 /* ===============================
    WATCHERS
 ================================= */
 
-watch(tipoCurso, () => {
-  selectedProf.value = "";
-  getProfesores();
-});
+watch(tipoMateria, () => {
+  selectedProf.value = ""
+  getProfesores()
+})
 
 /* ===============================
    INIT
 ================================= */
 
 onMounted(() => {
-  getProfesores();
-});
+  getProfesores()
+})
 </script>
+
+

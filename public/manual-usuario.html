@@ -1,0 +1,346 @@
+﻿<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Manual de Usuario - Sistema de Alumnos</title>
+  <style>
+    :root {
+      --bg: #f8f7f3;
+      --text: #1f1f1f;
+      --muted: #4d4d4d;
+      --accent: #0b5d59;
+      --card: #ffffff;
+      --border: #e3e1db;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Georgia", "Times New Roman", serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.5;
+    }
+    header {
+      padding: 32px 20px 16px;
+      border-bottom: 1px solid var(--border);
+      background: linear-gradient(180deg, #f1efe9 0%, #f8f7f3 100%);
+    }
+    header h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      letter-spacing: 0.3px;
+    }
+    header p {
+      margin: 0;
+      color: var(--muted);
+    }
+    main {
+      max-width: 980px;
+      margin: 0 auto;
+      padding: 24px 20px 60px;
+    }
+    nav {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 24px;
+    }
+    nav a {
+      color: var(--accent);
+      text-decoration: none;
+      margin-right: 14px;
+      display: inline-block;
+      padding: 6px 0;
+    }
+    section {
+      margin-bottom: 28px;
+      padding: 18px 18px 10px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    h2, h3 {
+      margin: 0 0 10px;
+    }
+    h2 { font-size: 22px; }
+    h3 { font-size: 18px; }
+    .muted { color: var(--muted); }
+    .tag {
+      display: inline-block;
+      font-size: 12px;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+      color: var(--accent);
+      border: 1px solid var(--accent);
+      padding: 2px 6px;
+      border-radius: 999px;
+      margin-right: 6px;
+    }
+    code {
+      background: #eee;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    ul, ol { margin: 8px 0 16px; padding-left: 20px; }
+    li { margin-bottom: 6px; }
+    .note {
+      border-left: 4px solid var(--accent);
+      padding: 8px 12px;
+      background: #f0f7f6;
+      margin: 10px 0 16px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Manual de Usuario - Sistema de Alumnos</h1>
+    <p>Guia operativa por rol: Administrador, Docentes y Estudiantes.</p>
+  </header>
+  <main>
+    <nav>
+      <a href="#general">General</a>
+      <a href="#admin">Administrador</a>
+      <a href="#docentes">Docentes</a>
+      <a href="#estudiantes">Estudiantes</a>
+    </nav>
+
+    <section id="general">
+      <h2>General</h2>
+      <p>
+        El sistema esta organizado por roles y cada rol tiene su propio panel.
+        El acceso se realiza desde rutas separadas.
+      </p>
+      <ul>
+        <li>Administrador: <code>/admin/login</code></li>
+        <li>Docentes: <code>/docentes/login</code></li>
+        <li>Estudiantes: <code>/estudiantes/login</code></li>
+      </ul>
+      <div class="note">
+        Algunos tramites y secciones se habilitan o deshabilitan desde la configuracion del sistema.
+      </div>
+    </section>
+
+    <section id="admin">
+      <h2><span class="tag">Rol</span>Administrador</h2>
+
+      <h3>Inicio</h3>
+      <ul>
+        <li>Ver notificaciones del sistema.</li>
+        <li>Consultar tramites habilitados para estudiantes (segun configuracion).</li>
+        <li>Activar o desactivar modo oscuro.</li>
+      </ul>
+
+      <h3>Busqueda de estudiantes y docentes</h3>
+      <ul>
+        <li>Buscar por apellido/DNI o por email.</li>
+        <li>En estudiantes, filtrar solo regulares.</li>
+        <li>Abrir panel del usuario encontrado.</li>
+        <li>Enviar mensajes desde la pantalla de resultados.</li>
+      </ul>
+
+      <h3>Grilla de horarios de cursos</h3>
+      <ul>
+        <li>Filtrar por dia, sede y profesor.</li>
+        <li>Ver cursos ubicados por aula y franja horaria.</li>
+        <li>Arrastrar cursos para mover horario y confirmar cambios.</li>
+        <li>Redimensionar cursos para cambiar la duracion y confirmar.</li>
+        <li>Editar curso: curso, profesor, comision, cupo, horarios, flags, tipo de materia, instrumento, color y observaciones.</li>
+      </ul>
+
+      <h3>Mensajes</h3>
+      <ul>
+        <li>Ver hilos de conversacion y abrir mensajes.</li>
+        <li>Responder mensajes y crear nuevos hilos.</li>
+      </ul>
+
+      <h3>Configuracion</h3>
+      <ul>
+        <li>Habilitar tramites del panel de estudiantes: reservas, inscripciones, solicitudes y constancias.</li>
+        <li>Habilitar carga de notas del panel de docentes (1er y 2do cuatrimestre).</li>
+        <li>Configurar preinscripciones y fechas minimas de nacimiento.</li>
+        <li>Guardar cambios de configuracion.</li>
+      </ul>
+
+      <h3>Carreras</h3>
+      <ul>
+        <li>Crear nuevas carreras.</li>
+        <li>Editar datos: codigo, nombre, nombre corto, resolucion del plan, titulo.</li>
+        <li>Definir tipo (pregrado, grado, extension, postitulo).</li>
+        <li>Marcar si habilita docencia o requiere titulo secundario.</li>
+        <li>Borrar carrera si corresponde.</li>
+      </ul>
+
+      <h3>Materias</h3>
+      <ul>
+        <li>Crear y editar materias.</li>
+        <li>Definir ciclo, nombre, nombre corto, nombre para titulo/analitico.</li>
+        <li>Definir cantidad de materias asociadas.</li>
+        <li>Cargar link de programa.</li>
+        <li>Eliminar materias.</li>
+      </ul>
+
+      <h3>Cursos</h3>
+      <ul>
+        <li>Crear cursos con nombre y nombre corto.</li>
+        <li>Editar cursos existentes.</li>
+        <li>Eliminar cursos.</li>
+      </ul>
+
+      <h3>Planes de estudio y correlativas</h3>
+      <ul>
+        <li>Seleccionar una carrera para ver sus materias.</li>
+        <li>Agregar materias a la carrera con anio, orden, tipo y cupo si aplica.</li>
+        <li>Agregar o quitar correlativas.</li>
+        <li>Cargar o borrar el link del programa.</li>
+        <li>Marcar si la materia es conceptual o promocional.</li>
+      </ul>
+
+      <h3>Mesas de examen</h3>
+      <ul>
+        <li>Crear mesa seleccionando curso, docente, fecha y hora.</li>
+        <li>Listar mesas por rango de fechas y ordenar por columnas.</li>
+        <li>Asignar autoridades: presidente, vocales, suplentes y pianistas.</li>
+        <li>Eliminar mesas sin inscriptos.</li>
+        <li>Descargar actas individuales o masivas.</li>
+      </ul>
+
+      <h3>Solicitudes de constancia</h3>
+      <ul>
+        <li>Ver solicitudes de constancias de estudiantes.</li>
+        <li>Ver inscripciones del alumno.</li>
+        <li>Descargar constancia y enviar aviso por email.</li>
+      </ul>
+    </section>
+
+    <section id="docentes">
+      <h2><span class="tag">Rol</span>Docentes</h2>
+
+      <h3>Inicio</h3>
+      <ul>
+        <li>Ver cursos asignados con horarios, aula y sede.</li>
+        <li>Ver reservas de vacante asociadas a sus cursos.</li>
+        <li>Copiar correos de estudiantes con reservas.</li>
+      </ul>
+
+      <h3>Listado de alumnos inscriptos</h3>
+      <ul>
+        <li>Visualizar alumnos por curso.</li>
+      </ul>
+
+      <h3>Calificacion de cursada</h3>
+      <ul>
+        <li>Seleccionar ciclo lectivo y curso.</li>
+        <li>Listar estudiantes a calificar.</li>
+        <li>Cargar o actualizar calificaciones por cuatrimestre.</li>
+      </ul>
+
+      <h3>Planes y programas</h3>
+      <ul>
+        <li>Consultar materias por carrera.</li>
+        <li>Ver correlativas y descargar programas.</li>
+      </ul>
+    </section>
+
+    <section id="estudiantes">
+      <h2><span class="tag">Rol</span>Estudiantes</h2>
+
+      <h3>Inicio</h3>
+      <ul>
+        <li>Ver notificaciones y enlaces informativos.</li>
+        <li>Ver tramites habilitados segun configuracion.</li>
+        <li>Consultar inscripciones vigentes a materias y examenes.</li>
+        <li>Consultar reservas de vacante y solicitudes realizadas.</li>
+        <li>Dar de baja o recuperar inscripciones y reservas cuando este habilitado.</li>
+      </ul>
+
+      <h3>Mensajes</h3>
+      <ul>
+        <li>Ver bandeja de hilos.</li>
+        <li>Responder mensajes o crear un nuevo hilo.</li>
+      </ul>
+
+      <h3>Inscripciones a materias</h3>
+      <ul>
+        <li>Seleccionar carrera y materia.</li>
+        <li>Elegir curso disponible y confirmar inscripcion.</li>
+        <li>Recibir aviso si la inscripcion es condicional por correlativas.</li>
+      </ul>
+
+      <h3>Inscripciones a examenes</h3>
+      <ul>
+        <li>Seleccionar carrera, materia y mesa disponible.</li>
+        <li>Elegir condicion de examen y confirmar.</li>
+      </ul>
+
+      <h3>Inscripcion a carreras</h3>
+      <ul>
+        <li>Seleccionar carrera e instrumento (si aplica).</li>
+        <li>Indicar lista de espera o condicional.</li>
+        <li>Confirmar inscripcion y gestionar estado (bloquear, desbloquear, borrar).</li>
+      </ul>
+
+      <h3>Datos personales</h3>
+      <ul>
+        <li>Actualizar datos personales, domicilio y contacto.</li>
+        <li>Registrar datos de salud y tutores si corresponde.</li>
+        <li>Solicitar blanqueo de clave si esta habilitado.</li>
+      </ul>
+
+      <h3>Reserva de vacante</h3>
+      <ul>
+        <li>Seleccionar carrera para reserva.</li>
+        <li>Solicitar cambio de profesor o instrumento si corresponde.</li>
+        <li>Confirmar reserva y ver estado en el inicio.</li>
+      </ul>
+
+      <h3>Envio de documentacion</h3>
+      <ul>
+        <li>Ver documentos enviados.</li>
+        <li>Subir un nuevo documento con descripcion.</li>
+      </ul>
+
+      <h3>Planes de estudio y programas</h3>
+      <ul>
+        <li>Consultar materias y correlativas por carrera.</li>
+        <li>Descargar programas cuando estan disponibles.</li>
+      </ul>
+
+      <h3>Trayectoria academica</h3>
+      <ul>
+        <li>Ver examenes acreditados por carrera.</li>
+      </ul>
+
+      <h3>Materias aprobadas y analitico</h3>
+      <ul>
+        <li>Ver materias aprobadas por carrera.</li>
+        <li>Descargar analitico ingresando lugar de nacimiento y destino.</li>
+      </ul>
+
+      <h3>Constancia de estudiante regular</h3>
+      <ul>
+        <li>Seleccionar destinatario y completar datos si aplica.</li>
+        <li>Confirmar solicitud y esperar aviso por email.</li>
+      </ul>
+
+      <h3>Historico de cursadas</h3>
+      <ul>
+        <li>Seleccionar ciclo lectivo para ver cursadas pasadas.</li>
+      </ul>
+
+      <h3>Notas de cursada</h3>
+      <ul>
+        <li>Seleccionar carrera y ver notas finales.</li>
+        <li>Solicitar baja de cursada cuando esta habilitado.</li>
+      </ul>
+
+      <h3>Novedades diarias</h3>
+      <ul>
+        <li>Ver notificaciones diarias.</li>
+        <li>Ver docentes ausentes.</li>
+      </ul>
+    </section>
+  </main>
+</body>
+</html>

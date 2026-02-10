@@ -72,6 +72,10 @@ export default [
             {
                 path: 'mesasExamen',
                 component: () => import ('@/views/admin/sections/MesasExamenView.vue')
+            },
+            {
+                path: 'reservas',
+                component: () => import('@/views/admin/sections/ReservasVacanteView.vue')
             }
         ]
     }

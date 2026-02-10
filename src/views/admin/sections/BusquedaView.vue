@@ -79,7 +79,7 @@
       :showRegulares="showRegulares"
       @open-panel="openPanel"
       @send-key="sendKey"
-      @del-user="delUser"
+      @del-user="delUser(k)"
       @show-message="toggleMsgForm"
     />
   </div>
@@ -168,7 +168,23 @@ const sendMsg = async ({asunto, mensaje, codAlumno}) => {
     indexArr.value = null
     showMessage.value = false
 }
-const delUser = (codigo) => {
+const delUser = async (k) => {
+  const codigo = arrBusqueda.value[k].codigo
+  let entity = ''
+  if (!searchArea || !codigo) return
+  if (searchArea == "estudiantes") entity = "estudiantes"
+  else entity = "profesores"  
+  const {ok} = await api.post({
+    entity: entity,
+    action: "deleteUser",
+    payload: {
+      codUser: codigo,
+    }
+  })
+  if (ok) {
+    arrBusqueda.value.splice(k,1)
+  }
+
     //Codigo para borrar el usuario
 }
 </script>

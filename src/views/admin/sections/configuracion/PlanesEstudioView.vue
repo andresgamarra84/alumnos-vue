@@ -106,6 +106,13 @@
                 </select>
               </div>
               <div>
+              <div v-if="['instrumento','instrumentoArmonico'].includes(m.tipoMateriaDesc)">
+                <label>Cupo:</label>
+                <select v-model="m.cupo" @change="updateMateriaCarrera(m)">
+                  <option disabled>Seleccione el cupo (en min.)</option>
+                  <option v-for="v in arrCupos" :value="v">{{ v }} minutos</option>
+                </select>
+              </div>
                 <!-- Año editable -->
                 <label class="form-label small">Año</label>
                 <input
@@ -197,6 +204,13 @@
               <option value="espacioAlternativo">Espacio Inst. Alternativo</option>
             </select>
         </div>
+        <div v-if="tieneCupo">
+          <label>Cupo de la materia de Instrumento/Armónico:</label>
+          <select v-model="cupo">
+            <option disabled>Seleccione el cupo (en min.)</option>
+            <option v-for="v in arrCupos" :value="v">{{ v }} minutos</option>
+          </select>
+        </div>
         <!-- Checkboxes -->
         <div class="mb-3">
           <div class="form-check">
@@ -261,6 +275,7 @@ const materiasFiltered = computed(() => {
     return materias.value[carreras.value[selectedCarreraIndex.value]?.tipo] || []
 })
 const newMateria = ref({
+    cupo: 0,
     codmateria: '',
     aniocarrera: 1,
     nroorden: 1,
@@ -268,6 +283,8 @@ const newMateria = ref({
     promocional: false,
     esnotaconceptual: false
 })
+const arrCupos = [15,20,30,60]
+const tieneCupo = ref(false)
 const materiasCarrera = ref([])
 const showModalNuevaMateria = ref(false)
 const selectedMateriaParaAgregar = ref('')
@@ -395,6 +412,8 @@ const delCorrelativa = async (m, c) => {
     }
 }
 const updateMateriaCarrera = async (m) => {
+    tieneCupo.value = ["instrumento", "instrumentoArmonico"].includes(m.tipoMateriaDesc)
+    if (tieneCupo.value) m.cupo = tieneCupo.value ? m.cupo : 0
     await api.post({
         entity: "materiascarreras",
         action: "updMateriaCarrera",

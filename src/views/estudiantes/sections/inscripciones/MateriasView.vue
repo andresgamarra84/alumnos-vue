@@ -14,11 +14,11 @@
   <!-- Cursos disponibles -->
   <div v-if="cursosDisponibles.length">
     <div
-      v-for="curso in cursosDisponibles"
+      v-for="(curso, k) in cursosDisponibles"
       :key="curso.codPlHorarios"
       class="lista"
       style="border:1px solid white; margin:10px; padding:10px; cursor:pointer"
-      @click="onSelectCurso(curso.codPlHorarios)"
+      @click="onSelectCurso(k)"
     >
       <div class="col-12 col-md-6 col-lg-4">
         {{ curso.titulo }}
@@ -112,7 +112,8 @@ const onSelectMateria = async () => {
     console.log(e);
   }
 };
-const onSelectCurso = async (codPlHorarios) => {
+const onSelectCurso = async (k) => {
+  const curso = cursosDisponibles.value[k]
   const ok = await showModal('¿Confirma inscripción?', 1);
   if (!ok.ok) return;
   const codAlC = carreras.value[selectedCarrera.value].codigo;
@@ -122,7 +123,8 @@ const onSelectCurso = async (codPlHorarios) => {
     payload: {
       codAlCarrera: codAlC,
       codMC: selectedMateria.value,
-      codPlHorarios: codPlHorarios,
+      codPlHorarios: curso.codPlHorarios,
+      codVLibres: curso.codVLibres ?? null,
       esCondicional: esCondicional.value,
     }
   });
