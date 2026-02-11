@@ -38,7 +38,7 @@
 import { ref, onMounted } from 'vue'
 import { api } from '@/api/api'
 import { showModal } from '@/services/uiBus'
-import { Conversacion } from '@/views/shared/Conversacion.vue'
+import Conversacion from '@/views/shared/Conversacion.vue'
 
 /* ---------- state ---------- */
 const showNewMsg = ref(false)
