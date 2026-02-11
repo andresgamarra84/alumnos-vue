@@ -5,7 +5,7 @@
     v-model="selectedCarrera"
     @change="listExamenes"
   />
-  <div class="text-end">
+  <div v-if='arrExamenes.length>0' class="text-end">
     <button 
         class="btn btn-primary" 
         @click="getAnalitico">
