@@ -25,7 +25,7 @@ function onChange(event) {
 <template>
   <div v-if="carreras.length">
     <label v-if="showLabel">Carrera:</label>
-    <select v-model="modelValue" @change="onChange">
+    <select @change="onChange">
       <option disabled selected value="">Seleccione una carrera</option>
 
       <option

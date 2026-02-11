@@ -31,8 +31,8 @@ const request = async (options = {}) => {
 
         // Manejo inteligente de response type
         let data;
-        const contentType = response.headers.get('Content-Type');
-        if (contentType && contentType.includes('application/json')) {
+        //const contentType = response.headers.get('Content-Type');
+        if (options.type == 'json'){//(contentType && contentType.includes('application/json')) {
             data = await response.json();
         } else {
             data = await response.blob();
