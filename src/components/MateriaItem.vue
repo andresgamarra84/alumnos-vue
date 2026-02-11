@@ -14,6 +14,7 @@
 
     <template v-if="materia.esAprobada">
       <div class="col-md-2">
+        Libro: {{ materia.infoExamen.libroletra }}{{ materia.infoExamen.libro }} acta {{ materia.infoExamen.acta }} -
         Nota:
         {{ materia.infoExamen.notanumerica || 'Aprobado' }}
       </div>
