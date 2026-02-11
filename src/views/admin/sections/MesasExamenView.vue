@@ -137,8 +137,18 @@
 
     <!-- Fecha -->
     <div class="col-md-2">
-      <a href="#" @click.prevent="openEditDate(key)">
-        {{ mesa.fecha }}
+      <div v-if="editingMesaKey === key" class="edit-fecha">
+        <input type="date" v-model="editFecha" class="form-control form-control-sm" />
+        <input type="time" v-model="editHora"  class="form-control form-control-sm" />
+        <button class="btn btn-sm btn-primary" @click="saveEditDate(key)">
+          OK
+        </button>
+        <button class="btn btn-sm btn-secondary" @click="cancelEditDate">
+          X
+        </button>
+      </div>
+      <a v-else href="#" @click.prevent="openEditDate(key)">
+        {{ mesa.fecha }} {{ mesa.hora }}
       </a>
     </div>
 
@@ -159,7 +169,10 @@
         </a>
       </div>
 
-      <a @click="showListProf(key, 'Presidente')">
+      <a
+        v-if="!mesa.autoridades.some(x => x.tipoAutoridad === 'Presidente')"
+        @click="showListProf(key, 'Presidente')"
+      >
         Elegir Presidente
       </a>
     </div>
@@ -202,7 +215,7 @@
     </div>
 
     <!-- Tipos materia (bitmask) -->
-    <div class="col-12 mt-3 text-start">
+    <div class="col-12 mt-3 text-start tipo-materia-linea">
       <label class="me-3">
         <input
           type="checkbox"
@@ -228,6 +241,24 @@
           @change="toggleTipoMateria(key, 4)"
         />
         Armónico
+      </label>
+
+      <label class="me-3">
+        <input
+          type="checkbox"
+          :checked="mesa.tipoMateria & 8"
+          @change="toggleTipoMateria(key, 8)"
+        />
+        Espacio Institucional
+      </label>
+
+      <label class="me-3">
+        <input
+          type="checkbox"
+          :checked="mesa.tipoMateria & 16"
+          @change="toggleTipoMateria(key, 16)"
+        />
+        Espacio Inst. Alternativo
       </label>
     </div>
   </div>
@@ -269,6 +300,9 @@ const showModalProf = ref(false)
 const selectedProf = ref("")
 const arrMesaKey = ref(null)
 const tipoAutoridadProf = ref(null)
+const editingMesaKey = ref(null)
+const editFecha = ref("")
+const editHora = ref("")
 /* FORM NUEVA MESA */
 const formMesa = ref({
   codCurso: "",
@@ -304,15 +338,19 @@ const getProfesores = async () => {
     arrProf.value = payload
 }
 const getProfesoresCurso = async (codCurso) => {
-    const { payload } = await api.get({
-        entity: "planillahorarios",
-        action: "getProfesoresByCurso",
-        payload: { codCurso },
-    })
-    arrProfCurso.value = payload
+  const curso = arrCursos.value.find(c => c.codigo == codCurso)
+  formMesa.value.codCurso = curso.codigo
+  formMesa.value.nombreCurso = curso.nombre
+  const { payload } = await api.get({
+      entity: "planillahorarios",
+      action: "getProfesoresByCurso",
+      payload: { codCurso },
+  })
+  arrProfCurso.value = payload
 }
 const  addMesa = async () => {
-  const {ok} = showModal("¿Confirma que desea incorporar esta mesa?",1)
+
+  const {ok} = await showModal("¿Confirma que desea incorporar esta mesa?",1)
   if (!ok) return
   const r = await api.post({
     entity: "mesasexamen",
@@ -333,15 +371,16 @@ const listMesas = async (criterio=0) => {
 
 const borrarMesa = async (key) => {
   console.log("Borrar mesa:", key)
-  const {ok} = showModal("¿Confirma que desea borrar esta mesa de exámen?",1)
+  const {ok} = await showModal("¿Confirma que desea borrar esta mesa de exámen?",1)
   if (!ok) return
   const r = await api.post({
     entity: "mesasexamen",
     action: "delMesa",
     payload: {
-      codMesa:arrMesas.value[key].datosMesa.codigo,
+      codMesa:arrMesas.value[key].codigo,
     }
   })
+  if (r.ok) arrMesas.value.splice(key,1)
 }
 
 const downloadActa = async (key) => {
@@ -398,6 +437,50 @@ const closeModalProf = () => {
   tipoAutoridadProf.value = null
   selectedProf.value = null
   showModalProf.value = false
+}
+const toInputDate = (ddmmyyyy) => {
+  if (!ddmmyyyy) return ""
+  const parts = ddmmyyyy.split("/")
+  if (parts.length !== 3) return ddmmyyyy
+  const [dd, mm, yyyy] = parts
+  return `${yyyy}-${mm.padStart(2,"0")}-${dd.padStart(2,"0")}`
+}
+const toDisplayDate = (yyyymmdd) => {
+  if (!yyyymmdd) return ""
+  const parts = yyyymmdd.split("-")
+  if (parts.length !== 3) return yyyymmdd
+  const [yyyy, mm, dd] = parts
+  return `${dd}/${mm}/${yyyy}`
+}
+const openEditDate = (key) => {
+  editingMesaKey.value = key
+  editFecha.value = toInputDate(arrMesas.value[key].fecha || "")
+  editHora.value = (arrMesas.value[key].hora || "").slice(0,5)
+}
+const cancelEditDate = () => {
+  editingMesaKey.value = null
+  editFecha.value = ""
+  editHora.value = ""
+}
+const saveEditDate = async (key) => {
+  if (!editFecha.value || !editHora.value) {
+    showModal("Complete fecha y hora")
+    return
+  }
+  const r = await api.post({
+    entity: "mesasexamen",
+    action: "updFechaMesa",
+    payload: {
+      codMesa: arrMesas.value[key].codigo,
+      fecha: editFecha.value,
+      hora: editHora.value,
+    }
+  })
+  if (r.ok) {
+    arrMesas.value[key].fecha = toDisplayDate(editFecha.value)
+    arrMesas.value[key].hora = editHora.value
+    cancelEditDate()
+  }
 }
 const borrarProfesor= async (key, autoridad) => {
   console.log("Borrar profesor:", key, autoridad)
@@ -460,3 +543,15 @@ const  toggleTipoMateria = async (key, bit) => {
 
 		*/
 </script>
+
+<style scoped>
+.tipo-materia-linea {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+}
+.tipo-materia-linea label {
+  margin-right: 0;
+}
+</style>
