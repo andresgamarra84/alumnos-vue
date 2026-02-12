@@ -2,7 +2,7 @@
     <!-- Conversación -->
     <div class="col-12 recuadro">
         <div
-            v-for="(m, i) in mensajes"
+            v-for="(m, i) in arrMensajes"
             :key="i"
             :class="['mensaje', m.clase]"
             v-html="m.mensaje"
@@ -11,8 +11,8 @@
             <textarea
                 class="form-control"
                 rows="4"
-                :value="txtRespuesta"
-                @input="emit('update:txt-respuesta', $event.target.value)"
+                :value="respuesta"
+                @input="emit('update:respuesta', $event.target.value)"
             />
         </div>
         <div class="text-end">
@@ -27,15 +27,15 @@
 </template>
 <script setup>
     import { defineEmits, defineProps } from 'vue';
-    const emit = defineEmits(["send-msg", "update:txt-respuesta", "close-chat"])
+    const emit = defineEmits(["send-msg", "update:respuesta", "close-chat"])
     const props = defineProps({
-        mensajes: {
+        arrMensajes: {
             type: Array,
-            value: [],
+            default: () => [],
         },
-        txtRespuesta: {
+        respuesta: {
             type: String,
-            value: ''
+            default: ''
         }
     })
 </script>

@@ -10,7 +10,11 @@
         </button>
       </div>
 
-    <NuevoMensaje />
+    <NuevoMensaje 
+      v-if="showNewMsg"
+      @send-msg="newMessage"
+      @close="showNewMsg = false"
+    />
 
     <!-- Bandeja -->
     <div class="col-12">
@@ -26,7 +30,8 @@
         <Conversacion
           :arrMensajes="item.mensajes"
           :respuesta="respuesta"
-          @send-msg="sendMsg(k)"
+          v-if="item.mensajes.length>0"
+          @send-msg="sendMessage(k)"
           @close-chat="closeChat(k)"
           @update:respuesta="updateRespuesta"
         />
@@ -39,11 +44,10 @@ import { ref, onMounted } from 'vue'
 import { api } from '@/api/api'
 import { showModal } from '@/services/uiBus'
 import Conversacion from '@/views/shared/Conversacion.vue'
+import NuevoMensaje from '../shared/NuevoMensaje.vue'
 
 /* ---------- state ---------- */
 const showNewMsg = ref(false)
-const nuevoAsunto = ref('')
-const nuevoMensaje = ref('')
 const respuesta = ref('')
 const arrBandeja = ref([])
 /* ---------- methods ---------- */
@@ -69,6 +73,7 @@ const getMsg = async (index) => {
     fechaIngreso: v.fechaIngreso,
     clase: v.codTipo 
   }))
+  console.log(arrBandeja.value[index].mensajes)
 }
 
 const closeChat = (k) => {
@@ -77,7 +82,7 @@ const closeChat = (k) => {
 const updateRespuesta = (t) => {
   respuesta.value = t
 }
-const sendMsg = async (k) => {
+const sendMessage = async (k) => {
   if (!respuesta.value) {
     showModal('El mensaje no puede estar vacío')
     return
@@ -106,7 +111,7 @@ const sendMsg = async (k) => {
   }
 }
 
-const newMsg = async (asunto, mensaje) => {
+const newMessage = async ({ asunto, mensaje }) => {
   if (!asunto || !mensaje) {
     await showModal('Asunto y mensaje son obligatorios', 0, 'Error')
     return
@@ -128,8 +133,6 @@ const newMsg = async (asunto, mensaje) => {
 
   if (r.ok) {
     await showModal('Mensaje enviado')
-    nuevoAsunto.value = ''
-    nuevoMensaje.value = ''
     showNewMsg.value = false
     list()
   }

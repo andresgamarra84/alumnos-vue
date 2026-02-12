@@ -30,6 +30,9 @@
       <input class='form-control' v-model="form.letra" placeholder="Libro letra" />
       <label>Nº de libro:</label>
       <input class='form-control' v-model="form.num" type="number" placeholder="Libro nº" />
+      <label>N° de foja:</label>
+      <input class='form-control' v-model="form.foja" type="number" placeholder="Foja nº" />
+
     </div>
     <div>
       <button class='btn' @click="save">Ingresar</button>

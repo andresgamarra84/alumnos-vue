@@ -13,11 +13,11 @@
       >
         <Conversacion
           v-if="item.mensajes.length>0"
-          :mensajes="item.mensajes"
-          :txtRespuesta="txtRespuesta"
+          :arrMensajes="item.mensajes"
+          :respuesta="respuesta"
           @send-msg="sendMsg(k)"
           @close-chat="closeChat(k)"
-          @update:txt-respuesta="updateTxtRespuesta"
+          @update:respuesta="updateRespuesta"
         />
       </HiloItem>
     </div>
@@ -33,10 +33,8 @@ import NuevoMensaje from '../shared/NuevoMensaje.vue'
 
 /* ---------- state ---------- */
 const showMsgModal = ref(false)
-const nuevoAsunto = ref('')
-const nuevoMensaje = ref('')
 const arrHilos = ref([])
-const txtRespuesta = ref('')
+const respuesta = ref('')
 
 /* ---------- methods ---------- */
 const list = async () => {
@@ -71,7 +69,7 @@ const closeMsgModal = () => {
 }
 
 const sendMsg = async (k) => {
-  if (!txtRespuesta.value) {
+  if (!respuesta.value) {
     await showModal('El mensaje no puede estar vacío')
     return
   }
@@ -81,7 +79,7 @@ const sendMsg = async (k) => {
   )
   if (!ok) return
   const codHilo = arrHilos.value[k].codHilo
-  const mensaje = txtRespuesta.value
+  const mensaje = respuesta.value
   const r = await api.post({
     entity: 'mensajes',
     action: 'addMessageToThread',
@@ -94,12 +92,12 @@ const sendMsg = async (k) => {
   if (r.ok) {
     await showModal('Mensaje enviado')
   }
-  txtRespuesta.value = ''
+  respuesta.value = ''
   closeChat(k)
   list()
 }
 
-const newMsg = async (asunto, mensaje) => {
+const newMsg = async ({ asunto, mensaje }) => {
   const c = await showModal(
     '¿Confirma que desea enviar este mensaje?',
     1
@@ -114,13 +112,11 @@ const newMsg = async (asunto, mensaje) => {
     showModal('Mensaje enviado')
   }
   showMsgModal.value = false
-  nuevoAsunto.value = ""
-  nuevoMensaje.value = ""
   list()
 }
 
-const updateTxtRespuesta = (str) => {
-  txtRespuesta.value = str
+const updateRespuesta = (str) => {
+  respuesta.value = str
 }
 
 /* ---------- lifecycle ---------- */
@@ -128,3 +124,4 @@ onMounted(() => {
   list()
 })
 </script>
+

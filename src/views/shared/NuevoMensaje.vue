@@ -4,52 +4,61 @@
             <div class="mb-2">
                 <label>Asunto</label>
                 <input
-                type="text"
-                class="form-control"
-                v-model="nuevoAsunto"
+                    type="text"
+                    class="form-control"
+                    v-model="nuevoAsunto"
                 />
             </div>
 
             <div class="mb-2">
                 <label>Mensaje</label>
                 <textarea
-                class="form-control"
-                rows="4"
-                v-model="nuevoMensaje"
+                    class="form-control"
+                    rows="4"
+                    v-model="nuevoMensaje"
                 ></textarea>
             </div>
 
             <div class="text-end">
                 <button
-                class="btn btn-secondary me-2"
-                @click="emit('close')"
+                    class="btn btn-secondary me-2"
+                    @click="emit('close')"
                 >
-                Cancelar
+                    Cancelar
                 </button>
 
                 <button
-                class="btn btn-success"
-                @click="newMsg(nuevoAsunto, nuevoMensaje)"
+                    class="btn btn-success"
+                    @click="newMsg(nuevoAsunto, nuevoMensaje)"
                 >
-                Enviar mensaje
+                    Enviar mensaje
                 </button>
             </div>
         </div>
     </div>
-    
 </template>
+
 <script setup>
-    import {defineEmits} from 'vue'
-    import { showModal } from '@/services/uiBus';
-    const emit = defineEmits(['send-msg', 'close'])
-    const newMsg = (asunto, mensaje) => {
-        if (asunto === "" || mensaje === "") {
-            showModal("El asunto y mensaje no pueden estar vacíos.")
-            return
-        }
-        emit('send-msg', {asunto, mensaje})
+import { defineEmits, ref } from 'vue'
+import { showModal } from '@/services/uiBus'
+
+const emit = defineEmits(['send-msg', 'close'])
+const nuevoAsunto = ref('')
+const nuevoMensaje = ref('')
+
+const newMsg = (asunto, mensaje) => {
+    if (!asunto?.trim() || !mensaje?.trim()) {
+        showModal('El asunto y mensaje no pueden estar vacios.')
+        return
     }
+
+    emit('send-msg', { asunto: asunto.trim(), mensaje: mensaje.trim() })
+    emit('close')
+    nuevoAsunto.value = ''
+    nuevoMensaje.value = ''
+}
 </script>
+
 <style>
 .modal-overlay {
     position: fixed;
