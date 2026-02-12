@@ -102,7 +102,10 @@ const onSelectCarrera = async () => {
     const r = await api.get({
       entity: 'materias',
       action: 'getMateriasCarrera',
-      payload: {codigo : codAlC},
+      payload: {
+        codigo : codAlC,
+        inscripcionMesa: true
+      },
     });
     materias.value = r.payload ?? [];
   } catch (e) {

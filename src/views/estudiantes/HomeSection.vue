@@ -7,7 +7,7 @@
     <h3 class="h3cabecera">Notificaciones</h3>
     <p v-for="item in arrNotif" :key="item.codigo">
       {{ item.before }}
-      <a v-if="item.linkText" :href="item.link">{{ item.linkText }}</a>
+      <a v-if="item.linkText" :href="item.link" target="_blank">{{ item.linkText }}</a>
       {{ item.after }}
     </p>
   </div>

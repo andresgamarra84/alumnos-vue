@@ -40,14 +40,14 @@ const request = async (options = {}) => {
                 return data
             }
         }
+        if (response.status == 401) {
+            window.dispatchEvent(new CustomEvent('session-expired'))
+            throw new Error('SESSION_EXPIRED')
+        }
         if (!data.ok) {
             showModal(data.message)
         }
         else if (!response.ok){
-            if (response.status == 401) {
-                window.dispatchEvent(new CustomEvent('session-expired'))
-                throw new Error('SESSION_EXPIRED')
-            }
             throw new Error(data.message || 'Error en la solicitud');
         }
         return {

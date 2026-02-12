@@ -118,7 +118,7 @@ const saveExamen = async (d) => {
         payload:{
             codMC: codMCNuevoExamen.value,
             codAlC:codAlC.value,
-            d:d
+            ...d
         }
     })
     listExamenes()
