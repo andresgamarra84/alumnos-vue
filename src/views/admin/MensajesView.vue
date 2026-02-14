@@ -9,6 +9,8 @@
       <HiloItem
         v-for="(item, k) in arrHilos"
         :item="item"
+        :showNombre="true"
+        @open-panel="openPanel(item.codAlumno)"
         @click="getMsg(k)"
       >
         <Conversacion
@@ -30,6 +32,8 @@ import { showModal } from '@/services/uiBus'
 import Conversacion from '@/views/shared/Conversacion.vue'
 import HiloItem from '@/views/shared/HiloItem.vue'
 import NuevoMensaje from '../shared/NuevoMensaje.vue'
+import { useImpersonation } from "@/views/admin/composables/useImpersonation"
+const { openUserPanel } = useImpersonation()
 
 /* ---------- state ---------- */
 const showMsgModal = ref(false)
@@ -44,7 +48,9 @@ const list = async () => {
   })
   arrHilos.value = payload ?? []
 }
-
+const openPanel = (codigo) =>  {
+  openUserPanel({area: "estudiantes", codigo})
+}
 const getMsg = async (index) => {
   if (arrHilos.value[index].mensajes.length>0) return
   const item = arrHilos.value[index]

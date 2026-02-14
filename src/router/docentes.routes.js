@@ -43,7 +43,11 @@ export default [
         component: () =>
           import('@/views/shared/PlanesProgramasView.vue')
       },
-
+      {
+        path: 'mesasExamen',
+        component: ()=>
+          import('@/views/docentes/MesasExamenView.vue')
+      },
     ]
   }
 ]
