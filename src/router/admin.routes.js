@@ -66,8 +66,16 @@ export default [
                 component: () => import ('@/views/admin/sections/configuracion/CursosView.vue')
             },
             {
+                path: 'planillas',
+                component: () => import('@/views/admin/sections/cursos/PlanillasView.vue')
+            },
+            {
                 path: 'planesProgramas',
                 component: () => import('@/views/admin/sections/configuracion/PlanesEstudioView.vue')
+            },
+            {
+                path: 'usuarios',
+                component: () => import('@/views/admin/sections/configuracion/UsuariosView.vue')
             },
             {
                 path: 'mesasExamen',
