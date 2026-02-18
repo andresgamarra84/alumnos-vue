@@ -4,12 +4,12 @@
 
     <div class="d-flex justify-content-around">
       <label>
-        <input type="radio" v-model="tipoMateria" :value="instrumento" />
+        <input type="radio" v-model="tipoMateria" value="instrumento" />
         Instrumento
       </label>
 
       <label>
-        <input type="radio" v-model="tipoMateria" :value="armonico" />
+        <input type="radio" v-model="tipoMateria" value="armonico" />
         Instrumento Armónico
       </label>
     </div>
@@ -74,7 +74,7 @@
         <label>Cupo:</label>
         <select v-model="cupo">
           <option
-            v-if="tipoMateria === 2"
+            v-if="tipoMateria === 'instrumento'"
             v-for="n in 4"
             :key="n"
             :value="n * 3"
@@ -83,7 +83,7 @@
           </option>
 
           <option
-            v-if="tipoMateria === 4"
+            v-if="tipoMateria === 'instrumentoArmonico'"
             v-for="n in 3"
             :key="n"
             :value="n * 4"
@@ -239,7 +239,7 @@ const getHoras = (fromTo) => {
 const getProfesores = async () => {
   const r = await api.get({
     entity: "planillahorarios",
-    action: "getProfesoresByTipoCurso",
+    action: "getProfesoresByTipoMateria",
     payload: {
       tipoMateria: tipoMateria.value,
     },
@@ -356,13 +356,6 @@ watch(tipoMateria, () => {
   getProfesores()
 })
 
-/* ===============================
-   INIT
-================================= */
-
-onMounted(() => {
-  getProfesores()
-})
 </script>
 
 

@@ -84,6 +84,10 @@ export default [
             {
                 path: 'reservas',
                 component: () => import('@/views/admin/sections/ReservasVacanteView.vue')
+            },
+            {
+                path: 'vacantesInstrumento',
+                component: () => import('@/views/admin/sections/cursos/HorariosInstrumentoView.vue')
             }
         ]
     }
