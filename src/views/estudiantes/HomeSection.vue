@@ -295,7 +295,7 @@ const updMesa = async (k) => {
   const confirm = await showModal(`¿Confirma que desea ${accion} esta inscripción?`, 1);
   if (confirm) {
     const d = { codigo: item.codigo, deleted: item.deleted };
-    const r = await api.post({ entity: 'examenes', action: 'updateInscripcion', payload: d });
+    const r = await api.post({ entity: 'mesas', action: 'updateInscripcion', payload: d });
     if (r.ok) {
       item.deleted = !item.deleted;
     }

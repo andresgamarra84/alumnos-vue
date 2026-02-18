@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="row g-4">
     <div class="col-12">
       <h3>Planillas de asistencia de estudiantes</h3>
@@ -44,10 +44,10 @@
         <div class="col-12 col-md-6">
           <label class="form-label">Seleccione el ciclo:</label>
           <select v-model="carreraCuatr" class="form-select">
-            <option value="3">FOBA Ninos</option>
-            <option value="1">FOBA Adultos</option>
-            <option value="4">FOBA Adultos y Ninos</option>
-            <option value="2">Superior</option>
+            <option value="foba_ninios">FOBA Ninos</option>
+            <option value="foba_adultos">FOBA Adultos</option>
+            <option value="foba_adultos_ninios">FOBA Adultos y Ninos</option>
+            <option value="superior">Superior</option>
           </select>
         </div>
         <div class="col-12 col-md-6">
@@ -60,10 +60,11 @@
         <div class="col-12 col-md-6">
           <label class="form-label">Seleccione el tipo de materia:</label>
           <select v-model="tipoCuatr" class="form-select">
-            <option value="1">Grupales</option>
-            <option value="2">Instrumento</option>
-            <option value="3">Instr. Arm.</option>
-            <option value="4">Espacios Inst.</option>
+            <option value="normal">Grupales</option>
+            <option value="instrumento">Instrumento</option>
+            <option value="instrumentoArmonico">Instr. Arm.</option>
+            <option value="espacioInstitucional">Espacios Inst.</option>
+            <option value="espacioAlternativo">Espacios Inst. Alt</option>
           </select>
         </div>
         <div class="col-12 text-end">
@@ -129,7 +130,7 @@ const porNombreEst = ref(false)
 
 const carreraCuatr = ref("3")
 const sedeCuatr = ref("S")
-const tipoCuatr = ref("1")
+const tipoCuatr = ref("normal")
 
 const sedeDoc = ref("S")
 const fechaDoc = ref(today)
