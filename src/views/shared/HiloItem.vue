@@ -8,7 +8,9 @@
         <a v-if="showNombre" @click="emit('open-panel')">
           {{ item.nombreAlumno }} {{ item.apellidoAlumno }} |
         </a>
-        {{ item.asunto }}
+        <span :class="{ 'fw-bold': item.estadoMensaje == 0, 'opacity-75': item.estadoMensaje != 0 }">
+          {{ item.asunto }}
+        </span>
       </div>
       <div class="col-6 text-end">{{ item.fechaIngreso }}</div>
       <slot />   

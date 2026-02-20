@@ -22,8 +22,8 @@
           <option disabled value="">Seleccione...</option>
           <option
             v-for="prof in arrProfesores"
-            :key="prof.codigo"
-            :value="prof.codigo"
+            :key="prof.codprofesor"
+            :value="prof.codprofesor"
           >
             {{ prof.nombre }}
           </option>
@@ -40,8 +40,8 @@
             :key="curso.codigo"
             :value="index"
           >
-            {{ curso.instrumento }}: {{ curso.dia }} -
-            {{ curso.horario[0] }} a {{ curso.horario[1] }}
+            {{ curso.nombreCurso }}: {{ curso.horarios[0].dia }} -
+            {{ curso.horarios[0].desde }} a {{ curso.horarios[0].hasta }}
           </option>
         </select>
       </div>
@@ -257,16 +257,15 @@ const getCursos = async () => {
       : [[1, 20], [2, 40], [3, 60]]
 
   const r = await api.get({
-    entity: "",
-    action: "",
+    entity: "planillahorarios",
+    action: "getCursosByTipoMateria",
     payload: {
       tipoMateria: tipoMateria.value,
       codProfesor: selectedProf.value,
     },
   })
 
-  arrCursos.value = r.payload.cursos
-  arrHorarios.value = r.payload.horarios
+  arrCursos.value = r.payload
 }
 
 const setCurso = () => {
