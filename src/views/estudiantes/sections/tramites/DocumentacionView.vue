@@ -71,62 +71,73 @@
         showUploadMenu.value = !showUploadMenu.value;
     }
     const prepareUpload = async (k = false) => {
-        let str = tituloDoc.value;
-        if (str == null || str.trim() == "") {
+        const str = tituloDoc.value?.trim();
+        if (str == null || str === "") {
             showModal("El campo no puede quedar vacío")
             return
-        }		
-        let f = document.createElement("input")
-        f.setAttribute("type","file")
-        let payload = {
+        }
+        const f = document.createElement("input")
+        f.setAttribute("type", "file")
+        let uploadPayload = {
             typeFile: 'docsAlumnos',
         }
         const upl = new Resumable({
            // withCredentials: true,
             headers: {
-                Authorization: `Bearer ${sessionStorage.getItem(SESSION_NAME)}`,
+                Authorization: `Bearer ${sessionStorage.getItem(SESSION_NAME)}`
             },
             target: 'https://cjjc.edu.ar/api-v2/',
-            query: {
-                entity:"docs",
-                action:"uploadFile",
-            }
+            testChunks: false,
+            query: () => ({
+                entity: "docs",
+                action: "uploadFile",
+                payload: JSON.stringify(uploadPayload),
+            }),
         })
+        if (!upl.support) {
+            showModal("Tu navegador no soporta la carga de archivos.")
+            return
+        }
         upl.assignBrowse(f)
-        upl.on('fileSuccess', (file)=>{
+        upl.on('fileSuccess', () => {
             tituloDoc.value = ""
+            showUploadMenu.value = false
             showModal("Documento enviado correctamente.")
             listDocs()
         })
-        upl.on('fileProgress', (file)=>{
-            let n = parseInt(upl.progress()*100)
+        upl.on('fileError', (_, message) => {
+            showModal(`No fue posible subir el archivo. ${message || ""}`.trim())
         })
-        upl.on('fileAdded', async (file, event)=>{
+        upl.on('fileProgress', () => {
+            let n = parseInt(upl.progress() * 100)
+        })
+        upl.on('fileAdded', async (file) => {
             const originalName = file.fileName
             const safeName = originalName.replace(
                 /[^a-zA-Z0-9\s\-_,.!¡¿?]/g,
                 ''
             )
             file.fileName = safeName
-            let dir = Date.now()
-            let d = {
-                "dateToDir":dir,
+            const dir = Date.now()
+            const d = {
+                "dateToDir": dir,
                 "nombre": str,
             }
-            const {ok} = await api.post({
+            const { ok } = await api.post({
                 entity: "docs",
                 action: "prepareUpload",
                 payload: d,
             })
-            if (ok) {
-                payload.dir = dir
-                payload = JSON.stringify(payload)
-                upl.opts.query.payload = payload
-                if(file.file.type.startsWith("video")) showModal("No pueden subirse videos a la página. Utilice otro medio (YouTube, Google Drive, etc.) y comparta el enlace de acceso desde un documento de texto");
-                else upl.upload();
+            if (!ok) return
+            uploadPayload.dir = dir
+            if (file.file.type.startsWith("video")) {
+                upl.removeFile(file)
+                showModal("No pueden subirse videos a la página. Utilice otro medio (YouTube, Google Drive, etc.) y comparta el enlace de acceso desde un documento de texto")
+                return
             }
-        });
-        f.click();
+            upl.upload()
+        })
+        f.click()
     }
     const delFile= async (arr, k) => {
         let r = confirm("¿Confirma que desea borrar este archivo?");
