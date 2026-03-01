@@ -386,7 +386,7 @@ const borrarMesa = async (key) => {
 const downloadActa = async (key) => {
   console.log("Descargar acta:", key)
   if (this.arrMesas[k].datosMesa.cantAlumnos==0){
-    showModal("No se puede descargar el acta porque no posee alumnos inscriptos");
+    showModal("No se puede descargar el acta porque no posee estudiantes inscriptos");
     return
   }
 	const blob = await api.getPDF({

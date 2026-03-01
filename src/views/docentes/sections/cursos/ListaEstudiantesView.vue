@@ -1,5 +1,5 @@
 <template>
-  <h3 class="h3cabecera">Listado de alumnos inscriptos</h3>
+  <h3 class="h3cabecera">Listado de estudiantes inscriptos</h3>
 
   <CursoItem
     v-for="(curso, k) in cursos"

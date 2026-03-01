@@ -61,7 +61,7 @@
             for="mostrarRegulares"
             class="form-check-label"
           >
-            Mostrar solo alumnos regulares
+            Mostrar solo estudiantes regulares
           </label>
         </div>
       </div>

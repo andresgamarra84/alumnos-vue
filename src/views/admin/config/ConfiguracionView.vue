@@ -34,7 +34,7 @@
     <label><input type="checkbox" v-model="config.solicitudMesa"> Solicitud de mesa de examen</label><br>
     <label><input type="checkbox" v-model="config.solicitudCarrera"> Solicitud de nueva carrera</label><br>
     <label><input type="checkbox" v-model="config.solicitudAnalitico"> Solicitud de analítico</label><br>
-    <label><input type="checkbox" v-model="config.solicitudConstancia"> Constancia de alumno regular</label>
+    <label><input type="checkbox" v-model="config.solicitudConstancia"> Constancia de estudiante regular</label>
 </div>
 
 <div class="p-2">

@@ -20,8 +20,8 @@
     >
       <div class="col-12 titulo">{{ item?.nombre }}</div>
       <div class="col-12 col-md-4">Fecha: {{ item?.fecha }}</div>
-      <div class="col-12 col-md-4">Condicion: {{ item?.condicion }}</div>
-      <div class="col-12 col-md-4">Alumnos inscriptos: {{ item?.cantAlumnos ?? 0 }}</div>
+      <div class="col-12 col-md-4">Condición: {{ item?.condicion }}</div>
+      <div class="col-12 col-md-4">Estudiantes inscriptos: {{ item?.cantAlumnos ?? 0 }}</div>
     </div>
 
     <div v-if="showDetalle" class="container mt-4">
@@ -36,12 +36,22 @@
         <div class="col-12 col-md-6">E-mail: {{ autoridad.email }}</div>
       </div>
 
+      <div class="row pt-2 pb-1">
+        <div class="col-12 text-md-end">
+          <a href="#" class="link-primary" @click.prevent="copyAuthorityEmails">
+            Copiar correos de autoridades
+          </a>
+        </div>
+      </div>
+
+      <hr class="my-3 mesa-separador" />
+
       <div class="col-12 text-center py-3">
-        <h4>Alumnos inscriptos</h4>
+        <h4>Estudiantes inscriptos</h4>
       </div>
 
       <div v-if="arrInscriptos.length === 0" class="text-center">
-        - (No hay alumnos inscriptos a la mesa) -
+        - (No hay estudiantes inscriptos a la mesa) -
       </div>
 
       <div
@@ -72,7 +82,7 @@
             </a>
           </div>
           <div v-if="!inscripto.archivos || inscripto.archivos.length === 0">
-            - Sin archivos cargados por el alumno -
+            - Sin archivos cargados por el estudiante -
           </div>
         </div>
 
@@ -164,7 +174,7 @@ const wasConfirmed = (result) => result === true || result?.ok === true
 const listMesas = async () => {
   const r = await api.get({
     entity: 'mesasexamen',
-    action: 'getMesasByProfesor',
+    action: 'getMesasByDocente',
   })
 
   arrMesas.value = (r.payload ?? []).map((mesa) => ({
@@ -196,6 +206,29 @@ const verMesa = async (visibleIndex) => {
   arrInscriptos.value = r.payload ?? []
 }
 
+const copyAuthorityEmails = async () => {
+  const autoridades = mesaActual.value?.autoridades ?? []
+  const emails = [...new Set(
+    autoridades
+      .map((v) => (v?.email ?? '').trim())
+      .filter(Boolean)
+  )]
+
+  if (emails.length === 0) {
+    await showModal('No hay correos para copiar')
+    return
+  }
+
+  const text = emails.join('; ')
+
+  try {
+    await navigator.clipboard.writeText(text)
+    await showModal('Correos copiados al portapapeles')
+  } catch {
+    await showModal('No se pudo copiar al portapapeles')
+  }
+}
+
 const setCalif = async (index, campo, event) => {
   const valor = event?.target?.value
   const item = arrInscriptos.value[index]
@@ -225,7 +258,7 @@ const downloadActa = async () => {
   )
 
   if (!todosCalificados) {
-    await showModal('No puede descargarse el acta porque aún quedan alumnos sin calificar')
+    await showModal('No puede descargarse el acta porque aún quedan estudiantes sin calificar')
     return
   }
 
@@ -243,3 +276,13 @@ onMounted(() => {
   listMesas()
 })
 </script>
+
+<style scoped>
+.mesa-separador {
+  border-top: 1px solid var(--color-borde, #d0d7de);
+  opacity: 0.9;
+}
+</style>
+
+
+

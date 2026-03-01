@@ -16,7 +16,7 @@
     <p v-if="arrConfig.inscrMaterias">-Para realizar inscripción a Materias ingrese en la sección "Inscripciones" -> "Materias".</p>
     <p v-if="arrConfig.inscrExamenes">-Para realizar inscripción a Examenes ingrese en la sección "Inscripciones" -> "Exámenes".</p>
     <p v-if="arrConfig.reserva">-Para realizar su Reserva de vacante ingrese en la sección "Trámites online" -> "Reserva de vacante".</p>
-    <p v-if="arrConfig.solicitudConstancia">-Para realizar su solicitud de Constancia de alumno regular ingrese en la sección "Trámites online" -> "Constancia de alumno regular".</p>
+    <p v-if="arrConfig.solicitudConstancia">-Para realizar su solicitud de Constancia de estudiante regular ingrese en la sección "Trámites online" -> "Constancia de estudiante regular".</p>
     <p v-if="arrConfig.solicitudAnalitico">-Para realizar su solicitud de Analítico ingrese en la sección "Trámites online" -> "Solicitud de analítico".</p>
   </div>
   <div v-if="arrInscrMaterias.length > 0" class="margen-bottom">

@@ -18,7 +18,7 @@ const isEstudiante = computed(() => props.area === 'estudiantes')
 
 const confirmDelete = async () => {
   const msg = isEstudiante.value
-    ? 'Se borrarán TODOS los datos del alumno. ¿Continuar?'
+    ? 'Se borrarán TODOS los datos del estudiante. ¿Continuar?'
     : '¿Confirma que desea borrar este profesor del listado?'
   const {ok} = await showModal(msg,1)
   if (ok) {
@@ -52,7 +52,7 @@ const confirmDelete = async () => {
           class="text-danger"
           @click.prevent="confirmDelete"
         >
-          Borrar alumno
+          Borrar estudiante
         </a>
       </div>
     </template>

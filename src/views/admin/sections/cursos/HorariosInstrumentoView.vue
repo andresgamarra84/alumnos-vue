@@ -88,7 +88,7 @@
             :key="n"
             :value="n * 4"
           >
-            {{ n }} alumnos
+            {{ n }} estudiantes
           </option>
         </select>
       </div>
