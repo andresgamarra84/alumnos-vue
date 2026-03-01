@@ -243,6 +243,14 @@ const listNotificaciones = async () => {
   console.log(arrNotif.value)
 };
 
+const showGlobalMessages = async () => {
+  const r = await api.get({ entity: 'mensajes', action: 'getGlobalMsg' });
+  for (const item of r.payload) {
+    if (!item?.mensaje) continue;
+    await showModal(item.mensaje);
+  }
+};
+
 const toggleDeleted = (k = 0) => {
   showDeleted.value[k] = !showDeleted.value[k];
 };
@@ -373,6 +381,7 @@ onMounted(async () => {
     listSolicitudes(),
     listNotificaciones()
   ]);
+  await showGlobalMessages();
 });
 </script>
 
