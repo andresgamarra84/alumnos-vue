@@ -36,7 +36,7 @@
 		const infoCursos = await getCursos()
         cursos.value = infoCursos.cursos
 		totalHoras.value = infoCursos.totalHoras
-        reservas.value = getReservas()
+        reservas.value = await getReservas()
     })
     const getCursos = async () => {
         const r = await api.get({
