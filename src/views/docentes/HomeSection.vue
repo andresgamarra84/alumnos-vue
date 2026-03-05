@@ -18,7 +18,7 @@
 		<div v-for="item in reservas" class='row lista recuadro'>
 			<div class='col-12 col-md-6 titulo'>{{item.apellido}}, {{item.nombre_alumno}}</div>
 			<div class='col-12 col-md-6'>
-				<div>Nivel: {{item.nombre_materia}}</div>
+				<!--<div>Nivel: {{item.nombre_materia}}</div>-->
 				<div>Carrera: {{item.nombre_carrera}}</div>
 				<div>E-mail: {{item.email}}</div>
 			</div>
