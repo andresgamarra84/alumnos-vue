@@ -1,5 +1,5 @@
 <script setup>
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
 
 const props = defineProps({
   isVisible: {
@@ -23,6 +23,9 @@ const props = defineProps({
 const emit = defineEmits(['resolve'])
 
 const inputValue = ref('')
+const parsedMessage = computed(() =>
+  String(props.message ?? '').replace(/<br\s*\/?>/gi, '\n')
+)
 
 function resolve(result) {
   emit('resolve', {
@@ -63,7 +66,7 @@ function resolve(result) {
       "
     >
       <h2>{{ title }}</h2>
-      <p>{{ message }}</p>
+      <p style="white-space: pre-line">{{ parsedMessage }}</p>
 
       <input
         v-if="type === 2"
