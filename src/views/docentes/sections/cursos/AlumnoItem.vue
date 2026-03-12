@@ -22,11 +22,10 @@ const nuevaHora = ref(null)
 
     <template v-if="esInstrumento">
       <div class="col-12 d-flex justify-content-between mt-1">
-        <span>Día: {{ alumno.horarios.dia }}</span>
-        <span>Hora: {{ alumno.horarios.hora }}</span>
-        <a @click="editando = !editando">Editar</a>
+        <span>Hora: {{ alumno.horario }}</span>
+        <!--<a @click="editando = !editando">Editar</a>-->
       </div>
-
+<!--
       <div v-if="editando" class="col-12 d-flex gap-2 mt-1">
         <select v-model="nuevoDia">
           <option disabled value="">Seleccione día</option>
@@ -36,6 +35,7 @@ const nuevaHora = ref(null)
           <option disabled value="">Seleccione hora</option>
         </select>
       </div>
+-->
     </template>
   </div>
 </template>
