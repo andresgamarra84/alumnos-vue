@@ -11,6 +11,7 @@ import GlobalModal from '@/components/GlobalModal.vue'
     :title="uiState.modal.title"
     :message="uiState.modal.message"
     :type="uiState.modal.type"
+    :input-value="uiState.modal.inputValue"
     @resolve="closeModal"
   />
 </template>

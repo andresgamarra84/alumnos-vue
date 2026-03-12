@@ -1,5 +1,5 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 const props = defineProps({
   isVisible: {
@@ -17,6 +17,10 @@ const props = defineProps({
   type: {
     type: Number,
     default: 0 // 0: info | 1: confirm | 2: input
+  },
+  inputValue: {
+    type: String,
+    default: ''
   }
 })
 
@@ -25,6 +29,16 @@ const emit = defineEmits(['resolve'])
 const inputValue = ref('')
 const parsedMessage = computed(() =>
   String(props.message ?? '').replace(/<br\s*\/?>/gi, '\n')
+)
+
+watch(
+  () => [props.isVisible, props.type, props.inputValue],
+  ([isVisible, type, nextValue]) => {
+    if (isVisible && type === 2) {
+      inputValue.value = nextValue ?? ''
+    }
+  },
+  { immediate: true }
 )
 
 function resolve(result) {
