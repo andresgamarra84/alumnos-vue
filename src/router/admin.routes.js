@@ -1,5 +1,3 @@
-import DashboardView from '@/layouts/Dashboard.vue'
-
 export default [
     {
         path: '/admin/login',
@@ -8,7 +6,7 @@ export default [
     },
     {  
         path: '/admin',
-        component: DashboardView,
+        component: () => import('@/layouts/Dashboard.vue'),
         meta: { 
             requiresAuth: true, 
             area: 'admin',
