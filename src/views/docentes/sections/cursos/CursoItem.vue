@@ -17,6 +17,7 @@
       >
         <AlumnoItem
           v-for="alumno in curso.alumnos"
+          :es-instrumento="curso.esInstrumento"
           :alumno="alumno"
         />
       </ListaAlumnos>
