@@ -5,6 +5,7 @@
     v-for="(curso, k) in cursos"
     :key="k"
     :curso="curso"
+    @toggle-estudiantes="openCloseEstudiantesInscriptos(k)"
   />
 </template>
 <script setup>
@@ -12,8 +13,12 @@
     import CursoItem from './CursoItem.vue'
     import { api } from '@/api/api'
     const cursos = ref([])
+
     onMounted(async () => {
-        cursos.value = await getCursos()
+        const c = await getCursos()
+        c.forEach(v=>v.listaAbierta=false)
+        console.log(c)
+        cursos.value = c
     })
     const getCursos = async () => {
         const r = await api.get({
@@ -21,5 +26,22 @@
             action: 'getCursos',
         })
         return r.payload.cursos
+    }
+    const openCloseEstudiantesInscriptos = async (k) => {
+        if (cursos.value[k].listaAbierta) {
+            cursos.value[k].listaAbierta=false
+            cursos.value[k].alumnos = []
+            return
+        }
+        const r = await api.get({
+            entity:"cursos",
+            action:"getEstudiantesInscriptos",
+            payload:{
+                codPlHorarios:cursos.value[k].codPlHorarios,
+                tipoMateria:cursos.value[k].tipoMateria,
+            },
+        })
+        cursos.value[k].alumnos = r.payload
+        cursos.value[k].listaAbierta = true
     }
 </script>

@@ -13,16 +13,24 @@
     </div>
     <template v-if="curso.cantInscriptos > 0">
       <ListaAlumnos
-        v-if="abierto"
+        v-if="curso.listaAbierta"
       >
         <AlumnoItem
-          v-for="alumno in alumnos"
+          v-for="alumno in curso.alumnos"
           :alumno="alumno"
         />
       </ListaAlumnos>
       <div class="col-12 text-end mt-2">
-        <a @click="showHideList">
-          {{ abierto ? 'Ocultar lista' : 'Ver lista' }}
+        <a
+          v-if="curso.listaAbierta"
+          href="#"
+          class="me-3"
+          @click.prevent="copyEmails"
+        >
+          Copiar correos
+        </a>
+        <a href="#" @click.prevent="showHideList">
+          {{ curso.listaAbierta ? 'Ocultar lista' : 'Ver lista' }}
         </a>
       </div>
     </template>
@@ -32,21 +40,36 @@
   </div>
 </template>
 <script setup>
-import { ref } from 'vue'
+import { showModal } from '@/services/uiBus'
 import ListaAlumnos from './ListaAlumnos.vue'
 import AlumnoItem from './AlumnoItem.vue';
-const abierto = ref(false)
+
 const props = defineProps({
   curso: Object,
 })
-const showHideList = async () => {
-  const r = await api.get({
-    entity:"cursos",
-    action:"getEstudiantesInscriptos",
-    payload:{
-      codPlHorarios:curso.value.codPlHorarios,
-      tipoMateria:curso.value.tipoMateria,
-    },
-})
+const emit = defineEmits(['toggle-estudiantes'])
+
+const copyEmails = async () => {
+  const emails = [...new Set(
+    (props.curso?.alumnos ?? [])
+      .map((alumno) => (alumno?.email ?? '').trim())
+      .filter(Boolean)
+  )]
+
+  if (emails.length === 0) {
+    await showModal('No hay correos para copiar')
+    return
+  }
+
+  try {
+    await navigator.clipboard.writeText(emails.join('; '))
+    await showModal('Correos copiados al portapapeles')
+  } catch {
+    await showModal('No se pudo copiar al portapapeles')
+  }
+}
+
+const showHideList = () => {
+  emit('toggle-estudiantes')
 }
 </script>
