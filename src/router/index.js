@@ -14,6 +14,7 @@ const router = createRouter({
   routes
 })
 router.beforeEach(async (to, from, next) => {
+  console.log(to)
   //if (to.meta.requiresAuth !== true) {
   if (to.path === "/"){
     return next("/estudiantes/login")

@@ -17,6 +17,7 @@ export function useImpersonation() {
         area: area,
         codigo: codigo,
         token: token,
+        env: import.meta.env.DEV ? 'development' : 'production',
     })
     const url = `${BASE_URL}/${ADMIN_FOLDER}/impersonate.php?${params.toString()}`
     window.open(

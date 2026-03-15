@@ -38,6 +38,11 @@
         cursos.value = infoCursos.cursos
 		totalHoras.value = infoCursos.totalHoras
         reservas.value = await getReservas()
+        const { payload } = await api.get({
+            entity:'cursos',
+            action:'getCursosInstrumento'
+        })
+        console.log(payload)
     })
     const getCursos = async () => {
         const r = await api.get({
