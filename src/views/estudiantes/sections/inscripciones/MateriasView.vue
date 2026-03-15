@@ -16,9 +16,8 @@
     <div
       v-for="(curso, k) in cursosDisponibles"
       :key="curso.codPlHorarios"
-      class="lista"
-      style="border:1px solid white; margin:10px; padding:10px; cursor:pointer"
-      @click="onSelectCurso(k)"
+      :class="['lista', 'curso-item', { 'curso-item--disabled': curso.cupoCompleto }]"
+      @click="!curso.cupoCompleto && onSelectCurso(k)"
     >
       <div class="col-12 col-md-6 col-lg-4">
         {{ curso.titulo }}
@@ -136,3 +135,18 @@ const onSelectCurso = async (k) => {
   }
 }
 </script>
+
+<style scoped>
+.curso-item {
+  border: 1px solid white;
+  margin: 10px;
+  padding: 10px;
+  cursor: pointer;
+}
+
+.curso-item--disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+  pointer-events: none;
+}
+</style>
