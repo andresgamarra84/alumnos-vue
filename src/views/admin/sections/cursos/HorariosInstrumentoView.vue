@@ -18,7 +18,7 @@
     <div class="col-12 d-md-inline-flex gap-md-3">
       <div class="col">
         <label>Docente:</label>
-        <select v-model="selectedProf" @change="getCursos">
+        <select v-model="selectedProf" @change="getCursosAndVacantes">
           <option disabled value="">Seleccione...</option>
           <option
             v-for="prof in arrProfesores"
@@ -210,6 +210,9 @@ const hasta = ref(0)
 const cupo = ref("")
 const destino = ref("0")
 
+onMounted(async () => {
+  //arrCursos.value = await getCursos().payload
+})
 /* ===============================
    HELPERS
 ================================= */
@@ -217,8 +220,8 @@ const destino = ref("0")
 const getHoras = (fromTo) => {
   arrHoras.value = []
 
-  const inicio = fromTo[0]
-  const bloques = fromTo[1]
+  const inicio = fromTo.inicio
+  const bloques = fromTo.duracion
 
   let i = inicio
   while (i <= inicio + bloques) {
@@ -246,11 +249,12 @@ const getProfesores = async () => {
   })
   arrProfesores.value = r.payload
 }
-
+const getCursosAndVacantes = async () => {
+  getCursos()
+  getVacantes()
+}
 const getCursos = async () => {
   arrCursos.value = []
-  arrHorarios.value = []
-
   arrSpans.value =
     tipoMateria.value === "instrumento"
       ? [[1, 15], [2, 30], [3, 45], [4, 60]]
@@ -267,10 +271,21 @@ const getCursos = async () => {
 
   arrCursos.value = r.payload
 }
+const getVacantes = async () => {
+  arrHorarios.value = []
+  const r = await api.get({
+    entity: 'vacantes',
+    action: 'getVacantes',
+    payload: {
+      tipoMateria: tipoMateria.value,
+      codProfesor: selectedProf.value,
+    },
+  })
+
+}
 
 const setCurso = () => {
   const curso = arrCursos.value[selectedCursoIndex.value]
-
   codPlHorarios.value = curso.codigo
   getHoras(curso.fromTo)
 }
