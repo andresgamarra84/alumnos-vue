@@ -35,7 +35,7 @@
         }
         const r = await api.get({
             entity:"cursos",
-            action:"getEstudiantesInscriptos",
+            action:"getEstudiantesInscriptosTest",
             payload:{
                 codPlHorarios:cursos.value[k].codPlHorarios,
                 tipoMateria:cursos.value[k].tipoMateria,
