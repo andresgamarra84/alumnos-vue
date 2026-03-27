@@ -1,55 +1,18 @@
 <template>
-  <h3 class="h3cabecera">Inscripción a Materias (Prueba)</h3>
+  <h3 class="h3cabecera">Inscripción a Materias</h3>
 
-  <CarrerasSelect
+    <CarrerasSelect
     v-model="selectedCarrera"
     :carreras="carreras"
     @change="onSelectCarrera"
   />
-  <MateriasSelect
+    <MateriasSelect
     v-model="selectedMateria"
     :materias="materias"
     @change="onSelectMateria"
   />
-
-  <div v-if="ocupaFranja" class="mt-3">
-    <label class="form-label">Día disponible</label>
-    <select v-model="selectedDia" class="form-select">
-      <option disabled value="">Seleccione un día</option>
-      <option
-        v-for="dia in diasDisponibles"
-        :key="dia.value ?? dia"
-        :value="dia.value ?? dia"
-      >
-        {{ dia.label ?? dia }}
-      </option>
-    </select>
-  </div>
-
-  <div v-if="ocupaFranja && selectedDia && cursosDelDia.length" class="mt-4">
-    <h4 class="mb-3">Horarios disponibles para {{ selectedDia }}</h4>
-
-    <div
-      v-for="(curso, k) in cursosDelDia"
-      :key="`${curso.codPlHorarios}-${curso.inicio}-${k}`"
-      class="lista curso-item"
-    >
-      <div class="col-12 col-md-4">
-        {{ curso.nombreProf }}
-      </div>
-
-      <div class="col-12 col-md-4">
-        {{ curso.sede?.[0] ?? 'Sin sede' }}
-      </div>
-
-      <div class="col-12 col-md-4">
-        Inicio: {{ curso.horario?.[0]?.[0] ?? curso.inicio }}
-      </div>
-    </div>
-  </div>
-
   <!-- Cursos disponibles -->
-  <div v-if="!ocupaFranja && cursosDisponibles.length">
+  <div v-if="cursosDisponibles.length">
     <div
       v-for="(curso, k) in cursosDisponibles"
       :key="curso.codPlHorarios"
@@ -82,7 +45,7 @@
 </template>
 
 <script setup>
-import { computed, ref, onMounted } from 'vue';
+import { ref, onMounted } from 'vue';
 import { api } from '@/api/api.js';
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import MateriasSelect from '@/components/MateriasSelect.vue';
@@ -91,22 +54,8 @@ const carreras = ref([]);
 const materias = ref([]);
 const selectedCarrera = ref('');
 const selectedMateria = ref('');
-const selectedDia = ref('');
 const esCondicional = ref(false);
-const ocupaFranja = ref(false);
 const cursosDisponibles = ref([]);
-const diasDisponibles = ref([]);
-const cursosAgrupados = ref([]);
-
-const cursosDelDia = computed(() => {
-  if (!selectedDia.value) return [];
-
-  const grupo = cursosAgrupados.value.find(
-    item => item.dia === selectedDia.value
-  );
-
-  return grupo?.cursos ?? [];
-});
 
 /* ---------- lifecycle ---------- */
 
@@ -128,12 +77,8 @@ const getCarrerasAlumno = async () => {
 };
 const onSelectCarrera = async () => {
   selectedMateria.value = '';
-  selectedDia.value = '';
   materias.value = [];
   cursosDisponibles.value = [];
-  diasDisponibles.value = [];
-  cursosAgrupados.value = [];
-  ocupaFranja.value = false;
   const codAlC = carreras.value[selectedCarrera.value].codigo;
   try {
     const r = await api.get({
@@ -148,11 +93,7 @@ const onSelectCarrera = async () => {
 };
 
 const onSelectMateria = async () => {
-  selectedDia.value = '';
   cursosDisponibles.value = [];
-  diasDisponibles.value = [];
-  cursosAgrupados.value = [];
-  ocupaFranja.value = false;
   const codAlC = carreras.value[selectedCarrera.value].codigo;
   try {
     const r = await api.get({
@@ -161,19 +102,10 @@ const onSelectMateria = async () => {
       payload: {
         codAlC: codAlC,
         codMC: selectedMateria.value,
-        test: true
       },
     });
-    ocupaFranja.value = r.payload.ocupaFranja ?? false;
-    esCondicional.value = r.payload.esCondicional ?? false;
-
-    if (ocupaFranja.value) {
-      diasDisponibles.value = r.payload.diasDisponibles ?? [];
-      cursosAgrupados.value = r.payload.cursosAgrupados ?? [];
-      return;
-    }
-
     cursosDisponibles.value = r.payload.cursos ?? [];
+    esCondicional.value = r.payload.esCondicional ?? false;
     if (esCondicional.value) showModal("La inscripción a esta materia se tomará como Condicional por no tener acreditadas las correlativas necesarias.");
   } catch (e) {
     console.log(e);
