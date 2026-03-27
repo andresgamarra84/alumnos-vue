@@ -35,11 +35,13 @@ export default [
         component: () =>
           import('@/views/estudiantes/sections/inscripciones/MateriasView.vue')
       },
+      /*
       {
         path: 'inscrMateriasTest',
         component: () =>
           import('@/views/estudiantes/sections/inscripciones/MateriasViewTest.vue')
       },
+      */
       {
         path: 'inscrCarreras',
         component: () =>

@@ -1,5 +1,5 @@
 <template>
-  <h3 class="h3cabecera">Inscripción a Materias (Prueba)</h3>
+  <h3 class="h3cabecera">Inscripción a Materias</h3>
 
   <CarrerasSelect
     v-model="selectedCarrera"
@@ -33,6 +33,7 @@
       v-for="(curso, k) in cursosDelDia"
       :key="`${curso.codPlHorarios}-${curso.inicio}-${k}`"
       class="lista curso-item"
+      @click="onSelectCursoFranja(k)"
     >
       <div class="col-12 col-md-4">
         {{ curso.nombreProf }}
@@ -191,8 +192,35 @@ const onSelectCurso = async (k) => {
       codAlCarrera: codAlC,
       codMC: selectedMateria.value,
       codPlHorarios: curso.codPlHorarios,
-      codVLibres: curso.codVLibres ?? null,
+      //codVLibres: curso.codVLibres ?? null,
+      ocupaFranja: ocupaFranja.value,
       esCondicional: esCondicional.value,
+    }
+  });
+
+  if (response.ok) {
+    showModal(
+      'La inscripción ha sido realizada y ya puede visualizarse en la página de inicio'
+    );
+  }
+}
+
+const onSelectCursoFranja = async (k) => {
+  const curso = cursosDelDia.value[k]
+  const ok = await showModal('¿Confirma inscripción?', 1);
+  if (!ok.ok) return;
+  const codAlC = carreras.value[selectedCarrera.value].codigo;
+  const response = await api.post({
+    entity: "materias",
+    action: "confirmarInscripcion",
+    payload: {
+      codAlCarrera: codAlC,
+      codMC: selectedMateria.value,
+      codPlHorarios: curso.codPlHorarios,
+      //codVLibres: curso.codVLibres ?? null,
+      ocupaFranja: ocupaFranja.value,
+      esCondicional: esCondicional.value,
+      inicio: curso.inicio,
     }
   });
 

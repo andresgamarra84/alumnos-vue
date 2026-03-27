@@ -42,7 +42,7 @@
         <template v-else>{{ item.infoInscripcion.notaNumerica2[0] }} ({{ item.infoInscripcion.notaNumerica2[1] }})</template>
       </div>
       <div class="col-12 text-end" v-if="arrConfig.inscrMaterias || esAutoridad">
-        <a @click="updMateria(key)" style="color:var(--bs-danger);">Borrar inscripción</a>
+        <a @click="updMateria(item)" style="color:var(--bs-danger);">Borrar inscripción</a>
       </div>
     </div>
 
@@ -64,7 +64,7 @@
           </div>
           <!-- Notas similares -->
           <div class="col-12 text-end">
-            <a @click="updMateria(key)">Recuperar inscripción</a>
+            <a @click="updMateria(item)">Recuperar inscripción</a>
           </div>
         </div>
       </div>
@@ -255,11 +255,10 @@ const toggleDeleted = (k = 0) => {
   showDeleted.value[k] = !showDeleted.value[k];
 };
 
-const updMateria = async (k) => {
-  const item = arrInscrMaterias.value[k];
+const updMateria = async (item) => {
   const accion = item.infoCurso.deleted ? 'recuperar' : 'borrar';
   const confirm = await showModal(`¿Confirma que desea ${accion} esta inscripción?`, 1);
-  if (confirm) {
+  if (confirm.ok) {
     const d = {
       codigo: item.infoCurso.codigo,
       vLibresAl: item.infoCurso.codVlibre ?? false,
