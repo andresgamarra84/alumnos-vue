@@ -6,6 +6,7 @@
     :key="k"
     :curso="curso"
     @toggle-estudiantes="openCloseEstudiantesInscriptos(k)"
+    @update-franja="updateFranjaInscripcion"
   />
 </template>
 <script setup>
@@ -48,5 +49,19 @@
         cursos.value[k].alumnos = r.payload.alumnos
         cursos.value[k].franjas = r.payload.franjas
         cursos.value[k].listaAbierta = true
+    }
+    const updateFranjaInscripcion = async ({ franja, revertir, confirmar }) => {
+        const r = await api.post({
+            entity:"cursos",
+            action:"updateFranjaInscripcion",
+            payload: franja,
+        })
+
+        if (r?.ok) {
+            confirmar()
+            return
+        }
+
+        revertir()
     }
 </script>

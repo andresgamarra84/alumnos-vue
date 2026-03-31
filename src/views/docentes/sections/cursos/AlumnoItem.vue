@@ -9,8 +9,10 @@ const props = defineProps({
     default: () => ({})
   }
 })
+const emit = defineEmits(['update-franja'])
 
 const horarioSeleccionado = ref('')
+const horarioSeleccionadoAnterior = ref('')
 
 const getAlumnoValue = (keys) => {
   for (const key of keys) {
@@ -45,24 +47,45 @@ const claveHorarioActual = computed(() => {
     return ''
   }
 
-  const franjaActual = franjasDisponibles.value.find(
+  const franjaActualIndex = franjasDisponibles.value.findIndex(
     (franja) =>
       franja.codplhorarios === codplhorarios &&
       franja.inicioFranja === inicioFranja
   )
 
-  return franjaActual
-    ? `${franjaActual.codplhorarios}-${franjaActual.inicioFranja}`
-    : ''
+  return franjaActualIndex >= 0 ? String(franjaActualIndex) : ''
 })
 
 watch(
   claveHorarioActual,
   (value) => {
     horarioSeleccionado.value = value
+    horarioSeleccionadoAnterior.value = value
   },
   { immediate: true }
 )
+
+const updateFranjaInscripcion = async () => {
+  const indexSeleccionado = Number(horarioSeleccionado.value)
+
+  if (Number.isNaN(indexSeleccionado) || !franjasDisponibles.value[indexSeleccionado]) {
+    horarioSeleccionado.value = horarioSeleccionadoAnterior.value
+    return
+  }
+
+  emit('update-franja', {
+    alumno: props.alumno,
+    franja: franjasDisponibles.value[indexSeleccionado],
+    indexSeleccionado,
+    valorAnterior: horarioSeleccionadoAnterior.value,
+    revertir: () => {
+      horarioSeleccionado.value = horarioSeleccionadoAnterior.value
+    },
+    confirmar: () => {
+      horarioSeleccionadoAnterior.value = horarioSeleccionado.value
+    }
+  })
+}
 </script>
 
 <template>
@@ -84,11 +107,11 @@ watch(
         class="col-12 d-flex gap-2 mt-1 align-items-center"
       >
         <label class="mb-0">Horario de cursado:</label>
-        <select v-model="horarioSeleccionado">
+        <select v-model="horarioSeleccionado" @change="updateFranjaInscripcion">
           <option
-            v-for="franja in franjasDisponibles"
+            v-for="(franja, index) in franjasDisponibles"
             :key="`${franja.codplhorarios}-${franja.inicioFranja}`"
-            :value="`${franja.codplhorarios}-${franja.inicioFranja}`"
+            :value="index"
           >
             {{ franja.dia }} {{ franja.hora }}
           </option>

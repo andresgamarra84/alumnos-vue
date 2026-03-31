@@ -21,6 +21,7 @@
           :es-instrumento="curso.esInstrumento"
           :alumno="alumno"
           :franjas="curso.franjas"
+          @update-franja="emit('update-franja', $event)"
         />
       </ListaAlumnos>
       <div class="col-12 text-end mt-2">
@@ -50,7 +51,7 @@ import AlumnoItem from './AlumnoItem.vue';
 const props = defineProps({
   curso: Object,
 })
-const emit = defineEmits(['toggle-estudiantes'])
+const emit = defineEmits(['toggle-estudiantes', 'update-franja'])
 
 const copyEmails = async () => {
   const emails = [...new Set(
