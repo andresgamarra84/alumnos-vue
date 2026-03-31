@@ -16,8 +16,11 @@
 
     onMounted(async () => {
         const c = await getCursos()
-        c.forEach(v=>v.listaAbierta=false)
-        console.log(c)
+        c.forEach(v => {
+            v.listaAbierta = false
+            v.alumnos = []
+            v.franjas = {}
+        })
         cursos.value = c
     })
     const getCursos = async () => {
@@ -31,6 +34,7 @@
         if (cursos.value[k].listaAbierta) {
             cursos.value[k].listaAbierta=false
             cursos.value[k].alumnos = []
+            cursos.value[k].franjas = {}
             return
         }
         const r = await api.get({
@@ -41,7 +45,8 @@
                 tipoMateria:cursos.value[k].tipoMateria,
             },
         })
-        cursos.value[k].alumnos = r.payload
+        cursos.value[k].alumnos = r.payload.alumnos
+        cursos.value[k].franjas = r.payload.franjas
         cursos.value[k].listaAbierta = true
     }
 </script>

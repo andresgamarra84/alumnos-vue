@@ -17,8 +17,10 @@
       >
         <AlumnoItem
           v-for="alumno in curso.alumnos"
+          :key="alumno.codcursosalumnos ?? alumno.codinscripcionmateria ?? alumno.nrodoc"
           :es-instrumento="curso.esInstrumento"
           :alumno="alumno"
+          :franjas="curso.franjas"
         />
       </ListaAlumnos>
       <div class="col-12 text-end mt-2">
