@@ -50,18 +50,14 @@
         cursos.value[k].franjas = r.payload.franjas
         cursos.value[k].listaAbierta = true
     }
-    const updateFranjaInscripcion = async ({ franja, revertir, confirmar }) => {
+    const updateFranjaInscripcion = async (d) => {
         const r = await api.post({
             entity:"cursos",
             action:"updateFranjaInscripcion",
-            payload: franja,
+            payload: d
         })
-
-        if (r?.ok) {
-            confirmar()
-            return
-        }
-
-        revertir()
+        cursos.value.forEach(v=>{
+            v.listaAbierta = false
+        })
     }
 </script>

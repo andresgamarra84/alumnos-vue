@@ -12,7 +12,6 @@ const props = defineProps({
 const emit = defineEmits(['update-franja'])
 
 const horarioSeleccionado = ref('')
-const horarioSeleccionadoAnterior = ref('')
 
 const getAlumnoValue = (keys) => {
   for (const key of keys) {
@@ -56,34 +55,12 @@ const claveHorarioActual = computed(() => {
   return franjaActualIndex >= 0 ? String(franjaActualIndex) : ''
 })
 
-watch(
-  claveHorarioActual,
-  (value) => {
-    horarioSeleccionado.value = value
-    horarioSeleccionadoAnterior.value = value
-  },
-  { immediate: true }
-)
-
 const updateFranjaInscripcion = async () => {
   const indexSeleccionado = Number(horarioSeleccionado.value)
-
-  if (Number.isNaN(indexSeleccionado) || !franjasDisponibles.value[indexSeleccionado]) {
-    horarioSeleccionado.value = horarioSeleccionadoAnterior.value
-    return
-  }
-
   emit('update-franja', {
     alumno: props.alumno,
     franja: franjasDisponibles.value[indexSeleccionado],
     indexSeleccionado,
-    valorAnterior: horarioSeleccionadoAnterior.value,
-    revertir: () => {
-      horarioSeleccionado.value = horarioSeleccionadoAnterior.value
-    },
-    confirmar: () => {
-      horarioSeleccionadoAnterior.value = horarioSeleccionado.value
-    }
   })
 }
 </script>
