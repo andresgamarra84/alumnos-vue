@@ -3,14 +3,17 @@
     <div class="col-12 fw-bold">
       {{ curso.nombreCurso }}
     </div>
-
     <div
-      v-for="info in curso.horarios"
+      v-for="(info, k) in curso.horarios"
       class="col-12 text-muted"
     >
       {{ info.dia }} de {{ info.horario[0] }} a {{ info.horario[1] }},
       Aula {{ info.aula }} – Sede {{ info.sede }}
     </div>
+    <template v-if="puedeAgregarExternos">
+      <div class='col-6 text-center mt-4'><a @click='addExternal(0,k)'>Agregar oyente</a></div>
+		  <div class='col-6 text-center mt-4'><a @click='addExternal(1,k)'>Agregar itinerante</a></div>
+    </template>
     <template v-if="curso.cantInscriptos > 0">
       <ListaAlumnos
         v-if="curso.listaAbierta"
@@ -47,9 +50,14 @@
 import { showModal } from '@/services/uiBus'
 import ListaAlumnos from './ListaAlumnos.vue'
 import AlumnoItem from './AlumnoItem.vue';
-
 const props = defineProps({
-  curso: Object,
+  curso: {
+    type: Object,
+  },
+  puedeAgregarExternos: {
+    type: Boolean,
+    default:false
+  }
 })
 const emit = defineEmits(['toggle-estudiantes', 'update-franja'])
 
@@ -72,7 +80,69 @@ const copyEmails = async () => {
     await showModal('No se pudo copiar al portapapeles')
   }
 }
-
+const addExternal = async (type=0, k) => {
+  const tipoAlumno = type == 0 ? "Oyente" : "Itinerante"
+  const respuestaNrodoc = await showModal(
+    "Nro de DNI",
+    2,
+    "Ingresar estudiante "+tipoAlumno
+  )
+  if (!nrodoc) {
+    showModal("El campo no puede estar vacío")
+    return;
+  }
+  const nrodoc = respuestaNrodoc.value
+  const { payload } = await api.get({
+    entity: "cursos",
+    action: "buscarEstudiantePorDni",
+    payload: {
+      tipo: type,
+      nrodoc: nrodoc
+    }
+  })
+  const nombre = r.payload.nombre
+  const email = r.payload.email
+  const nombreApellido = await showModal(
+    "Apellido y nombre",
+    2,
+    "Ingresar estudiante "+tipoAlumno,
+    nombre
+  )
+  if (!nombreApellido.value) {
+    showModal.show("El campo no puede estar vacío")
+    return
+  }
+  const modalEmail = await showModal(
+    "Correo electrónico",
+    2, 
+    "Ingresar estudiante "+tipoAlumno,
+    email
+  )
+  if (!modalEmail.value) {
+    showModal("El campo no puede estar vacío")
+    return
+  }    
+  const confirma = showModal(
+    "¿Confirma inscripción a la unidad curricular?", 
+    1,
+    "Ingresar estudiante "+tipoAlumno
+  )
+  if (!confirma.ok){
+    return
+  }
+  d = {
+    codigo:this.arrCursos[k].codigo,
+    nrodoc:nrodoc,
+    nombre:nombre,
+    email:email,
+    tipo:tipo,
+  }
+  const r = api.post({
+    entity: "cursos",
+    action: "agregarExterno"
+  })
+  if (r.ok) showModal("El estudiante fue ingresado al curso")
+}
 const showHideList = () => {
   emit('toggle-estudiantes')
 }
