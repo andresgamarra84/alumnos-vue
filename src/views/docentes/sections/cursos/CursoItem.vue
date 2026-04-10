@@ -4,15 +4,15 @@
       {{ curso.nombreCurso }}
     </div>
     <div
-      v-for="(info, k) in curso.horarios"
+      v-for="info in curso.horarios"
       class="col-12 text-muted"
     >
       {{ info.dia }} de {{ info.horario[0] }} a {{ info.horario[1] }},
       Aula {{ info.aula }} – Sede {{ info.sede }}
     </div>
     <template v-if="puedeAgregarExternos">
-      <div class='col-6 text-center mt-4'><a @click='addExternal(0,k)'>Agregar oyente</a></div>
-		  <div class='col-6 text-center mt-4'><a @click='addExternal(1,k)'>Agregar itinerante</a></div>
+      <div class='col-6 text-center mt-4'><a @click='addExternal(0)'>Agregar oyente</a></div>
+		  <div class='col-6 text-center mt-4'><a @click='addExternal(1)'>Agregar itinerante</a></div>
     </template>
     <template v-if="curso.cantInscriptos > 0">
       <ListaAlumnos
@@ -48,6 +48,7 @@
 </template>
 <script setup>
 import { showModal } from '@/services/uiBus'
+import { api } from '@/api/api';
 import ListaAlumnos from './ListaAlumnos.vue'
 import AlumnoItem from './AlumnoItem.vue';
 const props = defineProps({
@@ -80,14 +81,14 @@ const copyEmails = async () => {
     await showModal('No se pudo copiar al portapapeles')
   }
 }
-const addExternal = async (type=0, k) => {
+const addExternal = async (type=0) => {
   const tipoAlumno = type == 0 ? "Oyente" : "Itinerante"
   const respuestaNrodoc = await showModal(
     "Nro de DNI",
     2,
     "Ingresar estudiante "+tipoAlumno
   )
-  if (!nrodoc) {
+  if (!respuestaNrodoc.value) {
     showModal("El campo no puede estar vacío")
     return;
   }
@@ -100,8 +101,8 @@ const addExternal = async (type=0, k) => {
       nrodoc: nrodoc
     }
   })
-  const nombre = r.payload.nombre
-  const email = r.payload.email
+  const nombre = payload.nombre
+  const email = payload.email
   const nombreApellido = await showModal(
     "Apellido y nombre",
     2,
@@ -122,7 +123,7 @@ const addExternal = async (type=0, k) => {
     showModal("El campo no puede estar vacío")
     return
   }    
-  const confirma = showModal(
+  const confirma = await showModal(
     "¿Confirma inscripción a la unidad curricular?", 
     1,
     "Ingresar estudiante "+tipoAlumno
@@ -130,16 +131,16 @@ const addExternal = async (type=0, k) => {
   if (!confirma.ok){
     return
   }
-  d = {
-    codigo:this.arrCursos[k].codigo,
-    nrodoc:nrodoc,
-    nombre:nombre,
-    email:email,
-    tipo:tipo,
-  }
-  const r = api.post({
+  const r = await api.post({
     entity: "cursos",
-    action: "agregarExterno"
+    action: "agregarEstudianteExterno",
+    payload: {
+      curso: props.curso,
+      nrodoc,
+      nombre,
+      email,
+      tipo: type
+    }
   })
   if (r.ok) showModal("El estudiante fue ingresado al curso")
 }

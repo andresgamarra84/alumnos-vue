@@ -15,7 +15,7 @@
     import CursoItem from './CursoItem.vue'
     import { api } from '@/api/api'
     const cursos = ref([])
-    const puedeAgregarExternos = ref(false)
+    const puedeAgregarExternos = ref(true)
 
     onMounted(async () => {
         const c = await getCursos()
@@ -23,7 +23,7 @@
             entity: 'cursos',
             action: 'puedeAgregarExternos'
         })
-        puedeAgregarExternos.value = payload;
+        //puedeAgregarExternos.value = payload;
         c.forEach(v => {
             v.listaAbierta = false
             v.alumnos = []
