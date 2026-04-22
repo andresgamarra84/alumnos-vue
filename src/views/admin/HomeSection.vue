@@ -2,9 +2,13 @@
   <div class="text-end">
     <input type="button" class="btn" @click="toggleDarkMode" value="Modo oscuro" />
   </div>
-  <h3 class="h3cabecera">Notificaciones</h3>
-  <div>
-    <p v-for="item in arrNotif" :key="item.id" v-html="item.texto"></p>
+  <div v-if="arrNotif.length>0">
+    <h3 class="h3cabecera">Notificaciones</h3>
+    <p v-for="item in arrNotif" :key="item.codigo">
+      {{ item.before }}
+      <a v-if="item.linkText" :href="item.link" target="_blank">{{ item.linkText }}</a>
+      {{ item.after }}
+    </p>
   </div>
   <h3 class="h3cabecera">Trámites habilitados</h3>
   <div>
@@ -30,22 +34,26 @@ const toggleDarkMode = () => {
   document.body.classList.toggle('dark-mode');
 };
 
-
-const listNotif = async () => {
-  arrNotif.value = [];
-  try {
-    const r = await api.get({ entity: 'notificaciones', action: 'getAll' });
-    if (r.ok) {
-      r.payload.forEach(v => arrNotif.value.push(v));
+const listNotificaciones = async () => {
+  const r = await api.get({ entity: 'notificaciones', action: 'getAll' });
+  let notif = r.payload
+  arrNotif.value = notif.map(a => {
+    const match = a.texto.match(/\{\{(.*?)\}\}/)
+    if (!match) return { ...a, before: a.texto }
+    const [full, linkText] = match
+    const [before, after] = a.texto.split(full)
+    return {
+      ...a,
+      before,
+      linkText,
+      after,
     }
-  } catch (err) {
-    console.error('Error listNotif:', err);
-  }
+  })
 };
 
 
-
 onMounted(async () => {
+  listNotificaciones()
   //const configRes = await api.get({ entity: 'config', action: 'getConfig' }); // Action 0 default
   //arrConfig.value = configRes.payload || {};
   /*await Promise.all([
