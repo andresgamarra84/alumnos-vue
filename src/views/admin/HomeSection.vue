@@ -54,11 +54,12 @@ const listNotificaciones = async () => {
 
 onMounted(async () => {
   listNotificaciones()
-  //const configRes = await api.get({ entity: 'config', action: 'getConfig' }); // Action 0 default
-  //arrConfig.value = configRes.payload || {};
-  /*await Promise.all([
-    //listNotif()
-  ]);*/
+  const { payload } = await api.get({ 
+    entity: 'config', 
+    action: 'getConfig' 
+  })
+  arrConfig.value = payload
+  
 });
 </script>
 
