@@ -96,6 +96,11 @@ export default [
         path: 'notasCursadas',
         component: () =>
           import('@/views/estudiantes/sections/constancias/CursadasAprobadasView.vue')
+      },
+      {
+        path: 'solicitudMesa',
+        component: () =>
+          import('@/views/estudiantes/sections/tramites/SolicitudMesaView.vue')
       }
     ]
   }

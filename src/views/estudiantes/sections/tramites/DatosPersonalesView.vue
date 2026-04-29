@@ -265,6 +265,17 @@
 
     </div>
 
+    <div class="row recuadro mt-3">
+      <div class="col-12">
+        <label>Observaciones:</label>
+        <textarea
+          v-model="dPers.observaciones"
+          class="form-control"
+          rows="4"
+        />
+      </div>
+    </div>
+
     <!-- ================= ACCIONES ================= -->
     <div class="row mt-4">
       <div class="col-12 text-end">
