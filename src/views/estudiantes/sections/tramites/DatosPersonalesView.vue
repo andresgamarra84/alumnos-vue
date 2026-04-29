@@ -361,9 +361,9 @@ const getUsrData = async () => {
 
 const postData = async () => {
   const ok = await showModal(
-    'Confirmación',
     '¿Confirma que desea guardar la información?',
-    1
+    1,
+    'Confirmación'
   )
   if (!ok) return
 
@@ -373,7 +373,7 @@ const postData = async () => {
     payload: dPers
   })
 
-  await showModal('Información', 'Datos actualizados', 0)
+  await showModal('Datos actualizados', 0, 'Información')
 }
 
 const keyBlank = async () => {
