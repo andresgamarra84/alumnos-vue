@@ -38,7 +38,7 @@
         <strong>{{ grupo.nombreProf }}</strong>
       </div>
 
-      <div class="col-12 col-lg-8">
+      <div class="col-12 col-lg-8"> 
         <div class="franjas-grid">
           <button
             v-for="(curso, j) in grupo.franjas"
