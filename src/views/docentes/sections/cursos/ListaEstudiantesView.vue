@@ -7,6 +7,7 @@
     :curso="curso"
     @toggle-estudiantes="openCloseEstudiantesInscriptos(k)"
     @update-franja="updateFranjaInscripcion"
+    :puede-agregar-externos="puedeAgregarExternos"
   />
 </template>
 <script setup>
@@ -14,9 +15,15 @@
     import CursoItem from './CursoItem.vue'
     import { api } from '@/api/api'
     const cursos = ref([])
+    const puedeAgregarExternos = ref(true)
 
     onMounted(async () => {
         const c = await getCursos()
+        const { payload } = await api.get({
+            entity: 'cursos',
+            action: 'puedeAgregarExternos'
+        })
+        //puedeAgregarExternos.value = payload;
         c.forEach(v => {
             v.listaAbierta = false
             v.alumnos = []
