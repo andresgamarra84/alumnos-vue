@@ -63,8 +63,10 @@
             action:"updateFranjaInscripcion",
             payload: d
         })
+        /*
         cursos.value.forEach(v=>{
             v.listaAbierta = false
         })
+            */
     }
 </script>
