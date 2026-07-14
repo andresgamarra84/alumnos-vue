@@ -18,38 +18,42 @@ export default [
             redirect: '/admin/inicio'
             },
             {
-            path: 'inicio',
-            component: () => import('@/views/admin/HomeSection.vue')
+                path: 'inicio',
+                component: () => import('@/views/admin/HomeSection.vue')
             },
             {
-            path: 'busquedaEstudiantes',
-            component: () => import ('@/views/admin/sections/BusquedaView.vue'),
-            meta: {
-                area: 'estudiantes'
+                path: 'busquedaEstudiantes',
+                component: () => import ('@/views/admin/sections/BusquedaView.vue'),
+                meta: {
+                    area: 'estudiantes'
                 },
             },
             {
-            path: 'busquedaDocentes',
-            component: () => import ('@/views/admin/sections/BusquedaView.vue'),
-            meta: {
-                area: 'docentes',
+                path: 'busquedaDocentes',
+                component: () => import ('@/views/admin/sections/BusquedaView.vue'),
+                meta: {
+                    area: 'docentes',
                 },
             },
             {
-            path: 'grillaHorarios',
-            component: () => import('@/views/admin/GrillaHorariosView.vue')
+                path: 'nuevoDocente',
+                component: () => import('@/views/admin/sections/docentes/NuevoDocenteView.vue')
             },
             {
-            path: 'mensajes',
-            component: () => import('@/views/admin/MensajesView.vue')
+                path: 'grillaHorarios',
+                component: () => import('@/views/admin/GrillaHorariosView.vue')
             },
             {
-            path: 'config',
-            component: () => import('@/views/admin/config/ConfiguracionView.vue')
+                path: 'mensajes',
+                component: () => import('@/views/admin/MensajesView.vue')
             },
             {
-            path: 'solicitudesConstancias',
-            component: () => import ('@/views/admin/sections/estudiantes/SolicitudesConstanciasView.vue')
+                path: 'config',
+                component: () => import('@/views/admin/config/ConfiguracionView.vue')
+            },
+            {
+                path: 'solicitudesConstancias',
+                component: () => import ('@/views/admin/sections/estudiantes/SolicitudesConstanciasView.vue')
             },
             {
                 path: 'carreras',
