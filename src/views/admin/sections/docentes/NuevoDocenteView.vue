@@ -1,6 +1,6 @@
 <template>
 	<div id="nuevoProf">
-		<div class="carousel-item" v-show="currentStep === 0" ref="step1El">
+		<div class="wizard-step" v-show="currentStep === 0" ref="step1El">
 			<div class='col-12' style='padding-bottom:20px;'><h4>Datos personales del Profesor.</h4></div>
 			<div class='row'>
 				<div class='col-12 col-md-6' style='padding-bottom:2vw'>
@@ -336,7 +336,7 @@
 			</div>
 		</div>
 
-		<div class='carousel-item' v-show="currentStep === 1" ref="step2El">
+		<div class='wizard-step' v-show="currentStep === 1" ref="step2El">
 			<div class='row' style='margin-top:20px;border-top:1px solid white;text-align:center'>
 				<h4>Datos de contacto</h4>
 			</div>
@@ -366,7 +366,7 @@
 			</div>
 		</div>
 
-		<div class='carousel-item' v-show="currentStep === 2" ref="step3El">
+		<div class='wizard-step' v-show="currentStep === 2" ref="step3El">
 			<div class='row' style='margin-top:20px;border-top:1px solid white;text-align:center'>
 				<h4>Información docente</h4>
 			</div>

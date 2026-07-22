@@ -90,7 +90,11 @@ export default [
             {
                 path: 'vacantesInstrumento',
                 component: () => import('@/views/admin/sections/cursos/HorariosInstrumentoView.vue')
-            }
+            },
+            {
+                path: 'resumenInscriptos',
+                component: () => import('@/views/admin/sections/cursos/ResumenInscriptosView.vue')
+            },
         ]
     }
 ]
