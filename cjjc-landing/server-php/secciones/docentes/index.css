@@ -1,0 +1,5 @@
+.blog-entry img {
+	max-height: 500px; /* Establece el height máximo aquí */
+	object-fit: contain; /* Mantiene las proporciones de la imagen */
+	width: 100%; /* Asegura que la imagen ocupe todo el ancho del div */
+}

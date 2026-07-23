@@ -1,0 +1,52 @@
+.more-content {
+	display: none;
+}
+.social-icons {
+	display: flex;
+	gap: 10px; /* Espacio entre los íconos */
+}
+.social-icon {
+	text-decoration: none;
+	color: #000; /* Cambia el color según tu diseño */
+	font-size: 24px; /* Tamaño de los íconos */
+}
+.social-icon:hover {
+	color: #007bff; /* Color al pasar el cursor */
+}
+.carousel-image {
+	width:100%;
+	height: 100%;
+	object-fit: cover;
+}
+.carousel-control-prev,
+.carousel-control-next {
+  width: 5%; /* Ajusta el ancho según tus necesidades */
+  background-color: rgba(0, 0, 0, 0.1); /* Fondo semi-transparente por defecto */
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 5;
+}
+
+.carousel-control-prev {
+  left: -50px; /* Ajusta la distancia a la izquierda según tus necesidades */
+}
+
+.carousel-control-next {
+  right: -50px; /* Ajusta la distancia a la derecha según tus necesidades */
+}
+
+.carousel-control-prev:hover,
+.carousel-control-next:hover {
+  background-color: rgba(0, 0, 0, 0.3); /* Fondo oscuro al hacer hover */
+}
+
+.carousel-control-prev-icon,
+.carousel-control-next-icon {
+  filter: invert(1); /* Para que los iconos sean visibles en fondos oscuros */
+}
+
+.transparente-bordes {
+  mask-image: radial-gradient(circle, rgba(0,0,0,1) 0%, rgba(0,0,0,0) 100%);
+  -webkit-mask-image: radial-gradient(circle, rgba(0,0,0,1) 70%, rgba(0,0,0,0) 100%);
+}

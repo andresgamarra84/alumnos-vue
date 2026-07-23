@@ -1,0 +1,50 @@
+
+.dropdown-menu, .dropdown-item, .dropdown-toggle, .nav-link{
+	background-color: transparent;
+	color: rgba(255, 255, 255, 0.6);
+	border:none;
+}
+.dropdown-item:hover, .dropdown-item:focus{
+	background-color: transparent;
+	color: rgba(255, 255, 255, 1);
+}
+.ulSize {
+	width: fit-content;
+	block-size: fit-content;
+	padding-left:0.5rem;
+}
+.dropdown-divider{
+	border-top:1px solid rgba(255, 255, 255, 0.3);
+	margin-left:var(--bs-dropdown-item-padding-x);
+}
+.divDropdown {
+	transition: height 0.4s ease;
+}
+/* Estilo base para los submenús */
+ul.dropdown-menu {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.5s ease-out;
+}
+
+/* Estilo para submenús visibles */
+ul.dropdown-menu.show {
+  max-height: 500px; /* Ajusta esto según la altura máxima esperada del contenido */
+}
+.fade-in {
+	opacity: 0;
+	transition: opacity 0.7s ease-in-out;
+}
+
+.fade-in.visible {
+	opacity: 1;
+}
+.hover-effect {
+    transition: opacity 0.3s ease;
+	color: #03005f
+}
+
+.hover-effect:hover {
+    opacity: 0.5;
+    cursor: pointer;
+}
