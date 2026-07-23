@@ -95,6 +95,10 @@ export default [
                 path: 'resumenInscriptos',
                 component: () => import('@/views/admin/sections/cursos/ResumenInscriptosView.vue')
             },
+            {
+                path: 'correlatividades',
+                component: () => import('@/views/admin/sections/cursos/CorrelatividadesView.vue')
+            },
         ]
     }
 ]
