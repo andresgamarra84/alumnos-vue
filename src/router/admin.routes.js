@@ -99,6 +99,10 @@ export default [
                 path: 'correlatividades',
                 component: () => import('@/views/admin/sections/cursos/CorrelatividadesView.vue')
             },
+            {
+                path: 'pdfHorarios',
+                component: () => import('@/views/admin/sections/cursos/DescargarHorariosView.vue')
+            },
         ]
     }
 ]
