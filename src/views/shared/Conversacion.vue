@@ -17,6 +17,9 @@
         </div>
 
         <div class="text-end">
+            <button v-if="showArchivar" class="btn btn-outline-secondary m-2" @click.stop="emit('close-thread')">
+                Archivar
+            </button>
             <button class="btn btn-secondary m-2" @click.stop="emit('close-chat')">
                 Cerrar conversacion
             </button>
@@ -30,7 +33,7 @@
 <script setup>
 import { defineEmits, defineProps } from 'vue'
 
-const emit = defineEmits(['send-msg', 'update:respuesta', 'close-chat'])
+const emit = defineEmits(['send-msg', 'update:respuesta', 'close-chat', 'close-thread'])
 
 defineProps({
     arrMensajes: {
@@ -40,6 +43,10 @@ defineProps({
     respuesta: {
         type: String,
         default: ''
+    },
+    showArchivar: {
+        type: Boolean,
+        default: false
     }
 })
 
