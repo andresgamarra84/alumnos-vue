@@ -38,7 +38,7 @@
     </div>
 </template>
 <script setup>
-import { ref, watch } from 'vue'
+import { ref, watch, onMounted } from 'vue'
 import { api } from '@/api/api'
 import { showModal } from '@/services/uiBus'
 import { useImpersonation } from '@/views/admin/composables/useImpersonation'
@@ -46,6 +46,12 @@ const { openUserPanel }  = useImpersonation()
 const tipoCorrelativa = ref('')
 const arrCorrelatividades = ref([])
 const carrera = ref(null)
+onMounted(async () => {
+    await api.get({
+        entity: 'correlativas',
+        action: 'corregirCorrelativas'
+    })
+})
 watch(carrera, async (nuevaCarrera) => {
     if (!tipoCorrelativa.value) {
         showModal("Seleccione un tipo de listado");
