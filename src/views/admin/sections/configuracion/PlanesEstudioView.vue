@@ -20,24 +20,20 @@
             :key="m.codigo"
             class="row border rounded p-3 mb-3"
           >
-            <!-- IZQUIERDA -->
-            <div class="col-12 col-md-6">
-              <!-- Orden + nombre -->
-              <div class="fw-bold mb-2">
-                <select
-                  class="form-select d-inline-block w-auto me-2"
-                  v-model.number="m.nroOrden"
-                  @change="updateMateriaCarrera(m)"
-                >
-                  <option v-for="n in 50" :key="n" :value="n">
-                    {{ n }}
-                  </option>
-                </select>
-                {{ m.nombres.nombreTitulo }}
-              </div>
+            <!-- VISTA REDUCIDA -->
+            <div class="col-12 d-flex flex-wrap align-items-center gap-2">
+              <select
+                class="form-select d-inline-block w-auto"
+                v-model.number="m.nroOrden"
+                @change="updateMateriaCarrera(m)"
+              >
+                <option v-for="n in 50" :key="n" :value="n">
+                  {{ n }}
+                </option>
+              </select>
+              <span class="fw-bold">{{ m.nombres.nombreTitulo }}</span>
 
-              <!-- Programa -->
-              <div class="small">
+              <div class="small ms-auto">
                 <a
                   v-if="m.linkPrograma"
                   :href="m.linkPrograma"
@@ -62,79 +58,89 @@
                   + Cargar link de programa
                 </a>
               </div>
-            </div>
 
-            <!-- DERECHA -->
-            <div class="col-12 col-md-6">
-              <!-- Correlativas -->
-              <b v-if="m.correlativas.length>0">Correlativas:</b>
-              <div v-if="m.correlativas.length === 0" class="text-muted">
-                <i>(Sin correlativas)</i>
-              </div>
-              <div
-                v-else
-                v-for="c in m.correlativas"
-                :key="c.codigo"
-                class="d-flex justify-content-between align-items-center border rounded px-2 py-1 mb-1"
-              >
-                <span>{{ c.nombre }}</span>
-                <a
-                  @click="delCorrelativa(m, c)"
-                >
-                  X
-                </a>
-              </div>
               <a
                 href="#"
-                class="d-block mt-2"
-                @click.prevent="showMateriasParaCorrelativa(m)"
+                class="ms-2"
+                @click.prevent="toggleDetalles(m)"
               >
-                + Agregar correlativa
+                {{ isExpanded(m) ? 'Ocultar detalles' : 'Ver detalles' }}
               </a>
             </div>
 
-            <!-- ABAJO -->
-            <div class="col-6 mt-3">
-              <div>
-                <label class="form-label small">Tipo de materia:</label>
-                <select v-model="m.tipoMateriaDesc" class="form-select" @change="updateMateriaCarrera(m)">
-                  <option value="normal">Normal</option>
-                  <option value="instrumento">Instrumento</option>
-                  <option value="instrumentoArmonico">Instrumento Armónico</option>
-                  <option value="espacioInstitucional">Espacio Institucional</option>
-                  <option value="espacioAlternativo">Espacio Inst. Alternativo</option>
-                </select>
+            <template v-if="isExpanded(m)">
+              <!-- DERECHA -->
+              <div class="col-12 col-md-6 mt-3">
+                <!-- Correlativas -->
+                <b v-if="m.correlativas.length>0">Correlativas:</b>
+                <div v-if="m.correlativas.length === 0" class="text-muted">
+                  <i>(Sin correlativas)</i>
+                </div>
+                <div
+                  v-else
+                  v-for="c in m.correlativas"
+                  :key="c.codigo"
+                  class="d-flex justify-content-between align-items-center border rounded px-2 py-1 mb-1"
+                >
+                  <span>{{ c.nombre }}</span>
+                  <a
+                    @click="delCorrelativa(m, c)"
+                  >
+                    X
+                  </a>
+                </div>
+                <a
+                  href="#"
+                  class="d-block mt-2"
+                  @click.prevent="showMateriasParaCorrelativa(m)"
+                >
+                  + Agregar correlativa
+                </a>
               </div>
-              <div>
-              <div v-if="['instrumento','instrumentoArmonico'].includes(m.tipoMateriaDesc)">
-                <label>Cupo:</label>
-                <select v-model="m.cupo" @change="updateMateriaCarrera(m)">
-                  <option disabled>Seleccione el cupo (en min.)</option>
-                  <option v-for="v in arrCupos" :value="v">{{ v }} minutos</option>
-                </select>
+
+              <!-- ABAJO -->
+              <div class="col-6 mt-3">
+                <div>
+                  <label class="form-label small">Tipo de materia:</label>
+                  <select v-model="m.tipoMateriaDesc" class="form-select" @change="updateMateriaCarrera(m)">
+                    <option value="normal">Normal</option>
+                    <option value="instrumento">Instrumento</option>
+                    <option value="instrumentoArmonico">Instrumento Armónico</option>
+                    <option value="espacioInstitucional">Espacio Institucional</option>
+                    <option value="espacioAlternativo">Espacio Inst. Alternativo</option>
+                  </select>
+                </div>
+                <div>
+                <div v-if="['instrumento','instrumentoArmonico'].includes(m.tipoMateriaDesc)">
+                  <label>Cupo:</label>
+                  <select v-model="m.cupo" @change="updateMateriaCarrera(m)">
+                    <option disabled>Seleccione el cupo (en min.)</option>
+                    <option v-for="v in arrCupos" :value="v">{{ v }} minutos</option>
+                  </select>
+                </div>
+                  <!-- Año editable -->
+                  <label class="form-label small">Año</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="6"
+                    class="form-control"
+                    v-model.number="m.anioCarrera"
+                    @change="updateMateriaCarrera(m)"
+                  />
+                </div>
+                <input type="checkbox" v-model="m.esConceptual" @change="updateMateriaCarrera(m)"> Es conceptual
+                <input type="checkbox" v-model="m.esPromocional" @change="updateMateriaCarrera(m)"> Es promocional
               </div>
-                <!-- Año editable -->
-                <label class="form-label small">Año</label>
-                <input
-                  type="number"
-                  min="1"
-                  max="6"
-                  class="form-control"
-                  v-model.number="m.anioCarrera"
-                  @change="updateMateriaCarrera(m)"
-                />
+              <div class="col-6 mt-3 text-end">
+                <button
+                  class="btn btn-sm bg-danger"
+                  @click="delMateriaCarrera(m)"
+                >
+                  Quitar de la carrera
+                </button>
               </div>
-              <input type="checkbox" v-model="m.esConceptual" @change="updateMateriaCarrera(m)"> Es conceptual
-              <input type="checkbox" v-model="m.esPromocional" @change="updateMateriaCarrera(m)"> Es promocional
-            </div>
-            <div class="col-6 mt-3 text-end">
-              <button
-                class="btn btn-sm bg-danger"
-                @click="delMateriaCarrera(m)"
-              >
-                Quitar de la carrera
-              </button>
-            </div>
+            </template>
           </div>
         </div>
       </div>
@@ -265,7 +271,7 @@
 </template>
 <script setup>
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
-import { ref, onMounted, computed } from 'vue';
+import { ref, reactive, onMounted, computed } from 'vue';
 import { api } from '@/api/api'
 import { showModal } from '@/services/uiBus';
 const carreras = ref([])
@@ -289,6 +295,11 @@ const materiasCarrera = ref([])
 const showModalNuevaMateria = ref(false)
 const selectedMateriaParaAgregar = ref('')
 const selectedCarreraIndex = ref(null)
+const expandedMaterias = reactive({})
+const isExpanded = (m) => !!expandedMaterias[m.codigo]
+const toggleDetalles = (m) => {
+    expandedMaterias[m.codigo] = !expandedMaterias[m.codigo]
+}
 onMounted(async() => {
     carreras.value = await getCarreras()
     materias.value = await getMaterias()
