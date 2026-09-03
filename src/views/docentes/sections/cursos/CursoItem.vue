@@ -101,28 +101,28 @@ const addExternal = async (type=0) => {
       nrodoc: nrodoc
     }
   })
-  const nombre = payload.nombre
-  const email = payload.email
   const nombreApellido = await showModal(
     "Apellido y nombre",
     2,
     "Ingresar estudiante "+tipoAlumno,
-    nombre
+    payload.nombre
   )
   if (!nombreApellido.value) {
-    showModal.show("El campo no puede estar vacío")
+    showModal("El campo no puede estar vacío")
     return
   }
   const modalEmail = await showModal(
     "Correo electrónico",
-    2, 
+    2,
     "Ingresar estudiante "+tipoAlumno,
-    email
+    payload.email
   )
   if (!modalEmail.value) {
     showModal("El campo no puede estar vacío")
     return
-  }    
+  }
+  const nombre = nombreApellido.value
+  const email = modalEmail.value
   const confirma = await showModal(
     "¿Confirma inscripción a la unidad curricular?", 
     1,
