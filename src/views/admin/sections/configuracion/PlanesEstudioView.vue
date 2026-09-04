@@ -33,6 +33,19 @@
               </select>
               <span class="fw-bold">{{ m.nombres.nombreTitulo }}</span>
 
+              <div class="form-check form-check-inline mb-0">
+                <input
+                  class="form-check-input"
+                  type="checkbox"
+                  v-model="m.esPromocional"
+                  :id="`chkPromo-${m.codigo}`"
+                  @change="updateMateriaCarrera(m)"
+                >
+                <label class="form-check-label small" :for="`chkPromo-${m.codigo}`">
+                  Es promocional
+                </label>
+              </div>
+
               <div class="small ms-auto">
                 <a
                   v-if="m.linkPrograma"

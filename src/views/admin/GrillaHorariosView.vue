@@ -280,7 +280,6 @@ const updGrilla = async () => {
   const dia = diaSeleccionado.value
   const sede = sedeSeleccionada.value
   grillaHorarios.value = await getGrilla(dia, sede)
-  console.log(grillaHorarios.value)
 }
 const getGrilla = async () => {
   const r = await api.get({
