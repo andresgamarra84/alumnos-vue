@@ -115,7 +115,7 @@
   >
     <!-- Código -->
     <div class="col-md-1">
-      <a href="#" @click.prevent="downloadActa(key)">
+      <a href="#" @click.prevent="downloadActa(mesa.codigo)">
         {{ mesa.codigo }}
       </a>
 
@@ -393,7 +393,7 @@ const downloadActa = async (key) => {
     entity: "mesasexamen",
     action: "getActaMesa",
     payload: {
-      codMesa: arrMesas.value[key].datosMesa.codigo,
+      codMesa: key,
     }
   })
   downloadPDF(blob, "ActaMesa - "+this.arrMesas[k].datosMesa.codigo+".pdf")
