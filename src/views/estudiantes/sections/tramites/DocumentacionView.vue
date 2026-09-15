@@ -49,7 +49,7 @@
 <script setup>
     import { ref, onMounted} from 'vue'
     import Resumable from 'resumablejs'
-    import { showModal } from '@/services/uiBus.js'
+    import { showToast } from '@/services/uiBus.js'
     import { api } from '@/api/api'
     import { SESSION_NAME } from '@/config/app.config'
 
@@ -73,7 +73,7 @@
     const prepareUpload = async (k = false) => {
         const str = tituloDoc.value?.trim();
         if (str == null || str === "") {
-            showModal("El campo no puede quedar vacío")
+            showToast("El campo no puede quedar vacío", 'error')
             return
         }
         const f = document.createElement("input")
@@ -95,18 +95,18 @@
             }),
         })
         if (!upl.support) {
-            showModal("Tu navegador no soporta la carga de archivos.")
+            showToast("Tu navegador no soporta la carga de archivos.", 'error')
             return
         }
         upl.assignBrowse(f)
         upl.on('fileSuccess', () => {
             tituloDoc.value = ""
             showUploadMenu.value = false
-            showModal("Documento enviado correctamente.")
+            showToast("Documento enviado correctamente.", 'success')
             listDocs()
         })
         upl.on('fileError', (_, message) => {
-            showModal(`No fue posible subir el archivo. ${message || ""}`.trim())
+            showToast(`No fue posible subir el archivo. ${message || ""}`.trim(), 'error')
         })
         upl.on('fileProgress', () => {
             let n = parseInt(upl.progress() * 100)
@@ -132,7 +132,7 @@
             uploadPayload.dir = dir
             if (file.file.type.startsWith("video")) {
                 upl.removeFile(file)
-                showModal("No pueden subirse videos a la página. Utilice otro medio (YouTube, Google Drive, etc.) y comparta el enlace de acceso desde un documento de texto")
+                showToast("No pueden subirse videos a la página. Utilice otro medio (YouTube, Google Drive, etc.) y comparta el enlace de acceso desde un documento de texto", 'error')
                 return
             }
             upl.upload()
@@ -147,7 +147,7 @@
                 if (r.status==200) {
                     arrDocs.value[arr][2].splice(k,1);
                     if (arrDocs.value[arr][2].length == 0) arrDocs.value.splice(arr,1);
-                    showModal("El documento ha sido borrado", true);
+                    showToast("El documento ha sido borrado", 'success');
                 }
             });
         }

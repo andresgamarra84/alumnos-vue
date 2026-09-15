@@ -287,9 +287,9 @@
 import CursosSelect from "@/components/CursosSelect.vue"
 import { ref, onMounted } from "vue"
 import { api } from "@/api/api"
-import { showModal } from "@/services/uiBus"
+import { showModal, showToast } from "@/services/uiBus"
 import { useFileDownload } from "@/composables/useFileDownload"
-const { downloadPDF } = useFileDownload()
+const { downloadBlob } = useFileDownload()
 
 /* ARRAYS */
 const arrCursos = ref([])
@@ -386,7 +386,7 @@ const borrarMesa = async (key) => {
 const downloadActa = async (key) => {
   console.log("Descargar acta:", key)
   if (this.arrMesas[k].datosMesa.cantAlumnos==0){
-    showModal("No se puede descargar el acta porque no posee estudiantes inscriptos");
+    showToast("No se puede descargar el acta porque no posee estudiantes inscriptos", 'error');
     return
   }
 	const blob = await api.getPDF({
@@ -396,20 +396,20 @@ const downloadActa = async (key) => {
       codMesa: arrMesas.value[key].datosMesa.codigo,
     }
   })
-  downloadPDF(blob, "ActaMesa - "+this.arrMesas[k].datosMesa.codigo+".pdf")
+  downloadBlob(blob, "ActaMesa - "+this.arrMesas[k].datosMesa.codigo+".pdf", "application/pdf")
 }
 
 const downloadActaAll = async () => {
   console.log("Descargar todas")
   const blob = await api.getPDF({
-    entity: "mesasexamen",
+    entity: "mesasexamen", 
     action: "getActasMesas",
     payload: {
       fechaInicio: filtro.value.desde,
       fechaFin: filtro.value.hasta,
     }
   })
-  downloadPDF(blob, "ActasMesas.pdf")
+  downloadBlob(blob, "ActasMesas.pdf", "application/pdf")
 }
 
 const showListProf = (key, tipo) =>{
@@ -464,7 +464,7 @@ const cancelEditDate = () => {
 }
 const saveEditDate = async (key) => {
   if (!editFecha.value || !editHora.value) {
-    showModal("Complete fecha y hora")
+    showToast("Complete fecha y hora", 'error')
     return
   }
   const r = await api.post({

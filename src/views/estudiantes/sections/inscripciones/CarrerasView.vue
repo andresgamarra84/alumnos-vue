@@ -95,7 +95,7 @@ import { ref, onMounted } from 'vue';
 import { api } from '@/api/api.js';
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import InstrumentosSelect from '@/components/InstrumentosSelect.vue';
-import { showModal } from '@/services/uiBus'
+import { showModal, showToast } from '@/services/uiBus'
 const carreras = ref([]);
 const arrInstrumentos = ref([]);
 const carrerasAlumno = ref([]);
@@ -141,7 +141,7 @@ const addCarrera = async () => {
         }
     });
     if (r.ok) {
-        showModal("Datos actualizados");
+        showToast("Datos actualizados", 'success');
         listCarrerasAlumno();
     }
 }
@@ -178,7 +178,7 @@ const update = async (tipo, k) => {
     if (r.ok) {
         let v = null;
         if (tipo==3 && r == "") {
-            showModal("El campo no puede quedar vacío");
+            showToast("El campo no puede quedar vacío", 'error');
             return;
         }
         if (tipo === 7) v = carrerasAlumno.value[k].esEspera
@@ -191,7 +191,7 @@ const update = async (tipo, k) => {
             payload: d,
         });
         if (response.ok) {
-            showModal("Datos actualizados");
+            showToast("Datos actualizados", 'success');
         }
         listCarrerasAlumno();
     }

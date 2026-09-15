@@ -40,7 +40,7 @@
 
 <script setup>
 import { defineEmits, ref } from 'vue'
-import { showModal } from '@/services/uiBus'
+import { showToast } from '@/services/uiBus'
 
 const emit = defineEmits(['send-msg', 'close'])
 const nuevoAsunto = ref('')
@@ -48,7 +48,7 @@ const nuevoMensaje = ref('')
 
 const newMsg = (asunto, mensaje) => {
     if (!asunto?.trim() || !mensaje?.trim()) {
-        showModal('El asunto y mensaje no pueden estar vacios.')
+        showToast('El asunto y mensaje no pueden estar vacios.', 'error')
         return
     }
 

@@ -111,7 +111,7 @@
 <script setup>
 import { ref } from "vue"
 import { api } from "@/api/api"
-import { showModal } from "@/services/uiBus"
+import { showToast } from "@/services/uiBus"
 import { useFileDownload } from "@/composables/useFileDownload"
 
 const { downloadBlob } = useFileDownload()
@@ -171,7 +171,7 @@ const plDocentes = async () => {
 
 const plMesas = async () => {
   if (!fechaMesas.value) {
-    showModal("Debe seleccionar una fecha")
+    showToast("Debe seleccionar una fecha", 'error')
     return
   }
 

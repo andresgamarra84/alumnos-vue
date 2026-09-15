@@ -1,6 +1,6 @@
 <script setup>
 import { ref, watch } from 'vue'
-import { showModal } from '@/services/uiBus'
+import { showToast } from '@/services/uiBus'
 const props = defineProps({
   item: {
     type: Object,
@@ -24,7 +24,7 @@ watch(
 
 const send = () => {
   if (!title.value || !message.value) {
-    showModal('Complete asunto y mensaje')
+    showToast('Complete asunto y mensaje', 'error')
     return
   }
 

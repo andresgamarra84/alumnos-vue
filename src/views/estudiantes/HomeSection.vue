@@ -176,9 +176,7 @@
 <script setup>
 import { ref, onMounted, computed} from 'vue';
 import { api } from '../../api/api.js'; // Ajusta path a tu api.js
-import { showModal } from '@/services/uiBus'
-
-//import { showModal } from '@/services/uiBus'
+import { showModal, showToast } from '@/services/uiBus'
 const arrNotif = ref([]);
 const arrInscrMaterias = ref([]);
 const arrCambios = ref([]);
@@ -247,7 +245,7 @@ const showGlobalMessages = async () => {
   const r = await api.get({ entity: 'mensajes', action: 'getGlobalMsg' });
   for (const item of r.payload) {
     if (!item?.mensaje) continue;
-    await showModal(item.mensaje);
+    showToast(item.mensaje, 'info');
   }
 };
 

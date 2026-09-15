@@ -1,6 +1,7 @@
 <script setup>
 import { uiState, closeModal } from '@/services/uiBus'
 import GlobalModal from '@/components/GlobalModal.vue'
+import ToastContainer from '@/components/ToastContainer.vue'
 </script>
 
 <template>
@@ -14,4 +15,5 @@ import GlobalModal from '@/components/GlobalModal.vue'
     :input-value="uiState.modal.inputValue"
     @resolve="closeModal"
   />
+  <ToastContainer />
 </template>

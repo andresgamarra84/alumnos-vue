@@ -100,6 +100,10 @@ export default [
                 component: () => import('@/views/admin/sections/cursos/CorrelatividadesView.vue')
             },
             {
+                path: 'fobaIncompleto',
+                component: () => import('@/views/admin/sections/cursos/FobaIncompletoView.vue')
+            },
+            {
                 path: 'pdfHorarios',
                 component: () => import('@/views/admin/sections/cursos/DescargarHorariosView.vue')
             },

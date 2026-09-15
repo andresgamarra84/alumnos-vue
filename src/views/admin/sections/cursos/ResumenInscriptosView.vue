@@ -33,7 +33,7 @@
 <script setup>
 import { ref, onMounted } from "vue"
 import { api } from "@/api/api"
-import { showModal } from "@/services/uiBus"
+import { showToast } from "@/services/uiBus"
 const arrCursos = ref([])
 const arrHorarios = ref([])
 const curso = ref('')
@@ -63,7 +63,7 @@ const copiarCorreos = (k) => {
     let arr = [];
     arrHorarios.value[k].listaInscriptos.forEach(v=>arr.push(v.email));
     navigator.clipboard.writeText(arr.join(","));
-    showModal("Correos copiados al portapapeles");
+    showToast("Correos copiados al portapapeles", 'success');
 }
 onMounted (() => {
     listCursos()

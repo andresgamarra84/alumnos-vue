@@ -299,7 +299,7 @@
 <script setup>
 import { ref, reactive, onMounted, watch } from 'vue'
 import { api } from '@/api/api'
-import { showModal } from '@/services/uiBus'
+import { showModal, showToast } from '@/services/uiBus'
 
 /* ================= STATE ================= */
 const dPers = reactive({})
@@ -373,7 +373,7 @@ const postData = async () => {
     payload: dPers
   })
 
-  await showModal('Datos actualizados', 0, 'Información')
+  showToast('Datos actualizados', 'success')
 }
 
 const keyBlank = async () => {
@@ -397,7 +397,7 @@ const keyBlank = async () => {
     action: 'keyBlank',
     payload: { email }
   })
-  if (response.ok)  await showModal('Correo enviado')
+  if (response.ok) showToast('Correo enviado', 'success')
 }
 
 /* ================= LIFECYCLE ================= */

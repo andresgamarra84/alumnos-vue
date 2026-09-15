@@ -63,7 +63,7 @@
 <script setup>
 import { computed, onMounted, ref } from "vue"
 import { api } from "@/api/api"
-import { showModal } from "@/services/uiBus"
+import { showModal, showToast } from "@/services/uiBus"
 
 const arrUsuarios = ref([])
 const permisos = ref({})
@@ -101,6 +101,7 @@ const permissionSections = [
       { id: "cursos_vacantes_instrumento", label: "Carga de vacantes de Instrumento" },
       { id: "cursos_planillas_all", label: "Descarga de planillas (Asistencia, Cuatrimestrales)" },
       { id: "cursos_correlatividades", label: "Ver correlatividades de estudiantes" },
+      { id: "cursos_foba_incompleto", label: "Ver estudiantes con FOBA incompleto" },
       { id: "cursos_matricula", label: "Matricula de estudiantes" },
       { id: "cursos_nombres", label: "Crear/Eliminar nombres de Curso" },
     ],
@@ -233,7 +234,7 @@ const saveConfig = async () => {
   })
 
   if (r.ok) {
-    showModal("Datos actualizados")
+    showToast("Datos actualizados", 'success')
   }
 }
 
@@ -248,7 +249,7 @@ const delUser = async (codigo) => {
   })
 
   if (r.ok) {
-    showModal("Datos actualizados")
+    showToast("Datos actualizados", 'success')
     await listUsuarios()
   }
 }

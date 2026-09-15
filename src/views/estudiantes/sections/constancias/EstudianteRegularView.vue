@@ -16,7 +16,7 @@
 <script setup>
     import { ref } from 'vue'
     import { api } from "@/api/api"
-    import { showModal } from "@/services/uiBus";
+    import { showModal, showToast } from "@/services/uiBus";
     const opciones = [
         "Seleccione un destinatario",
         "S.A.D.",
@@ -66,7 +66,7 @@
 
     const revisar = async () => {	
         if ( indiceOpcion.value == 0 || ((indiceOpcion.value != 3 && indiceOpcion.value != 6) && info.value == "")) {
-            showModal("Complete la información requerida");
+            showToast("Complete la información requerida", 'error');
             return
         }
         const c = await showModal("¿Confirma solicitud?",1)
@@ -80,7 +80,7 @@
             }
         })
         if (r.ok) {
-            showModal("La solicitud ha sido ingresada. Recibirá un email cuando la misma esté disponible para ser retirada")
+            showToast("La solicitud ha sido ingresada. Recibirá un email cuando la misma esté disponible para ser retirada", 'success')
         }
     }
 

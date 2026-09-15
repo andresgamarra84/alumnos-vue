@@ -97,7 +97,7 @@ import { computed, ref, onMounted } from 'vue';
 import { api } from '@/api/api.js';
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import MateriasSelect from '@/components/MateriasSelect.vue';
-import { showModal } from '@/services/uiBus';
+import { showModal, showToast } from '@/services/uiBus';
 
 const carreras = ref([]);
 const materias = ref([]);
@@ -207,7 +207,7 @@ const onSelectMateria = async () => {
 
     cursosDisponibles.value = r.payload.cursos ?? [];
     if (esCondicional.value) {
-      showModal('La inscripcion a esta materia se tomara como Condicional por no tener acreditadas las correlativas necesarias.');
+      showToast('La inscripcion a esta materia se tomara como Condicional por no tener acreditadas las correlativas necesarias.', 'info');
     }
   } catch (e) {
     console.log(e);
@@ -233,8 +233,9 @@ const onSelectCurso = async (k) => {
   });
 
   if (response.ok) {
-    showModal(
-      'La inscripcion ha sido realizada y ya puede visualizarse en la pagina de inicio'
+    showToast(
+      'La inscripcion ha sido realizada y ya puede visualizarse en la pagina de inicio',
+      'success'
     );
   }
 };
@@ -258,8 +259,9 @@ const onSelectCursoFranja = async (curso) => {
   });
 
   if (response.ok) {
-    showModal(
-      'La inscripcion ha sido realizada y ya puede visualizarse en la pagina de inicio'
+    showToast(
+      'La inscripcion ha sido realizada y ya puede visualizarse en la pagina de inicio',
+      'success'
     );
   }
 };

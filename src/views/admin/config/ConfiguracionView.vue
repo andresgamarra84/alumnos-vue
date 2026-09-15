@@ -61,7 +61,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { api } from '@/api/api'
-import { showModal } from '@/services/uiBus'
+import { showToast } from '@/services/uiBus'
 
 const config = ref({})
 
@@ -80,7 +80,7 @@ const setConfig = async () => {
     payload: config.value,
   })
 
-  if (r.ok) showModal("Cambios guardados")
+  if (r.ok) showToast("Cambios guardados", 'success')
 }
 
 onMounted(() => {

@@ -1,4 +1,4 @@
-import { showModal } from "@/services/uiBus"
+import { showToast } from "@/services/uiBus"
 import { BASE_URL, ADMIN_FOLDER, SESSION_NAME } from '@/config/app.config'
 export function useImpersonation() {
   const openUserPanel = ({ area, codigo }) => {
@@ -8,7 +8,7 @@ export function useImpersonation() {
     const token = sessionStorage.getItem(SESSION_NAME)
 
     if (!token) {
-      showModal('Sesión inválida')
+      showToast('Sesión inválida', 'error')
       return
     }
 

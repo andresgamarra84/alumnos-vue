@@ -104,7 +104,7 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/api/api'
-import { showModal } from '@/services/uiBus'
+import { showToast } from '@/services/uiBus'
 const showRecovery = ref(false)
 const router = useRouter()
 const recoveryUsr = ref('')
@@ -141,7 +141,7 @@ const login = async () => {
 
 const changePassword = async () => {
   if (newPwd.value !== newPwdRepeat.value) {
-    await showModal('Las contraseñas no coinciden', 0, 'Error')
+    showToast('Las contraseñas no coinciden', 'error')
     return
   }
   const r = await api.post({
@@ -155,13 +155,13 @@ const changePassword = async () => {
   })
 
   if (r.payload === "Updated") {
-    await showModal('Contraseña actualizada correctamente')
+    showToast('Contraseña actualizada correctamente', 'success')
     router.replace('/estudiantes')
   }
 }
 const askRecover = async () =>{
   if (!recoveryUsr.value) {
-    showModal("El campo no puede estar vacío")
+    showToast("El campo no puede estar vacío", 'error')
     return
   }
   const r = await api.post({
@@ -173,7 +173,7 @@ const askRecover = async () =>{
     }
   })
   showRecovery.value = false
-  if (r.ok) showModal("Se ha enviado un correo al email registrado con la información necesaria para acceder.")
+  if (r.ok) showToast("Se ha enviado un correo al email registrado con la información necesaria para acceder.", 'success')
 }
 </script>
 <style>

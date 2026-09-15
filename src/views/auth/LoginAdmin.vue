@@ -71,7 +71,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/api/api'
-import { showModal } from '@/services/uiBus'
+import { showToast } from '@/services/uiBus'
 import { SESSION_NAME } from '@/config/app.config'
 
 const router = useRouter()
@@ -115,7 +115,7 @@ const login = async () => {
 
 const changePassword = async () => {
   if (newPwd.value !== newPwdRepeat.value) {
-    await showModal('Las contraseñas no coinciden', 0, 'Error')
+    showToast('Las contraseñas no coinciden', 'error')
     return
   }
   const r = await api.post({
@@ -129,7 +129,7 @@ const changePassword = async () => {
   })
 
   if (r.payload === "Updated") {
-    await showModal('Contraseña actualizada correctamente')
+    showToast('Contraseña actualizada correctamente', 'success')
     router.replace('/admin')
   }
 }

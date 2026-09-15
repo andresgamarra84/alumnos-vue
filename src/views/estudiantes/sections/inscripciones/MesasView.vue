@@ -53,7 +53,7 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { api } from '@/api/api.js';
-import { showModal } from '@/services/uiBus';
+import { showModal, showToast } from '@/services/uiBus';
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import MateriasSelect from '@/components/MateriasSelect.vue';
 const carreras = ref([]);
@@ -139,7 +139,7 @@ const confirmarInscripcion = async () => {
   const codAlC = carreras.value[selectedCarrera.value].codigo;
   console.log(selectedCondicion.value)
   if (selectedCondicion.value === null) {
-    showModal('Debe seleccionar una condición de examen');
+    showToast('Debe seleccionar una condición de examen', 'error');
     return;
   }
 
@@ -158,8 +158,9 @@ const confirmarInscripcion = async () => {
   });
 
   if (r.ok) {
-    showModal(
-      'La inscripción ha sido realizada y ya puede visualizarse en la página de inicio'
+    showToast(
+      'La inscripción ha sido realizada y ya puede visualizarse en la página de inicio',
+      'success'
     );
   }
   selectedCarrera.value = '';

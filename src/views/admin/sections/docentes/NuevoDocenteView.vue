@@ -395,7 +395,7 @@
 <script setup>
 import { reactive, ref, onMounted, watch } from 'vue'
 import { api } from '@/api/api'
-import { showModal } from '@/services/uiBus'
+import { showModal, showToast } from '@/services/uiBus'
 
 const initialForm = () => ({
 	nombre: '',
@@ -484,17 +484,17 @@ const checkRequired = (container) => {
 const goNext = async () => {
 	if (currentStep.value === 0) {
 		if (!checkRequired(step1El.value)) {
-			await showModal('Complete correctamente todos los campos requeridos')
+			showToast('Complete correctamente todos los campos requeridos', 'error')
 			return
 		}
 		currentStep.value = 1
 	} else if (currentStep.value === 1) {
 		if (!checkRequired(step2El.value)) {
-			await showModal('Complete los campos requeridos')
+			showToast('Complete los campos requeridos', 'error')
 			return
 		}
 		if (form.email !== form.email2) {
-			await showModal('Las direcciones de e-mail no coinciden')
+			showToast('Las direcciones de e-mail no coinciden', 'error')
 			return
 		}
 		currentStep.value = 2
@@ -507,7 +507,7 @@ const goBack = () => {
 
 const submitForm = async () => {
 	if (!checkRequired(step3El.value)) {
-		await showModal('Complete todos los campos requeridos')
+		showToast('Complete todos los campos requeridos', 'error')
 		return
 	}
 	const { ok: confirmado } = await showModal('¿Confirma que desea guardar los datos del nuevo docente?', 1)
@@ -520,7 +520,7 @@ const submitForm = async () => {
 		payload,
 	})
 	if (r.ok) {
-		await showModal('Docente creado correctamente')
+		showToast('Docente creado correctamente', 'success')
 		Object.assign(form, initialForm())
 		arrLocalidad.value = []
 		currentStep.value = 0

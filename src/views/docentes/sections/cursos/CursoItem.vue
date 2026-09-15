@@ -47,7 +47,7 @@
   </div>
 </template>
 <script setup>
-import { showModal } from '@/services/uiBus'
+import { showModal, showToast } from '@/services/uiBus'
 import { api } from '@/api/api';
 import ListaAlumnos from './ListaAlumnos.vue'
 import AlumnoItem from './AlumnoItem.vue';
@@ -70,15 +70,15 @@ const copyEmails = async () => {
   )]
 
   if (emails.length === 0) {
-    await showModal('No hay correos para copiar')
+    showToast('No hay correos para copiar', 'error')
     return
   }
 
   try {
     await navigator.clipboard.writeText(emails.join('; '))
-    await showModal('Correos copiados al portapapeles')
+    showToast('Correos copiados al portapapeles', 'success')
   } catch {
-    await showModal('No se pudo copiar al portapapeles')
+    showToast('No se pudo copiar al portapapeles', 'error')
   }
 }
 const addExternal = async (type=0) => {
@@ -89,7 +89,7 @@ const addExternal = async (type=0) => {
     "Ingresar estudiante "+tipoAlumno
   )
   if (!respuestaNrodoc.value) {
-    showModal("El campo no puede estar vacío")
+    showToast("El campo no puede estar vacío", 'error')
     return;
   }
   const nrodoc = respuestaNrodoc.value
@@ -108,7 +108,7 @@ const addExternal = async (type=0) => {
     payload.nombre
   )
   if (!nombreApellido.value) {
-    showModal("El campo no puede estar vacío")
+    showToast("El campo no puede estar vacío", 'error')
     return
   }
   const modalEmail = await showModal(
@@ -118,7 +118,7 @@ const addExternal = async (type=0) => {
     payload.email
   )
   if (!modalEmail.value) {
-    showModal("El campo no puede estar vacío")
+    showToast("El campo no puede estar vacío", 'error')
     return
   }
   const nombre = nombreApellido.value
@@ -142,7 +142,7 @@ const addExternal = async (type=0) => {
       tipo: type
     }
   })
-  if (r.ok) showModal("El estudiante fue ingresado al curso")
+  if (r.ok) showToast("El estudiante fue ingresado al curso", 'success')
 }
 const showHideList = () => {
   emit('toggle-estudiantes')

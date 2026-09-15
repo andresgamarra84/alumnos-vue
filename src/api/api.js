@@ -1,5 +1,5 @@
 import { useLoading } from '@/composables/useLoading'
-import { showModal } from '@/services/uiBus'
+import { showToast } from '@/services/uiBus'
 const { start, stop } = useLoading()
 import { BASE_URL, SESSION_NAME } from '@/config/app.config'
 
@@ -45,7 +45,7 @@ const request = async (options = {}) => {
             throw new Error('SESSION_EXPIRED')
         }
         if (!data.ok) {
-            showModal(data.message)
+            showToast(data.message, 'error')
         }
         else if (!response.ok){
             throw new Error(data.message || 'Error en la solicitud');

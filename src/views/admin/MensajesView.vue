@@ -51,7 +51,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { api } from '@/api/api'
-import { showModal } from '@/services/uiBus'
+import { showModal, showToast } from '@/services/uiBus'
 import Conversacion from '@/views/shared/Conversacion.vue'
 import HiloItem from '@/views/shared/HiloItem.vue'
 import NuevoMensaje from '../shared/NuevoMensaje.vue'
@@ -134,7 +134,7 @@ const closeMsgModal = () => {
 
 const sendMsg = async (k) => {
   if (!respuesta.value) {
-    await showModal('El mensaje no puede estar vacío')
+    showToast('El mensaje no puede estar vacío', 'error')
     return
   }
   const {ok} = await showModal(
@@ -154,7 +154,7 @@ const sendMsg = async (k) => {
     }
   })
   if (r.ok) {
-    await showModal('Mensaje enviado')
+    showToast('Mensaje enviado', 'success')
   }
   respuesta.value = ''
   closeChat(k)
@@ -173,7 +173,7 @@ const newMsg = async ({ asunto, mensaje }) => {
     payload: { asunto, mensaje }
   })
   if (r.ok) {
-    showModal('Mensaje enviado')
+    showToast('Mensaje enviado', 'success')
   }
   showMsgModal.value = false
   list()

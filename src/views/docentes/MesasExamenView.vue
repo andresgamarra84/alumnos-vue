@@ -149,7 +149,7 @@
 <script setup>
 import { computed, onMounted, ref } from 'vue'
 import { api } from '@/api/api'
-import { showModal } from '@/services/uiBus'
+import { showModal, showToast } from '@/services/uiBus'
 import { useFileDownload } from '@/composables/useFileDownload'
 
 const { downloadBlob } = useFileDownload()
@@ -215,7 +215,7 @@ const copyAuthorityEmails = async () => {
   )]
 
   if (emails.length === 0) {
-    await showModal('No hay correos para copiar')
+    showToast('No hay correos para copiar', 'error')
     return
   }
 
@@ -223,9 +223,9 @@ const copyAuthorityEmails = async () => {
 
   try {
     await navigator.clipboard.writeText(text)
-    await showModal('Correos copiados al portapapeles')
+    showToast('Correos copiados al portapapeles', 'success')
   } catch {
-    await showModal('No se pudo copiar al portapapeles')
+    showToast('No se pudo copiar al portapapeles', 'error')
   }
 }
 
@@ -258,7 +258,7 @@ const downloadActa = async () => {
   )
 
   if (!todosCalificados) {
-    await showModal('No puede descargarse el acta porque aún quedan estudiantes sin calificar')
+    showToast('No puede descargarse el acta porque aún quedan estudiantes sin calificar', 'error')
     return
   }
 

@@ -42,7 +42,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { api } from '@/api/api'
-import { showModal } from '@/services/uiBus'
+import { showModal, showToast } from '@/services/uiBus'
 import Conversacion from '@/views/shared/Conversacion.vue'
 import NuevoMensaje from '../shared/NuevoMensaje.vue'
 
@@ -84,7 +84,7 @@ const updateRespuesta = (t) => {
 }
 const sendMessage = async (k) => {
   if (!respuesta.value) {
-    showModal('El mensaje no puede estar vacío')
+    showToast('El mensaje no puede estar vacío', 'error')
     return
   }
   const {ok} = await showModal(
@@ -105,7 +105,7 @@ const sendMessage = async (k) => {
   })
 
   if (r.ok) {
-    await showModal('Mensaje enviado')
+    showToast('Mensaje enviado', 'success')
     arrBandeja.value[k].mensajes.push({mensaje, clase:"alumno"})
     respuesta.value = ''
   }
@@ -113,7 +113,7 @@ const sendMessage = async (k) => {
 
 const newMessage = async ({ asunto, mensaje }) => {
   if (!asunto || !mensaje) {
-    await showModal('Asunto y mensaje son obligatorios', 0, 'Error')
+    showToast('Asunto y mensaje son obligatorios', 'error')
     return
   }
 
@@ -132,7 +132,7 @@ const newMessage = async ({ asunto, mensaje }) => {
   })
 
   if (r.ok) {
-    await showModal('Mensaje enviado')
+    showToast('Mensaje enviado', 'success')
     showNewMsg.value = false
     list()
   }

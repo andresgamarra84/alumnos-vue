@@ -184,7 +184,7 @@
 <script setup>
 import { ref, watch, onMounted } from "vue"
 import { api } from "@/api/api"
-import { showModal } from "@/services/uiBus"
+import { showModal, showToast } from "@/services/uiBus"
 
 /* ===============================
    STATE
@@ -315,7 +315,7 @@ const addHorario = async () => {
     },
   })
 
-  if (r.ok) showModal("Datos actualizados", 0)
+  if (r.ok) showToast("Datos actualizados", 'success')
 }
 
 const updHorario = async (key, k, clave, j, ev) => {

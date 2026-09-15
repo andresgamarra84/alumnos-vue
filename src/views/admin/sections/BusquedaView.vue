@@ -97,7 +97,7 @@ import { api } from '@/api/api'
 import BusquedaItem from '@/views/admin/components/BusquedaItem.vue'
 
 import MessagePopup from '@/views/admin/components/MessagePopup.vue'
-import { showModal } from '@/services/uiBus'
+import { showToast } from '@/services/uiBus'
 import { useRoute } from 'vue-router'
 import { useImpersonation } from '@/views/admin/composables/useImpersonation'
 const { openUserPanel }  = useImpersonation()
@@ -112,7 +112,7 @@ const indexArr = ref(null)
 const searchArea = useRoute().meta.area
 const listSearch = async () => {
   if (!searchText.value && !searchEmail.value) {
-    showModal('Complete el campo de búsqueda')
+    showToast('Complete el campo de búsqueda', 'error')
     return
   }
 
@@ -164,7 +164,7 @@ const sendMsg = async ({asunto, mensaje, codAlumno}) => {
             codAlumno:codAlumno
         }
     })
-    if (r.ok) showModal("Mensaje enviado")
+    if (r.ok) showToast("Mensaje enviado", 'success')
     indexArr.value = null
     showMessage.value = false
 }

@@ -140,7 +140,7 @@
 <script setup>
 import { ref, onMounted, computed } from "vue"
 import { api } from "@/api/api"
-import { showModal } from "@/services/uiBus"
+import { showModal, showToast } from "@/services/uiBus"
 import { useImpersonation } from "@/views/admin/composables/useImpersonation"
 import ReservaItem from "@/views/admin/components/ReservaItem.vue"
 
@@ -191,7 +191,7 @@ const listCiclos = async () => {
 
 const listReservas = async (t = "comun") => {
   if (!selectedCiclo.value || selectedCiclo.value === "0") {
-    showModal("Seleccione el ciclo lectivo")
+    showToast("Seleccione el ciclo lectivo", 'error')
     return
   }
   const r = await api.get({
@@ -226,7 +226,7 @@ const listReservas = async (t = "comun") => {
 }
 const filterReservas = (tipo) => {
   if (!selectedCiclo.value || selectedCiclo.value === "0") {
-    showModal("Seleccione el ciclo lectivo")
+    showToast("Seleccione el ciclo lectivo", 'error')
     return
   }
   filteredReservas.value = arrReservas.value.filter((i) => i.cambio === tipo)
@@ -253,7 +253,7 @@ const updProf = async (ev) => {
       action: "updProfesor",
       payload: d,
     })
-    if (!r.ok) showModal("No fue posible realizar el cambio en la reserva")
+    if (!r.ok) showToast("No fue posible realizar el cambio en la reserva", 'error')
   }
   s.selectedIndex = 0
   currentCode.value = null
@@ -301,7 +301,7 @@ const saveEditReserva = async () => {
     payload: d,
   })
   if (r.ok) {
-    showModal("Datos actualizados")
+    showToast("Datos actualizados", 'success')
     closeEditModal()
     listReservas(tipo.value)
   }

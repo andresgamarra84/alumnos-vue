@@ -29,7 +29,7 @@
 <script setup>
     import { ref, onMounted } from 'vue'
     import { api } from '@/api/api'
-    import { showModal } from '@/services/uiBus'
+    import { showToast } from '@/services/uiBus'
     const cursos = ref([])
 	const totalHoras = ref(0)
     const reservas = ref([])
@@ -67,15 +67,15 @@
         )]
 
         if (mails.length === 0) {
-            await showModal('No hay correos para copiar')
+            showToast('No hay correos para copiar', 'error')
             return
         }
 
         try {
             await navigator.clipboard.writeText(mails.join('; '))
-            await showModal('Correos copiados al portapapeles')
+            showToast('Correos copiados al portapapeles', 'success')
         } catch {
-            await showModal('No se pudo copiar al portapapeles')
+            showToast('No se pudo copiar al portapapeles', 'error')
         }
     }
 </script>

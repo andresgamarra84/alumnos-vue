@@ -52,7 +52,7 @@ import { api } from '@/api/api.js';
 import { useModal } from '@/composables/useModal'
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import InstrumentosSelect from '@/components/InstrumentosSelect.vue';
-import { showModal } from '@/services/uiBus';
+import { showModal, showToast } from '@/services/uiBus';
 const selectedIndexCarrera = ref(null);
 const carreras = ref([]);
 const opciones = ref({});
@@ -132,7 +132,7 @@ const confirmReserva = async () => {
           cambioInstr: setCambioInstr.value,
         },
       });
-      if (r.ok) showModal("La reserva ha sido ingresada y puede visualizarse en la página de inicio.")
+      if (r.ok) showToast("La reserva ha sido ingresada y puede visualizarse en la página de inicio.", 'success')
     } catch (e) {
       console.log(e);
     }
