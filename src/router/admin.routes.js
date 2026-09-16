@@ -80,6 +80,10 @@ export default [
                 component: () => import('@/views/admin/sections/configuracion/UsuariosView.vue')
             },
             {
+                path: 'flyers',
+                component: () => import('@/views/admin/sections/configuracion/FlyersView.vue')
+            },
+            {
                 path: 'mesasExamen',
                 component: () => import ('@/views/admin/sections/MesasExamenView.vue')
             },
