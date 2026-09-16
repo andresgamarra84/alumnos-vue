@@ -51,14 +51,26 @@
 
       <section class="seccion">
         <h3>Logos</h3>
-        <label class="fila-logo">
-          <input type="checkbox" v-model="logos.circulo.visible" />
-          Círculo 60° aniversario
-        </label>
-        <label class="fila-logo">
-          <input type="checkbox" v-model="logos.semana.visible" />
-          Logo Semana de las Artes
-        </label>
+
+        <div class="bloque-logo" v-for="(l, clave) in logos" :key="clave">
+          <label class="fila-logo">
+            <input type="checkbox" v-model="l.visible" />
+            {{ etiquetasLogos[clave] }}
+          </label>
+
+          <div class="ajustes">
+            <span class="ajustes-titulo">Tamaño</span>
+            <button type="button" @click="cambiarTamanoLogo(clave, -PASO_TAMANO)">−</button>
+            <button type="button" @click="cambiarTamanoLogo(clave, PASO_TAMANO)">+</button>
+
+            <span class="ajustes-titulo">Posición</span>
+            <button type="button" @click="moverLogo(clave, 0, -PASO_DESPLAZAMIENTO)">↑</button>
+            <button type="button" @click="moverLogo(clave, 0, PASO_DESPLAZAMIENTO)">↓</button>
+            <button type="button" @click="moverLogo(clave, -PASO_DESPLAZAMIENTO, 0)">←</button>
+            <button type="button" title="Restablecer posición y tamaño" @click="restablecerLogo(clave)">↺</button>
+            <button type="button" @click="moverLogo(clave, PASO_DESPLAZAMIENTO, 0)">→</button>
+          </div>
+        </div>
 
         <span class="ajustes-titulo">Color de los logos</span>
         <div class="selector-color">
@@ -225,11 +237,34 @@ const bgSwatches = ['#ffffff', '#dceaf5', '#eef2e2', '#f6e6ea', '#f4ecd8', '#e7e
 const logoSwatches = ['#1b2452', '#000000', '#ffffff', '#3c4470', '#b8863f', '#5c5142']
 const textSwatches = ['#ffffff', '#1b2452', '#000000', '#3c4470', '#8a6d3b', '#333333']
 
-// Visibilidad individual de cada logo
+const etiquetasLogos = {
+  circulo: 'Círculo 60° aniversario',
+  semana: 'Logo Semana de las Artes',
+}
+
+// Visibilidad, tamaño y posición individual de cada logo
 const logos = reactive({
-  circulo: { visible: true },
-  semana: { visible: true },
+  circulo: { visible: true, tamano: 1, offsetX: 0, offsetY: 0 },
+  semana: { visible: true, tamano: 1, offsetX: 0, offsetY: 0 },
 })
+
+function moverLogo(clave, dx, dy) {
+  const l = logos[clave]
+  l.offsetX += dx
+  l.offsetY += dy
+}
+
+function cambiarTamanoLogo(clave, delta) {
+  const l = logos[clave]
+  l.tamano = Math.min(3, Math.max(0.4, +(l.tamano + delta).toFixed(2)))
+}
+
+function restablecerLogo(clave) {
+  const l = logos[clave]
+  l.tamano = 1
+  l.offsetX = 0
+  l.offsetY = 0
+}
 
 const circuloImg = new Image()
 const semanaImg = new Image()
@@ -317,15 +352,8 @@ function cargarImagen(event) {
 
 function dibujarFondo(width, height) {
   if (bgMode.value === 'image' && imagenFondo.value) {
-    // Recorte tipo "cover": la imagen llena el canvas 4:3 sin deformarse
-    const img = imagenFondo.value
-    const escala = Math.max(width / img.width, height / img.height)
-    const anchoRecorte = width / escala
-    const altoRecorte = height / escala
-    const origenX = (img.width - anchoRecorte) / 2
-    const origenY = (img.height - altoRecorte) / 2
-
-    ctx.drawImage(img, origenX, origenY, anchoRecorte, altoRecorte, 0, 0, width, height)
+    // Estira la imagen para llenar todo el canvas según la relación de aspecto seleccionada, sin recortar
+    ctx.drawImage(imagenFondo.value, 0, 0, width, height)
   } else {
     ctx.fillStyle = bgColor.value
     ctx.fillRect(0, 0, width, height)
@@ -338,35 +366,35 @@ function dibujarLogos(width, height) {
 
   if (layout.value === 'A') {
     if (logos.circulo.visible) {
-      const cW = width * 0.20625
+      const cW = width * 0.20625 * logos.circulo.tamano
       const cH = cW / circuloRatio
-      const cX = width - width * 0.04375 - cW
-      const cY = height * 0.05
+      const cX = width - width * 0.04375 - cW + logos.circulo.offsetX
+      const cY = height * 0.05 + logos.circulo.offsetY
       ctx.save()
       ctx.globalAlpha = circleOpacity.value
       ctx.drawImage(circuloTintado, cX, cY, cW, cH)
       ctx.restore()
     }
     if (logos.semana.visible) {
-      const sW = width * 0.29375
+      const sW = width * 0.29375 * logos.semana.tamano
       const sH = sW / semanaRatio
-      const sX = (width - sW) / 2
-      const sY = height - height * 0.05 - sH
+      const sX = (width - sW) / 2 + logos.semana.offsetX
+      const sY = height - height * 0.05 - sH + logos.semana.offsetY
       ctx.drawImage(semanaTintado, sX, sY, sW, sH)
     }
   } else {
     if (logos.semana.visible) {
-      const sW = width * 0.4
+      const sW = width * 0.4 * logos.semana.tamano
       const sH = sW / semanaRatio
-      const sX = (width - sW) / 2
-      const sY = height * 0.04583
+      const sX = (width - sW) / 2 + logos.semana.offsetX
+      const sY = height * 0.04583 + logos.semana.offsetY
       ctx.drawImage(semanaTintado, sX, sY, sW, sH)
     }
     if (logos.circulo.visible) {
-      const cW = width * 0.18125
+      const cW = width * 0.18125 * logos.circulo.tamano
       const cH = cW / circuloRatio
-      const cX = width - width * 0.04375 - cW
-      const cY = height - height * 0.04583 - cH
+      const cX = width - width * 0.04375 - cW + logos.circulo.offsetX
+      const cY = height - height * 0.04583 - cH + logos.circulo.offsetY
       ctx.save()
       ctx.globalAlpha = circleOpacity.value
       ctx.drawImage(circuloTintado, cX, cY, cW, cH)
@@ -500,6 +528,15 @@ function descargar() {
   border: 1px solid #ccc;
   border-radius: 4px;
   cursor: pointer;
+}
+
+.bloque-logo {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .fila-logo {
