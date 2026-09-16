@@ -3,148 +3,191 @@
     <div class="controles">
 
       <section class="seccion">
-        <h3>Formato</h3>
-        <div class="opciones">
-          <button
-            type="button"
-            v-for="f in FORMATOS"
-            :key="f.clave"
-            :class="{ activo: formato === f.clave }"
-            @click="formato = f.clave"
-          >{{ f.etiqueta }}</button>
+        <button type="button" class="seccion-header" @click="alternarSeccion('formato')">
+          <h3>Formato</h3>
+          <span class="chevron" :class="{ colapsado: !secciones.formato }">▾</span>
+        </button>
+        <div v-show="secciones.formato" class="seccion-body">
+          <div class="opciones">
+            <button
+              type="button"
+              v-for="f in FORMATOS"
+              :key="f.clave"
+              :class="{ activo: formato === f.clave }"
+              @click="formato = f.clave"
+            >{{ f.etiqueta }}</button>
+          </div>
         </div>
       </section>
 
       <section class="seccion">
-        <h3>Diseño</h3>
-        <div class="opciones">
-          <button type="button" :class="{ activo: layout === 'A' }" @click="layout = 'A'">Círculo arriba · logo al pie</button>
-          <button type="button" :class="{ activo: layout === 'B' }" @click="layout = 'B'">Logo como título · círculo al pie</button>
+        <button type="button" class="seccion-header" @click="alternarSeccion('diseno')">
+          <h3>Diseño</h3>
+          <span class="chevron" :class="{ colapsado: !secciones.diseno }">▾</span>
+        </button>
+        <div v-show="secciones.diseno" class="seccion-body">
+          <div class="opciones">
+            <button type="button" :class="{ activo: layout === 'A' }" @click="layout = 'A'">Círculo arriba · logo al pie</button>
+            <button type="button" :class="{ activo: layout === 'B' }" @click="layout = 'B'">Logo como título · círculo al pie</button>
+          </div>
         </div>
       </section>
 
       <section class="seccion">
-        <h3>Fondo</h3>
-        <div class="opciones">
-          <button type="button" :class="{ activo: bgMode === 'color' }" @click="bgMode = 'color'">Color</button>
-          <button type="button" :class="{ activo: bgMode === 'image' }" @click="bgMode = 'image'">Imagen propia</button>
-        </div>
+        <button type="button" class="seccion-header" @click="alternarSeccion('fondo')">
+          <h3>Fondo</h3>
+          <span class="chevron" :class="{ colapsado: !secciones.fondo }">▾</span>
+        </button>
+        <div v-show="secciones.fondo" class="seccion-body">
+          <div class="opciones">
+            <button type="button" :class="{ activo: bgMode === 'color' }" @click="bgMode = 'color'">Color</button>
+            <button type="button" :class="{ activo: bgMode === 'image' }" @click="bgMode = 'image'">Imagen propia</button>
+          </div>
 
-        <div v-if="bgMode === 'color'" class="selector-color">
-          <button
-            v-for="c in bgSwatches"
-            :key="c"
-            type="button"
-            class="swatch"
-            :class="{ activo: bgColor === c }"
-            :style="{ background: c }"
-            @click="bgColor = c"
-          />
-          <input type="color" v-model="bgColor" title="Color de fondo personalizado" />
-        </div>
+          <div v-if="bgMode === 'color'" class="selector-color">
+            <button
+              v-for="c in bgSwatches"
+              :key="c"
+              type="button"
+              class="swatch"
+              :class="{ activo: bgColor === c }"
+              :style="{ background: c }"
+              @click="bgColor = c"
+            />
+            <input type="color" v-model="bgColor" title="Color de fondo personalizado" />
+          </div>
 
-        <label v-else class="campo-imagen">
-          Imagen de fondo (PNG o JPG)
-          <input type="file" accept="image/png, image/jpeg" @change="cargarImagen" />
-        </label>
-      </section>
-
-      <section class="seccion">
-        <h3>Logos</h3>
-
-        <div class="bloque-logo" v-for="(l, clave) in logos" :key="clave">
-          <label class="fila-logo">
-            <input type="checkbox" v-model="l.visible" />
-            {{ etiquetasLogos[clave] }}
+          <label v-else class="campo-imagen">
+            Imagen de fondo (PNG o JPG)
+            <input type="file" accept="image/png, image/jpeg" @change="cargarImagen" />
           </label>
-
-          <div class="ajustes">
-            <span class="ajustes-titulo">Tamaño</span>
-            <button type="button" @click="cambiarTamanoLogo(clave, -PASO_TAMANO)">−</button>
-            <button type="button" @click="cambiarTamanoLogo(clave, PASO_TAMANO)">+</button>
-
-            <span class="ajustes-titulo">Posición</span>
-            <button type="button" @click="moverLogo(clave, 0, -PASO_DESPLAZAMIENTO)">↑</button>
-            <button type="button" @click="moverLogo(clave, 0, PASO_DESPLAZAMIENTO)">↓</button>
-            <button type="button" @click="moverLogo(clave, -PASO_DESPLAZAMIENTO, 0)">←</button>
-            <button type="button" title="Restablecer posición y tamaño" @click="restablecerLogo(clave)">↺</button>
-            <button type="button" @click="moverLogo(clave, PASO_DESPLAZAMIENTO, 0)">→</button>
-          </div>
-        </div>
-
-        <span class="ajustes-titulo">Color de los logos</span>
-        <div class="selector-color">
-          <button
-            v-for="c in logoSwatches"
-            :key="c"
-            type="button"
-            class="swatch"
-            :class="{ activo: logoColor === c }"
-            :style="{ background: c }"
-            @click="logoColor = c"
-          />
-          <input type="color" v-model="logoColor" title="Color de logos personalizado" />
-        </div>
-
-        <div class="campo-slider">
-          <label>Opacidad del círculo</label>
-          <input type="range" min="30" max="100" v-model.number="circleOpacityPct" />
-          <span>{{ circleOpacityPct }}%</span>
         </div>
       </section>
 
       <section class="seccion">
-        <h3>Color de texto</h3>
-        <div class="selector-color">
-          <button
-            v-for="c in textSwatches"
-            :key="c"
-            type="button"
-            class="swatch"
-            :class="{ activo: textColor === c }"
-            :style="{ background: c, boxShadow: c === '#ffffff' ? '0 0 0 1px #ccc' : undefined }"
-            @click="textColor = c"
-          />
-          <input type="color" v-model="textColor" title="Color de texto personalizado" />
+        <button type="button" class="seccion-header" @click="alternarSeccion('logos')">
+          <h3>Logos</h3>
+          <span class="chevron" :class="{ colapsado: !secciones.logos }">▾</span>
+        </button>
+        <div v-show="secciones.logos" class="seccion-body">
+          <div class="bloque-logo" v-for="(l, clave) in logos" :key="clave">
+            <label class="fila-logo">
+              <input type="checkbox" v-model="l.visible" />
+              {{ etiquetasLogos[clave] }}
+            </label>
+
+            <div class="ajustes">
+              <span class="ajustes-titulo">Tamaño</span>
+              <button type="button" @click="cambiarTamanoLogo(clave, -PASO_TAMANO)">−</button>
+              <button type="button" @click="cambiarTamanoLogo(clave, PASO_TAMANO)">+</button>
+
+              <span class="ajustes-titulo">Posición</span>
+              <button type="button" @click="moverLogo(clave, 0, -PASO_DESPLAZAMIENTO)">↑</button>
+              <button type="button" @click="moverLogo(clave, 0, PASO_DESPLAZAMIENTO)">↓</button>
+              <button type="button" @click="moverLogo(clave, -PASO_DESPLAZAMIENTO, 0)">←</button>
+              <button type="button" title="Restablecer posición y tamaño" @click="restablecerLogo(clave)">↺</button>
+              <button type="button" @click="moverLogo(clave, PASO_DESPLAZAMIENTO, 0)">→</button>
+            </div>
+          </div>
+
+          <span class="ajustes-titulo">Color de los logos</span>
+          <div class="selector-color">
+            <button
+              v-for="c in logoSwatches"
+              :key="c"
+              type="button"
+              class="swatch"
+              :class="{ activo: logoColor === c }"
+              :style="{ background: c }"
+              @click="logoColor = c"
+            />
+            <input type="color" v-model="logoColor" title="Color de logos personalizado" />
+          </div>
+
+          <div class="campo-slider">
+            <label>Opacidad del círculo</label>
+            <input type="range" min="30" max="100" v-model.number="circleOpacityPct" />
+            <span>{{ circleOpacityPct }}%</span>
+          </div>
         </div>
       </section>
 
       <section class="seccion">
-        <h3>Contenido</h3>
-
-        <div class="campo-texto" v-for="(t, clave) in textos" :key="clave">
-          <div class="campo-texto-header">
-            <label>{{ etiquetas[clave] }}</label>
-            <button type="button" class="btn-fuente" title="Elegir fuente" @click="alternarFuente(clave)">🔤</button>
-          </div>
-          <textarea v-model="t.valor" rows="2"></textarea>
-
-          <div v-if="fuenteAbierta === clave">
-            <select v-model="t.fuente" :style="{ fontFamily: `${t.fuente}, sans-serif` }">
-              <option v-for="f in fuentesDisponibles" :key="f" :value="f" :style="{ fontFamily: `${f}, sans-serif` }">{{ f }}</option>
-            </select>
-            <p v-if="errorFuentes" class="aviso-fuentes">{{ errorFuentes }}</p>
-          </div>
-
-          <div class="ajustes">
-            <span class="ajustes-titulo">Tamaño</span>
-            <button type="button" @click="cambiarTamano(clave, -PASO_TAMANO)">−</button>
-            <button type="button" @click="cambiarTamano(clave, PASO_TAMANO)">+</button>
-
-            <span class="ajustes-titulo">Posición</span>
-            <button type="button" @click="mover(clave, 0, -PASO_DESPLAZAMIENTO)">↑</button>
-            <button type="button" @click="mover(clave, 0, PASO_DESPLAZAMIENTO)">↓</button>
-            <button type="button" @click="mover(clave, -PASO_DESPLAZAMIENTO, 0)">←</button>
-            <button type="button" title="Centrar horizontalmente" @click="centrarHorizontal(clave)">↔</button>
-            <button type="button" @click="mover(clave, PASO_DESPLAZAMIENTO, 0)">→</button>
+        <button type="button" class="seccion-header" @click="alternarSeccion('colorTexto')">
+          <h3>Color de texto</h3>
+          <span class="chevron" :class="{ colapsado: !secciones.colorTexto }">▾</span>
+        </button>
+        <div v-show="secciones.colorTexto" class="seccion-body">
+          <div class="selector-color">
+            <button
+              v-for="c in textSwatches"
+              :key="c"
+              type="button"
+              class="swatch"
+              :class="{ activo: textColor === c }"
+              :style="{ background: c, boxShadow: c === '#ffffff' ? '0 0 0 1px #ccc' : undefined }"
+              @click="textColor = c"
+            />
+            <input type="color" v-model="textColor" title="Color de texto personalizado" />
           </div>
         </div>
       </section>
 
-      <button @click="descargar" :disabled="descargaDeshabilitada">Descargar flyer</button>
+      <section class="seccion">
+        <button type="button" class="seccion-header" @click="alternarSeccion('contenido')">
+          <h3>Contenido</h3>
+          <span class="chevron" :class="{ colapsado: !secciones.contenido }">▾</span>
+        </button>
+        <div v-show="secciones.contenido" class="seccion-body">
+          <div class="campo-texto" v-for="(t, clave) in textos" :key="clave">
+            <div class="campo-texto-header">
+              <label>{{ etiquetas[clave] }}</label>
+              <button type="button" class="btn-fuente" title="Elegir fuente" @click="alternarFuente(clave)">🔤</button>
+            </div>
+            <textarea v-model="t.valor" rows="2"></textarea>
+
+            <div v-if="fuenteAbierta === clave">
+              <select v-model="t.fuente" :style="{ fontFamily: `${t.fuente}, sans-serif` }">
+                <option v-for="f in fuentesDisponibles" :key="f" :value="f" :style="{ fontFamily: `${f}, sans-serif` }">{{ f }}</option>
+              </select>
+              <p v-if="errorFuentes" class="aviso-fuentes">{{ errorFuentes }}</p>
+            </div>
+
+            <div class="ajustes">
+              <span class="ajustes-titulo">Tamaño</span>
+              <button type="button" @click="cambiarTamano(clave, -PASO_TAMANO)">−</button>
+              <button type="button" @click="cambiarTamano(clave, PASO_TAMANO)">+</button>
+
+              <span class="ajustes-titulo">Posición</span>
+              <button type="button" @click="mover(clave, 0, -PASO_DESPLAZAMIENTO)">↑</button>
+              <button type="button" @click="mover(clave, 0, PASO_DESPLAZAMIENTO)">↓</button>
+              <button type="button" @click="mover(clave, -PASO_DESPLAZAMIENTO, 0)">←</button>
+              <button type="button" title="Centrar horizontalmente" @click="centrarHorizontal(clave)">↔</button>
+              <button type="button" @click="mover(clave, PASO_DESPLAZAMIENTO, 0)">→</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <button class="btn-descargar" @click="descargar" :disabled="descargaDeshabilitada">Descargar flyer</button>
     </div>
 
-    <canvas ref="canvasRef" :width="dimensiones.ancho" :height="dimensiones.alto"></canvas>
+    <div class="lienzo-panel">
+      <div class="zoom-controles">
+        <button type="button" @click="alejarZoom" title="Alejar">−</button>
+        <span class="zoom-valor">{{ zoom }}%</span>
+        <button type="button" @click="acercarZoom" title="Acercar">+</button>
+        <button type="button" @click="restablecerZoom" title="Ajustar al 100%">Ajustar</button>
+      </div>
+      <div class="lienzo-scroll">
+        <canvas
+          ref="canvasRef"
+          :width="dimensiones.ancho"
+          :height="dimensiones.alto"
+          :style="{ width: zoom + '%', maxWidth: zoom <= 100 ? '100%' : 'none' }"
+        ></canvas>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -169,6 +212,38 @@ const dimensiones = computed(() => {
   const f = FORMATOS.find((f) => f.clave === formato.value)
   return { ancho: ANCHO_BASE, alto: f.alto }
 })
+
+// Colapsado/expandido de cada sección del panel izquierdo
+const secciones = reactive({
+  formato: true,
+  diseno: true,
+  fondo: true,
+  logos: true,
+  colorTexto: true,
+  contenido: true,
+})
+
+function alternarSeccion(clave) {
+  secciones[clave] = !secciones[clave]
+}
+
+// Zoom visual del canvas: solo cambia el tamaño en pantalla, no la resolución ni la relación de aspecto
+const PASO_ZOOM = 10
+const ZOOM_MIN = 25
+const ZOOM_MAX = 200
+const zoom = ref(100)
+
+function acercarZoom() {
+  zoom.value = Math.min(ZOOM_MAX, zoom.value + PASO_ZOOM)
+}
+
+function alejarZoom() {
+  zoom.value = Math.max(ZOOM_MIN, zoom.value - PASO_ZOOM)
+}
+
+function restablecerZoom() {
+  zoom.value = 100
+}
 
 // Fuentes de respaldo para navegadores sin soporte de Local Font Access API (Firefox, Safari)
 const FUENTES_RESPALDO = ['Arial', 'Georgia', 'Times New Roman', 'Verdana', 'Courier New', 'Impact', 'Comic Sans MS']
@@ -463,11 +538,21 @@ function descargar() {
 }
 
 .seccion {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
   border-bottom: 1px solid #eee;
   padding-bottom: 0.75rem;
+}
+
+.seccion-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
 }
 
 .seccion h3 {
@@ -478,15 +563,35 @@ function descargar() {
   color: #666;
 }
 
+.chevron {
+  font-size: 0.75rem;
+  color: #999;
+  transition: transform 0.15s ease;
+}
+
+.chevron.colapsado {
+  transform: rotate(-90deg);
+}
+
+.seccion-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
 .opciones {
   display: flex;
   gap: 0.4rem;
   flex-wrap: wrap;
 }
 
-.opciones button {
-  flex: 1;
-  padding: 0.4rem 0.5rem;
+.opciones button,
+.ajustes button,
+.btn-fuente,
+.btn-descargar,
+input[type='file']::file-selector-button,
+input[type='file']::-webkit-file-upload-button {
   border: 1px solid #ccc;
   border-radius: 6px;
   background: #f5f5f5;
@@ -494,10 +599,27 @@ function descargar() {
   font-size: 0.85rem;
 }
 
+.opciones button,
+.btn-descargar {
+  flex: 1;
+  padding: 0.4rem 0.5rem;
+}
+
 .opciones button.activo {
   border-color: #1b2452;
   background: #dde1ef;
   color: #1b2452;
+}
+
+.btn-descargar:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+input[type='file']::file-selector-button,
+input[type='file']::-webkit-file-upload-button {
+  padding: 0.4rem 0.5rem;
+  margin-right: 0.5rem;
 }
 
 .selector-color {
@@ -579,10 +701,6 @@ function descargar() {
 }
 
 .btn-fuente {
-  cursor: pointer;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-  background: #f5f5f5;
   line-height: 1;
   padding: 0.2rem 0.4rem;
 }
@@ -619,13 +737,50 @@ function descargar() {
 .ajustes button {
   width: 2rem;
   height: 2rem;
+  padding: 0;
   line-height: 1;
+}
+
+.lienzo-panel {
+  flex: 1;
+  min-width: 280px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.zoom-controles {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.zoom-controles button {
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #f5f5f5;
   cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.6rem;
+}
+
+.zoom-valor {
+  font-size: 0.85rem;
+  color: #666;
+  min-width: 3rem;
+  text-align: center;
+}
+
+.lienzo-scroll {
+  overflow: auto;
+  max-height: 80vh;
+  background: #fafafa;
+  border: 1px solid #ccc;
+  border-radius: 6px;
 }
 
 canvas {
-  max-width: 100%;
+  display: block;
   height: auto;
-  border: 1px solid #ccc;
 }
 </style>
