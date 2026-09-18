@@ -84,6 +84,10 @@ export default [
                 component: () => import('@/views/admin/sections/configuracion/FlyersView.vue')
             },
             {
+                path: 'agendaActividades',
+                component: () => import('@/views/admin/sections/configuracion/NovedadesView.vue')
+            },
+            {
                 path: 'mesasExamen',
                 component: () => import ('@/views/admin/sections/MesasExamenView.vue')
             },
