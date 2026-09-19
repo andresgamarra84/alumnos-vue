@@ -13,6 +13,9 @@
         </div>
         <div class="col-md-7">
             <div class="titulo">{{ e.titulo }}</div>
+            <div v-if="e.fecha_actividad" class="text-muted small mb-1">
+                {{ formatFechaHora(e.fecha_actividad, e.hora_actividad) }}
+            </div>
             <div>{{ e.descripcion }}</div>
         </div>
         <div class="col-md-2 text-end">
@@ -33,6 +36,17 @@
 
             <label class="form-label">Descripción</label>
             <textarea class="form-control mb-3" rows="4" v-model="nuevaDescripcion"></textarea>
+
+            <div class="row">
+                <div class="col-6">
+                    <label class="form-label">Fecha de la actividad</label>
+                    <input type="date" class="form-control mb-3" v-model="nuevaFecha">
+                </div>
+                <div class="col-6">
+                    <label class="form-label">Hora de la actividad</label>
+                    <input type="time" class="form-control mb-3" v-model="nuevaHora">
+                </div>
+            </div>
 
             <div class="text-center">
                 <button class="btn btn-primary me-2" @click="guardarEntrada">
@@ -56,6 +70,8 @@
     const showForm = ref(false)
     const nuevoTitulo = ref('')
     const nuevaDescripcion = ref('')
+    const nuevaFecha = ref('')
+    const nuevaHora = ref('')
 
     onMounted(() => {
         getNovedades()
@@ -71,9 +87,17 @@
 
     const imgUrl = (e) => `https://cjjc.edu.ar/uploads/novedades/${e.codigo}/${e.img_path}`
 
+    const formatFechaHora = (fecha, hora) => {
+        const [y, m, d] = fecha.split('-')
+        const fechaFmt = `${d}/${m}/${y}`
+        return hora ? `${fechaFmt} - ${hora.slice(0, 5)} hs` : fechaFmt
+    }
+
     const nuevaEntrada = () => {
         nuevoTitulo.value = ''
         nuevaDescripcion.value = ''
+        nuevaFecha.value = ''
+        nuevaHora.value = ''
         showForm.value = true
     }
 
@@ -91,7 +115,12 @@
         const { ok, payload: codigo } = await api.post({
             entity: 'novedades',
             action: 'addNovedad',
-            payload: { titulo, descripcion },
+            payload: {
+                titulo,
+                descripcion,
+                fecha_actividad: nuevaFecha.value || null,
+                hora_actividad: nuevaHora.value || null,
+            },
         })
         if (!ok) return
         showForm.value = false
