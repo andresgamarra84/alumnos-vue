@@ -48,6 +48,12 @@
                 </div>
             </div>
 
+            <label class="form-label">Imagen</label>
+            <input type="file" accept="image/*" class="form-control mb-2" @change="onImagenSeleccionada">
+            <div v-if="imagenPreview" class="text-center mb-3">
+                <img :src="imagenPreview" alt="Vista previa" style="max-width:100%; max-height:160px; object-fit:contain;" />
+            </div>
+
             <div class="text-center">
                 <button class="btn btn-primary me-2" @click="guardarEntrada">
                     Guardar
@@ -72,6 +78,8 @@
     const nuevaDescripcion = ref('')
     const nuevaFecha = ref('')
     const nuevaHora = ref('')
+    const imagenFile = ref(null)
+    const imagenPreview = ref('')
 
     onMounted(() => {
         getNovedades()
@@ -98,41 +106,58 @@
         nuevaDescripcion.value = ''
         nuevaFecha.value = ''
         nuevaHora.value = ''
+        limpiarImagenSeleccionada()
         showForm.value = true
     }
 
     const cerrarForm = () => {
         showForm.value = false
+        limpiarImagenSeleccionada()
+    }
+
+    const limpiarImagenSeleccionada = () => {
+        if (imagenPreview.value) URL.revokeObjectURL(imagenPreview.value)
+        imagenFile.value = null
+        imagenPreview.value = ''
+    }
+
+    const onImagenSeleccionada = (event) => {
+        const file = event.target.files?.[0]
+        if (!file) return
+        if (!file.type.startsWith('image')) {
+            showToast('Solo se permiten imágenes (PNG o JPG).', 'error')
+            event.target.value = ''
+            return
+        }
+        limpiarImagenSeleccionada()
+        imagenFile.value = file
+        imagenPreview.value = URL.createObjectURL(file)
     }
 
     const guardarEntrada = async () => {
-        const titulo = nuevoTitulo.value?.trim()
-        const descripcion = nuevaDescripcion.value?.trim()
-        if (!titulo || !descripcion) {
-            showToast('El título y la descripción son obligatorios', 'error')
-            return
-        }
         const { ok, payload: codigo } = await api.post({
             entity: 'novedades',
             action: 'addNovedad',
             payload: {
-                titulo,
-                descripcion,
+                titulo: nuevoTitulo.value?.trim() || null,
+                descripcion: nuevaDescripcion.value?.trim() || null,
                 fecha_actividad: nuevaFecha.value || null,
                 hora_actividad: nuevaHora.value || null,
             },
         })
         if (!ok) return
+        const archivo = imagenFile.value
         showForm.value = false
+        limpiarImagenSeleccionada()
+        showToast('La entrada fue creada.', 'success')
         await getNovedades()
-        showToast('La entrada fue creada. Puede cargar una imagen para acompañarla.', 'success')
-        const creada = entradas.value.find(item => item.codigo == codigo)
-        if (creada) subirImagen(creada)
+        if (archivo) {
+            const creada = entradas.value.find(item => item.codigo == codigo)
+            if (creada) await subirImagenArchivo(creada, archivo)
+        }
     }
 
-    const subirImagen = (entrada) => {
-        const f = document.createElement('input')
-        f.setAttribute('type', 'file')
+    const crearResumable = (entrada, { onSuccess, onError } = {}) => {
         const uploadPayload = {
             typeFile: 'novedades',
             codNovedad: entrada.codigo,
@@ -149,28 +174,50 @@
                 payload: JSON.stringify(uploadPayload),
             }),
         })
-        if (!upl.support) {
-            showToast('Tu navegador no soporta la carga de archivos.', 'error')
-            return
-        }
-        upl.assignBrowse(f)
         upl.on('fileSuccess', () => {
             showToast('La imagen fue cargada correctamente.', 'success')
             getNovedades()
+            onSuccess?.()
         })
         upl.on('fileError', (_, message) => {
             showToast(`No fue posible subir la imagen. ${message || ''}`.trim(), 'error')
+            onError?.()
         })
         upl.on('fileAdded', (file) => {
             if (!file.file.type.startsWith('image')) {
                 upl.removeFile(file)
                 showToast('Solo se permiten imágenes (PNG o JPG).', 'error')
+                onError?.()
                 return
             }
             file.fileName = file.fileName.replace(/[^a-zA-Z0-9\s\-_,.!¡¿?]/g, '')
             upl.upload()
         })
+        return upl
+    }
+
+    const subirImagen = (entrada) => {
+        const upl = crearResumable(entrada)
+        if (!upl.support) {
+            showToast('Tu navegador no soporta la carga de archivos.', 'error')
+            return
+        }
+        const f = document.createElement('input')
+        f.setAttribute('type', 'file')
+        upl.assignBrowse(f)
         f.click()
+    }
+
+    const subirImagenArchivo = (entrada, file) => {
+        return new Promise((resolve) => {
+            const upl = crearResumable(entrada, { onSuccess: () => resolve(true), onError: () => resolve(false) })
+            if (!upl.support) {
+                showToast('Tu navegador no soporta la carga de archivos.', 'error')
+                resolve(false)
+                return
+            }
+            upl.addFile(file)
+        })
     }
 
     const borrarEntrada = async (entrada) => {
