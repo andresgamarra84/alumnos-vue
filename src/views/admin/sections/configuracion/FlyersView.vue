@@ -21,19 +21,6 @@
       </section>
 
       <section class="seccion">
-        <button type="button" class="seccion-header" @click="alternarSeccion('diseno')">
-          <h3>Diseño</h3>
-          <span class="chevron" :class="{ colapsado: !secciones.diseno }">▾</span>
-        </button>
-        <div v-show="secciones.diseno" class="seccion-body">
-          <div class="opciones">
-            <button type="button" :class="{ activo: layout === 'A' }" @click="layout = 'A'">Círculo arriba · logo al pie</button>
-            <button type="button" :class="{ activo: layout === 'B' }" @click="layout = 'B'">Logo como título · círculo al pie</button>
-          </div>
-        </div>
-      </section>
-
-      <section class="seccion">
         <button type="button" class="seccion-header" @click="alternarSeccion('fondo')">
           <h3>Fondo</h3>
           <span class="chevron" :class="{ colapsado: !secciones.fondo }">▾</span>
@@ -87,6 +74,35 @@
               <button type="button" @click="moverLogo(clave, -PASO_DESPLAZAMIENTO, 0)">←</button>
               <button type="button" title="Restablecer posición y tamaño" @click="restablecerLogo(clave)">↺</button>
               <button type="button" @click="moverLogo(clave, PASO_DESPLAZAMIENTO, 0)">→</button>
+            </div>
+
+            <div class="ajustes-fondo-logo">
+              <span class="ajustes-titulo">Fondo ({{ clave === 'circulo' ? 'circular' : 'rectangular' }})</span>
+              <div class="opciones">
+                <button type="button" :class="{ activo: l.bgMode === 'transparent' }" @click="l.bgMode = 'transparent'">Transparente</button>
+                <button type="button" :class="{ activo: l.bgMode === 'color' }" @click="l.bgMode = 'color'">Color</button>
+              </div>
+
+              <template v-if="l.bgMode === 'color'">
+                <div class="selector-color">
+                  <button
+                    v-for="c in logoBgSwatches"
+                    :key="c"
+                    type="button"
+                    class="swatch"
+                    :class="{ activo: l.bgColor === c }"
+                    :style="{ background: c, boxShadow: c === '#ffffff' ? '0 0 0 1px #ccc' : undefined }"
+                    @click="l.bgColor = c"
+                  />
+                  <input type="color" v-model="l.bgColor" title="Color de fondo del logo" />
+                </div>
+
+                <div class="campo-slider">
+                  <label>Opacidad del fondo</label>
+                  <input type="range" min="0" max="100" v-model.number="l.bgOpacityPct" />
+                  <span>{{ l.bgOpacityPct }}%</span>
+                </div>
+              </template>
             </div>
           </div>
 
@@ -216,7 +232,6 @@ const dimensiones = computed(() => {
 // Colapsado/expandido de cada sección del panel izquierdo
 const secciones = reactive({
   formato: true,
-  diseno: true,
   fondo: true,
   logos: true,
   colorTexto: true,
@@ -299,8 +314,7 @@ const textos = reactive({
   descripcion: { valor: '', bold: false, fontBase: 0.03, yBase: 0.55, tamano: 1, offsetX: 0, offsetY: 0, fuente: 'Arial' },
 })
 
-// --- Diseño, fondo y logos (integrado desde vue-flyer-editor/FlyerEditor.vue) ---
-const layout = ref('A') // 'A': círculo arriba / logo al pie — 'B': logo arriba / círculo al pie
+// --- Fondo y logos (integrado desde vue-flyer-editor/FlyerEditor.vue) ---
 const bgMode = ref('color') // 'color' | 'image'
 const bgColor = ref('#ffffff')
 const logoColor = ref('#1b2452')
@@ -311,16 +325,18 @@ const textColor = ref('#ffffff')
 const bgSwatches = ['#ffffff', '#dceaf5', '#eef2e2', '#f6e6ea', '#f4ecd8', '#e7e5ee']
 const logoSwatches = ['#1b2452', '#000000', '#ffffff', '#3c4470', '#b8863f', '#5c5142']
 const textSwatches = ['#ffffff', '#1b2452', '#000000', '#3c4470', '#8a6d3b', '#333333']
+const logoBgSwatches = ['#ffffff', '#000000', '#1b2452', '#dceaf5', '#f6e6ea', '#f4ecd8']
 
 const etiquetasLogos = {
   circulo: 'Círculo 60° aniversario',
   semana: 'Logo Semana de las Artes',
 }
 
-// Visibilidad, tamaño y posición individual de cada logo
+// Visibilidad, tamaño, posición y fondo individual de cada logo.
+// bgMode: 'transparent' | 'color'. El fondo del círculo se dibuja circular, el de "semana" rectangular.
 const logos = reactive({
-  circulo: { visible: true, tamano: 1, offsetX: 0, offsetY: 0 },
-  semana: { visible: true, tamano: 1, offsetX: 0, offsetY: 0 },
+  circulo: { visible: true, tamano: 1, offsetX: 0, offsetY: 0, bgMode: 'transparent', bgColor: '#ffffff', bgOpacityPct: 100 },
+  semana: { visible: true, tamano: 1, offsetX: 0, offsetY: 0, bgMode: 'transparent', bgColor: '#ffffff', bgOpacityPct: 100 },
 })
 
 function moverLogo(clave, dx, dy) {
@@ -435,46 +451,49 @@ function dibujarFondo(width, height) {
   }
 }
 
+// Dibuja el fondo de un logo detrás de su imagen: circular para "circulo", rectangular para "semana".
+// Su opacidad es independiente del deslizador de opacidad del círculo (que solo afecta al logo).
+function dibujarFondoLogo(forma, x, y, w, h, color, opacidad) {
+  const cx = x + w / 2
+  const cy = y + h / 2
+  ctx.save()
+  ctx.globalAlpha = opacidad
+  ctx.fillStyle = color
+  if (forma === 'circulo') {
+    const radio = (Math.max(w, h) / 2) * 1.15
+    ctx.beginPath()
+    ctx.arc(cx, cy, radio, 0, Math.PI * 2)
+    ctx.fill()
+  } else {
+    const padX = w * 0.12
+    const padY = h * 0.12
+    ctx.fillRect(x - padX, y - padY, w + padX * 2, h + padY * 2)
+  }
+  ctx.restore()
+}
+
 function dibujarLogos(width, height) {
   const circuloTintado = obtenerTintado(circuloImg, logoColor.value)
   const semanaTintado = obtenerTintado(semanaImg, logoColor.value)
 
-  if (layout.value === 'A') {
-    if (logos.circulo.visible) {
-      const cW = width * 0.20625 * logos.circulo.tamano
-      const cH = cW / circuloRatio
-      const cX = width - width * 0.04375 - cW + logos.circulo.offsetX
-      const cY = height * 0.05 + logos.circulo.offsetY
-      ctx.save()
-      ctx.globalAlpha = circleOpacity.value
-      ctx.drawImage(circuloTintado, cX, cY, cW, cH)
-      ctx.restore()
-    }
-    if (logos.semana.visible) {
-      const sW = width * 0.29375 * logos.semana.tamano
-      const sH = sW / semanaRatio
-      const sX = (width - sW) / 2 + logos.semana.offsetX
-      const sY = height - height * 0.05 - sH + logos.semana.offsetY
-      ctx.drawImage(semanaTintado, sX, sY, sW, sH)
-    }
-  } else {
-    if (logos.semana.visible) {
-      const sW = width * 0.4 * logos.semana.tamano
-      const sH = sW / semanaRatio
-      const sX = (width - sW) / 2 + logos.semana.offsetX
-      const sY = height * 0.04583 + logos.semana.offsetY
-      ctx.drawImage(semanaTintado, sX, sY, sW, sH)
-    }
-    if (logos.circulo.visible) {
-      const cW = width * 0.18125 * logos.circulo.tamano
-      const cH = cW / circuloRatio
-      const cX = width - width * 0.04375 - cW + logos.circulo.offsetX
-      const cY = height - height * 0.04583 - cH + logos.circulo.offsetY
-      ctx.save()
-      ctx.globalAlpha = circleOpacity.value
-      ctx.drawImage(circuloTintado, cX, cY, cW, cH)
-      ctx.restore()
-    }
+  if (logos.circulo.visible) {
+    const cW = width * 0.20625 * logos.circulo.tamano
+    const cH = cW / circuloRatio
+    const cX = width - width * 0.04375 - cW + logos.circulo.offsetX
+    const cY = height * 0.05 + logos.circulo.offsetY
+    if (logos.circulo.bgMode === 'color') dibujarFondoLogo('circulo', cX, cY, cW, cH, logos.circulo.bgColor, logos.circulo.bgOpacityPct / 100)
+    ctx.save()
+    ctx.globalAlpha = circleOpacity.value
+    ctx.drawImage(circuloTintado, cX, cY, cW, cH)
+    ctx.restore()
+  }
+  if (logos.semana.visible) {
+    const sW = width * 0.29375 * logos.semana.tamano
+    const sH = sW / semanaRatio
+    const sX = (width - sW) / 2 + logos.semana.offsetX
+    const sY = height - height * 0.05 - sH + logos.semana.offsetY
+    if (logos.semana.bgMode === 'color') dibujarFondoLogo('rect', sX, sY, sW, sH, logos.semana.bgColor, logos.semana.bgOpacityPct / 100)
+    ctx.drawImage(semanaTintado, sX, sY, sW, sH)
   }
 }
 
@@ -509,7 +528,7 @@ function dibujar() {
   dibujarTextos(width, height)
 }
 
-watch([layout, bgMode, bgColor, logoColor, circleOpacityPct, textColor, logos, textos], dibujar, { deep: true })
+watch([bgMode, bgColor, logoColor, circleOpacityPct, textColor, logos, textos], dibujar, { deep: true })
 
 // El cambio de ancho/alto del <canvas> se aplica al DOM en el próximo tick; recién ahí se puede redibujar
 watch(formato, () => nextTick(dibujar))
@@ -666,6 +685,12 @@ input[type='file']::-webkit-file-upload-button {
   align-items: center;
   gap: 0.4rem;
   font-size: 0.9rem;
+}
+
+.ajustes-fondo-logo {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .campo-slider {
