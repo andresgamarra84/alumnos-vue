@@ -65,16 +65,11 @@
 
             <div class="ajustes">
               <span class="ajustes-titulo">Tamaño</span>
-              <button type="button" @click="cambiarTamanoLogo(clave, -PASO_TAMANO)">−</button>
-              <button type="button" @click="cambiarTamanoLogo(clave, PASO_TAMANO)">+</button>
-
-              <span class="ajustes-titulo">Posición</span>
-              <button type="button" @click="moverLogo(clave, 0, -PASO_DESPLAZAMIENTO)">↑</button>
-              <button type="button" @click="moverLogo(clave, 0, PASO_DESPLAZAMIENTO)">↓</button>
-              <button type="button" @click="moverLogo(clave, -PASO_DESPLAZAMIENTO, 0)">←</button>
-              <button type="button" title="Restablecer posición y tamaño" @click="restablecerLogo(clave)">↺</button>
-              <button type="button" @click="moverLogo(clave, PASO_DESPLAZAMIENTO, 0)">→</button>
+              <button type="button" @click="cambiarTamano(l, -PASO_TAMANO)">−</button>
+              <button type="button" @click="cambiarTamano(l, PASO_TAMANO)">+</button>
+              <button type="button" title="Centrar horizontalmente" @click="centrarHorizontal(l)">↔</button>
             </div>
+            <p class="ajustes-hint">Arrastrá el logo directamente sobre el lienzo para moverlo.</p>
 
             <div class="ajustes-fondo-logo">
               <span class="ajustes-titulo">Fondo ({{ clave === 'circulo' ? 'circular' : 'rectangular' }})</span>
@@ -101,6 +96,12 @@
                   <label>Opacidad del fondo</label>
                   <input type="range" min="0" max="100" v-model.number="l.bgOpacityPct" />
                   <span>{{ l.bgOpacityPct }}%</span>
+                </div>
+
+                <div class="campo-slider">
+                  <label>Difuminado del borde</label>
+                  <input type="range" min="0" max="60" v-model.number="l.bgFeatherPct" />
+                  <span>{{ l.bgFeatherPct }}%</span>
                 </div>
               </template>
             </div>
@@ -155,14 +156,17 @@
           <span class="chevron" :class="{ colapsado: !secciones.contenido }">▾</span>
         </button>
         <div v-show="secciones.contenido" class="seccion-body">
-          <div class="campo-texto" v-for="(t, clave) in textos" :key="clave">
+          <div class="campo-texto" v-for="(t, index) in textos" :key="t.id">
             <div class="campo-texto-header">
-              <label>{{ etiquetas[clave] }}</label>
-              <button type="button" class="btn-fuente" title="Elegir fuente" @click="alternarFuente(clave)">🔤</button>
+              <label>Texto {{ index + 1 }}</label>
+              <div class="campo-texto-acciones">
+                <button type="button" class="btn-fuente" title="Elegir fuente" @click="alternarFuente(t.id)">🔤</button>
+                <button type="button" class="btn-quitar-texto" title="Quitar texto" @click="eliminarTexto(t.id)">🗑</button>
+              </div>
             </div>
-            <textarea v-model="t.valor" rows="2"></textarea>
+            <textarea v-model="t.valor" rows="2" placeholder="Escribí el texto..."></textarea>
 
-            <div v-if="fuenteAbierta === clave">
+            <div v-if="fuenteAbierta === t.id">
               <select v-model="t.fuente" :style="{ fontFamily: `${t.fuente}, sans-serif` }">
                 <option v-for="f in fuentesDisponibles" :key="f" :value="f" :style="{ fontFamily: `${f}, sans-serif` }">{{ f }}</option>
               </select>
@@ -171,17 +175,21 @@
 
             <div class="ajustes">
               <span class="ajustes-titulo">Tamaño</span>
-              <button type="button" @click="cambiarTamano(clave, -PASO_TAMANO)">−</button>
-              <button type="button" @click="cambiarTamano(clave, PASO_TAMANO)">+</button>
-
-              <span class="ajustes-titulo">Posición</span>
-              <button type="button" @click="mover(clave, 0, -PASO_DESPLAZAMIENTO)">↑</button>
-              <button type="button" @click="mover(clave, 0, PASO_DESPLAZAMIENTO)">↓</button>
-              <button type="button" @click="mover(clave, -PASO_DESPLAZAMIENTO, 0)">←</button>
-              <button type="button" title="Centrar horizontalmente" @click="centrarHorizontal(clave)">↔</button>
-              <button type="button" @click="mover(clave, PASO_DESPLAZAMIENTO, 0)">→</button>
+              <button type="button" @click="cambiarTamano(t, -PASO_TAMANO)">−</button>
+              <button type="button" @click="cambiarTamano(t, PASO_TAMANO)">+</button>
+              <button type="button" title="Centrar horizontalmente" @click="centrarHorizontal(t)">↔</button>
             </div>
+
+            <div class="opciones">
+              <button type="button" :class="{ activo: t.align === 'left' }" @click="t.align = 'left'">Izq</button>
+              <button type="button" :class="{ activo: t.align === 'center' }" @click="t.align = 'center'">Centro</button>
+              <button type="button" :class="{ activo: t.align === 'right' }" @click="t.align = 'right'">Der</button>
+            </div>
+
+            <p class="ajustes-hint">Arrastrá el texto directamente sobre el lienzo para moverlo.</p>
           </div>
+
+          <button type="button" class="btn-agregar-texto" @click="agregarTexto">+ Agregar texto</button>
         </div>
       </section>
 
@@ -201,6 +209,9 @@
           :width="dimensiones.ancho"
           :height="dimensiones.alto"
           :style="{ width: zoom + '%', maxWidth: zoom <= 100 ? '100%' : 'none' }"
+          @mousedown="onCanvasMouseDown"
+          @mousemove="onCanvasMouseMoveHover"
+          @mouseleave="onCanvasMouseLeave"
         ></canvas>
       </div>
     </div>
@@ -213,7 +224,6 @@ import circuloSrc from '@/assets/flyers/circulo-60-aniversario.png'
 import semanaSrc from '@/assets/flyers/logo-semana-de-las-artes.png'
 
 const PASO_TAMANO = 0.1
-const PASO_DESPLAZAMIENTO = 10
 
 // Formatos de publicación: el ancho se mantiene fijo en 1200px, el alto surge de la relación de aspecto
 const ANCHO_BASE = 1200
@@ -299,20 +309,41 @@ async function cargarFuentesDelSistema() {
   }
 }
 
-const etiquetas = {
-  titulo: 'Título del evento',
-  fecha: 'Fecha',
-  lugar: 'Lugar',
-  descripcion: 'Descripción (opcional)',
+// Listado libre de textos: cada uno mantiene tamaño, fuente, alineación y posición (drag/drop) propios.
+// yBase: posición vertical proporcional al alto del canvas. fontBase: tamaño de fuente proporcional al ancho.
+let idSeqTextos = 0
+function crearTexto(valorInicial, overrides = {}) {
+  idSeqTextos += 1
+  return {
+    id: idSeqTextos,
+    valor: valorInicial,
+    fontBase: 0.04,
+    yBase: 0.3,
+    tamano: 1,
+    offsetX: 0,
+    offsetY: 0,
+    fuente: 'Arial',
+    align: 'center',
+    ...overrides,
+  }
 }
 
-// yBase: posición vertical proporcional al alto del canvas. fontBase: tamaño de fuente proporcional al ancho.
-const textos = reactive({
-  titulo: { valor: 'Título del evento', bold: true, fontBase: 0.05, yBase: 0.30, tamano: 1, offsetX: 0, offsetY: 0, fuente: 'Arial' },
-  fecha: { valor: '20/09/2026', bold: false, fontBase: 0.035, yBase: 0.36, tamano: 1, offsetX: 0, offsetY: 0, fuente: 'Arial' },
-  lugar: { valor: 'Buenos Aires', bold: false, fontBase: 0.035, yBase: 0.40, tamano: 1, offsetX: 0, offsetY: 0, fuente: 'Arial' },
-  descripcion: { valor: '', bold: false, fontBase: 0.03, yBase: 0.55, tamano: 1, offsetX: 0, offsetY: 0, fuente: 'Arial' },
-})
+const textos = reactive([
+  crearTexto('Título del evento', { fontBase: 0.05, yBase: 0.30 }),
+  crearTexto('20/09/2026', { fontBase: 0.035, yBase: 0.36 }),
+  crearTexto('Buenos Aires', { fontBase: 0.035, yBase: 0.40 }),
+])
+
+// yBase escalonado para que los textos nuevos no queden apilados uno sobre otro por defecto.
+function agregarTexto() {
+  const yBase = 0.3 + ((textos.length * 0.08) % 0.6)
+  textos.push(crearTexto('Nuevo texto', { yBase }))
+}
+
+function eliminarTexto(id) {
+  const indice = textos.findIndex((t) => t.id === id)
+  if (indice !== -1) textos.splice(indice, 1)
+}
 
 // --- Fondo y logos (integrado desde vue-flyer-editor/FlyerEditor.vue) ---
 const bgMode = ref('color') // 'color' | 'image'
@@ -335,27 +366,9 @@ const etiquetasLogos = {
 // Visibilidad, tamaño, posición y fondo individual de cada logo.
 // bgMode: 'transparent' | 'color'. El fondo del círculo se dibuja circular, el de "semana" rectangular.
 const logos = reactive({
-  circulo: { visible: true, tamano: 1, offsetX: 0, offsetY: 0, bgMode: 'transparent', bgColor: '#ffffff', bgOpacityPct: 100 },
-  semana: { visible: true, tamano: 1, offsetX: 0, offsetY: 0, bgMode: 'transparent', bgColor: '#ffffff', bgOpacityPct: 100 },
+  circulo: { visible: true, tamano: 1, offsetX: 0, offsetY: 0, bgMode: 'transparent', bgColor: '#ffffff', bgOpacityPct: 100, bgFeatherPct: 30 },
+  semana: { visible: true, tamano: 1, offsetX: 0, offsetY: 0, bgMode: 'transparent', bgColor: '#ffffff', bgOpacityPct: 100, bgFeatherPct: 30 },
 })
-
-function moverLogo(clave, dx, dy) {
-  const l = logos[clave]
-  l.offsetX += dx
-  l.offsetY += dy
-}
-
-function cambiarTamanoLogo(clave, delta) {
-  const l = logos[clave]
-  l.tamano = Math.min(3, Math.max(0.4, +(l.tamano + delta).toFixed(2)))
-}
-
-function restablecerLogo(clave) {
-  const l = logos[clave]
-  l.tamano = 1
-  l.offsetX = 0
-  l.offsetY = 0
-}
 
 const circuloImg = new Image()
 const semanaImg = new Image()
@@ -408,19 +421,26 @@ onMounted(() => {
   dibujar()
 })
 
-function cambiarTamano(clave, delta) {
-  const t = textos[clave]
-  t.tamano = Math.min(3, Math.max(0.4, +(t.tamano + delta).toFixed(2)))
+// Misma función para textos y logos: reciben el ítem directamente (ambos son objetos
+// reactivos con .tamano/.offsetX), así que no hace falta distinguir de qué colección vienen.
+function cambiarTamano(item, delta) {
+  item.tamano = Math.min(3, Math.max(0.4, +(item.tamano + delta).toFixed(2)))
 }
 
-function mover(clave, dx, dy) {
-  const t = textos[clave]
-  t.offsetX += dx
-  t.offsetY += dy
-}
+// Centra horizontalmente un elemento (logo o texto) respecto al lienzo completo.
+function centrarHorizontal(item) {
+  const { width, height } = canvasRef.value
+  // El offsetX de cada ítem se suma linealmente (coeficiente 1) a la posición base de su caja,
+  // sea cual sea esa base (el centro del lienzo para "semana"/textos, o el margen derecho para
+  // "circulo"). Por eso centrar de verdad requiere medir la caja actual y corregir la diferencia,
+  // en vez de solo poner offsetX = 0 (que solo devuelve al ítem a su anclaje de diseño original).
+  let caja
+  if (item === logos.circulo) caja = obtenerCajaLogo('circulo', width, height)
+  else if (item === logos.semana) caja = obtenerCajaLogo('semana', width, height)
+  else caja = obtenerCajaTexto(item, width, height)
 
-function centrarHorizontal(clave) {
-  textos[clave].offsetX = 0
+  const centroActual = caja.x + caja.w / 2
+  item.offsetX += width / 2 - centroActual
 }
 
 function cargarImagen(event) {
@@ -453,23 +473,53 @@ function dibujarFondo(width, height) {
 
 // Dibuja el fondo de un logo detrás de su imagen: circular para "circulo", rectangular para "semana".
 // Su opacidad es independiente del deslizador de opacidad del círculo (que solo afecta al logo).
-function dibujarFondoLogo(forma, x, y, w, h, color, opacidad) {
+// difuminado (0 a 1): fracción del radio/mitad de lado que se dedica a difuminar el borde hacia
+// opacity 0. Se logra dibujando la forma más chica y aplicándole un blur del mismo tamaño: el blur
+// expande el borde hacia afuera hasta el tamaño original, dejando el centro sólido intacto.
+function dibujarFondoLogo(forma, x, y, w, h, color, opacidad, difuminado) {
   const cx = x + w / 2
   const cy = y + h / 2
+  const dimensionBase = forma === 'circulo' ? Math.max(w, h) / 2 : Math.min(w, h) / 2
+  const feather = dimensionBase * difuminado
+
   ctx.save()
   ctx.globalAlpha = opacidad
   ctx.fillStyle = color
+  ctx.filter = feather > 0.5 ? `blur(${feather}px)` : 'none'
+
   if (forma === 'circulo') {
-    const radio = (Math.max(w, h) / 2) * 1.15
+    const radio = Math.max((Math.max(w, h) / 2) * 1.15 - feather, 0)
     ctx.beginPath()
     ctx.arc(cx, cy, radio, 0, Math.PI * 2)
     ctx.fill()
   } else {
     const padX = w * 0.12
     const padY = h * 0.12
-    ctx.fillRect(x - padX, y - padY, w + padX * 2, h + padY * 2)
+    ctx.fillRect(
+      x - padX + feather,
+      y - padY + feather,
+      Math.max(w + padX * 2 - feather * 2, 0),
+      Math.max(h + padY * 2 - feather * 2, 0)
+    )
   }
   ctx.restore()
+}
+
+// Caja (x, y, w, h) de un logo en coordenadas del canvas. La misma función se usa
+// para dibujar y para detectar sobre qué logo se hizo click al arrastrar.
+function obtenerCajaLogo(clave, width, height) {
+  if (clave === 'circulo') {
+    const cW = width * 0.20625 * logos.circulo.tamano
+    const cH = cW / circuloRatio
+    const cX = width - width * 0.04375 - cW + logos.circulo.offsetX
+    const cY = height * 0.05 + logos.circulo.offsetY
+    return { x: cX, y: cY, w: cW, h: cH }
+  }
+  const sW = width * 0.29375 * logos.semana.tamano
+  const sH = sW / semanaRatio
+  const sX = (width - sW) / 2 + logos.semana.offsetX
+  const sY = height - height * 0.05 - sH + logos.semana.offsetY
+  return { x: sX, y: sY, w: sW, h: sH }
 }
 
 function dibujarLogos(width, height) {
@@ -477,32 +527,129 @@ function dibujarLogos(width, height) {
   const semanaTintado = obtenerTintado(semanaImg, logoColor.value)
 
   if (logos.circulo.visible) {
-    const cW = width * 0.20625 * logos.circulo.tamano
-    const cH = cW / circuloRatio
-    const cX = width - width * 0.04375 - cW + logos.circulo.offsetX
-    const cY = height * 0.05 + logos.circulo.offsetY
-    if (logos.circulo.bgMode === 'color') dibujarFondoLogo('circulo', cX, cY, cW, cH, logos.circulo.bgColor, logos.circulo.bgOpacityPct / 100)
+    const { x: cX, y: cY, w: cW, h: cH } = obtenerCajaLogo('circulo', width, height)
+    if (logos.circulo.bgMode === 'color') dibujarFondoLogo('circulo', cX, cY, cW, cH, logos.circulo.bgColor, logos.circulo.bgOpacityPct / 100, logos.circulo.bgFeatherPct / 100)
     ctx.save()
     ctx.globalAlpha = circleOpacity.value
     ctx.drawImage(circuloTintado, cX, cY, cW, cH)
     ctx.restore()
   }
   if (logos.semana.visible) {
-    const sW = width * 0.29375 * logos.semana.tamano
-    const sH = sW / semanaRatio
-    const sX = (width - sW) / 2 + logos.semana.offsetX
-    const sY = height - height * 0.05 - sH + logos.semana.offsetY
-    if (logos.semana.bgMode === 'color') dibujarFondoLogo('rect', sX, sY, sW, sH, logos.semana.bgColor, logos.semana.bgOpacityPct / 100)
+    const { x: sX, y: sY, w: sW, h: sH } = obtenerCajaLogo('semana', width, height)
+    if (logos.semana.bgMode === 'color') dibujarFondoLogo('rect', sX, sY, sW, sH, logos.semana.bgColor, logos.semana.bgOpacityPct / 100, logos.semana.bgFeatherPct / 100)
     ctx.drawImage(semanaTintado, sX, sY, sW, sH)
   }
 }
 
+// Caja (x, y, w, h) de un texto en coordenadas del canvas, usada para detectar el arrastre.
+// Requiere ctx.font igual al usado al dibujar, por eso lo fija antes de medir.
+function obtenerCajaTexto(t, width, height) {
+  const tamanoFuente = width * t.fontBase * t.tamano
+  const alturaLinea = tamanoFuente * 1.2
+  const lineas = t.valor.split('\n')
+  const yInicio = height * t.yBase + t.offsetY - (alturaLinea * (lineas.length - 1)) / 2
+
+  ctx.font = `${tamanoFuente}px ${t.fuente}`
+  const anchoMaximo = Math.max(...lineas.map((linea) => ctx.measureText(linea).width))
+  const anchorX = width / 2 + t.offsetX
+  const x = t.align === 'left' ? anchorX : t.align === 'right' ? anchorX - anchoMaximo : anchorX - anchoMaximo / 2
+
+  return {
+    x,
+    y: yInicio - tamanoFuente * 0.8, // aproxima el ascenso de la primera línea
+    w: anchoMaximo,
+    h: alturaLinea * lineas.length,
+  }
+}
+
+// --- Drag & drop de logos y textos sobre el lienzo ---
+// arrastre guarda una referencia directa al ítem (logo o texto): ambos son objetos
+// reactivos con .offsetX/.offsetY, así que no hace falta distinguir su tipo.
+let arrastre = null // { item, startX, startY, startOffsetX, startOffsetY }
+
+// Convierte coordenadas del mouse (CSS px) a coordenadas del canvas (resolución real),
+// para que el drag funcione igual con cualquier zoom o ancho responsivo.
+function coordenadasCanvas(event) {
+  const rect = canvasRef.value.getBoundingClientRect()
+  const escalaX = canvasRef.value.width / rect.width
+  const escalaY = canvasRef.value.height / rect.height
+  return {
+    x: (event.clientX - rect.left) * escalaX,
+    y: (event.clientY - rect.top) * escalaY,
+  }
+}
+
+function elementoEnPunto(x, y) {
+  const { width, height } = canvasRef.value
+  // Los textos se dibujan encima de los logos: se testean primero, en orden inverso al de dibujo
+  // (el último de la lista es el que queda arriba visualmente si se superponen).
+  for (let i = textos.length - 1; i >= 0; i--) {
+    const t = textos[i]
+    if (!t.valor.trim()) continue
+    const caja = obtenerCajaTexto(t, width, height)
+    if (x >= caja.x && x <= caja.x + caja.w && y >= caja.y && y <= caja.y + caja.h) return t
+  }
+  // Orden inverso al de dibujo de logos: "semana" se dibuja último y queda arriba visualmente.
+  for (const clave of ['semana', 'circulo']) {
+    if (!logos[clave].visible) continue
+    const caja = obtenerCajaLogo(clave, width, height)
+    if (x >= caja.x && x <= caja.x + caja.w && y >= caja.y && y <= caja.y + caja.h) return logos[clave]
+  }
+  return null
+}
+
+function onCanvasMouseDown(event) {
+  const { x, y } = coordenadasCanvas(event)
+  const item = elementoEnPunto(x, y)
+  if (!item) return
+
+  event.preventDefault()
+  arrastre = {
+    item,
+    startX: x,
+    startY: y,
+    startOffsetX: item.offsetX,
+    startOffsetY: item.offsetY,
+  }
+  canvasRef.value.style.cursor = 'grabbing'
+  window.addEventListener('mousemove', onWindowMouseMoveDrag)
+  window.addEventListener('mouseup', onWindowMouseUpDrag)
+}
+
+function onWindowMouseMoveDrag(event) {
+  if (!arrastre) return
+  if (event.buttons === 0) { // el botón se soltó fuera de la ventana
+    onWindowMouseUpDrag()
+    return
+  }
+  const { x, y } = coordenadasCanvas(event)
+  arrastre.item.offsetX = arrastre.startOffsetX + (x - arrastre.startX)
+  arrastre.item.offsetY = arrastre.startOffsetY + (y - arrastre.startY)
+}
+
+function onWindowMouseUpDrag() {
+  arrastre = null
+  if (canvasRef.value) canvasRef.value.style.cursor = 'default'
+  window.removeEventListener('mousemove', onWindowMouseMoveDrag)
+  window.removeEventListener('mouseup', onWindowMouseUpDrag)
+}
+
+// Cambia el cursor a "grab" al pasar sobre un elemento arrastrable, fuera de un drag activo.
+function onCanvasMouseMoveHover(event) {
+  if (arrastre) return
+  const { x, y } = coordenadasCanvas(event)
+  canvasRef.value.style.cursor = elementoEnPunto(x, y) ? 'grab' : 'default'
+}
+
+function onCanvasMouseLeave() {
+  if (arrastre) return
+  canvasRef.value.style.cursor = 'default'
+}
+
 function dibujarTextos(width, height) {
   ctx.fillStyle = textColor.value
-  ctx.textAlign = 'center'
 
-  for (const clave in textos) {
-    const t = textos[clave]
+  for (const t of textos) {
     if (!t.valor.trim()) continue // texto vacío: no se dibuja
 
     const tamanoFuente = width * t.fontBase * t.tamano
@@ -510,7 +657,8 @@ function dibujarTextos(width, height) {
     const lineas = t.valor.split('\n')
     const yInicio = height * t.yBase + t.offsetY - (alturaLinea * (lineas.length - 1)) / 2
 
-    ctx.font = `${t.bold ? 'bold ' : ''}${tamanoFuente}px ${t.fuente}`
+    ctx.font = `${tamanoFuente}px ${t.fuente}`
+    ctx.textAlign = t.align
     lineas.forEach((linea, i) => {
       ctx.fillText(linea, width / 2 + t.offsetX, yInicio + i * alturaLinea)
     })
@@ -608,6 +756,7 @@ function descargar() {
 .opciones button,
 .ajustes button,
 .btn-fuente,
+.btn-quitar-texto,
 .btn-descargar,
 input[type='file']::file-selector-button,
 input[type='file']::-webkit-file-upload-button {
@@ -693,6 +842,12 @@ input[type='file']::-webkit-file-upload-button {
   gap: 0.35rem;
 }
 
+.ajustes-hint {
+  font-size: 0.75rem;
+  color: #888;
+  margin: 0;
+}
+
 .campo-slider {
   display: flex;
   align-items: center;
@@ -725,9 +880,30 @@ input[type='file']::-webkit-file-upload-button {
   gap: 0.5rem;
 }
 
-.btn-fuente {
+.campo-texto-acciones {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.btn-fuente,
+.btn-quitar-texto {
   line-height: 1;
   padding: 0.2rem 0.4rem;
+}
+
+.btn-agregar-texto {
+  border: 1px dashed #bbb;
+  border-radius: 6px;
+  background: none;
+  color: #666;
+  cursor: pointer;
+  font-size: 0.85rem;
+  padding: 0.5rem;
+}
+
+.btn-agregar-texto:hover {
+  border-color: #1b2452;
+  color: #1b2452;
 }
 
 .campo-texto select {
