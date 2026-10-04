@@ -149,10 +149,11 @@ const permissionSections = [
     ],
   },
   {
-    title: "Menu Novedades:",
+    title: "Menu Novedades diarias:",
     items: [
       { id: "novedades_all", label: "Todos los permisos" },
-      { id: "novedades_ausentes", label: "Ausentes y notificaciones" },
+      { id: "novedades_notificaciones", label: "Notificaciones del panel" },
+      { id: "novedades_ausentes", label: "Docentes ausentes" },
     ],
   },
 ]
