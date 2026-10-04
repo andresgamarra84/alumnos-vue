@@ -4,137 +4,199 @@
     class="modal-backdrop-custom d-flex justify-content-center align-items-center"
     @click.self="closeModal"
   >
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-12 col-md-10 col-lg-6">
-          <div class="modal-card-bootstrap">
+    <div class="modal-card-bootstrap">
 
-            <h4>Editar curso</h4>
+      <!-- Header -->
+      <div class="modal-header-custom">
+        <div>
+          <h5 class="mb-0">Editar curso</h5>
+          <span class="text-muted small">Código #{{ cursoForm.codPlHorarios }}</span>
+        </div>
+        <button type="button" class="btn-close" aria-label="Cerrar" @click="closeModal"></button>
+      </div>
 
-            <!-- Código -->
-            <div><strong>Código:</strong> {{ cursoForm.codPlHorarios }}</div>
+      <!-- Body -->
+      <div class="modal-body-custom">
 
-            <!-- Curso -->
-            <label>Curso</label>
-            <select v-model="cursoForm.codCurso">
-              <option :value="null">Seleccionar</option>
-              <option v-for="c in cursos" :key="c.codigo" :value="c.codigo">
-                {{ c.nombre }}
-              </option>
-            </select>
-
-            <!-- Profesor -->
-            <label>Profesor</label>
-            <select v-model="cursoForm.codProfesor">
-              <option :value="null">Seleccionar</option>
-              <option v-for="p in profesores" :key="p.codigo" :value="p.codigo">
-                {{ p.nombre }}
-              </option>
-            </select>
-
-            <!-- Comisión / Cupo -->
-            <div class="row">
-              <div>
-                <label>Comisión</label>
-                <select v-model="cursoForm.comision">
-                  <option :value="0">Sin comisión</option>
-                  <option v-for="c in arrComision" :key="c" :value="c">{{ c }}</option>
-                </select>
-              </div>
-
-              <div>
-                <label>Cupo</label>
-                <input type="number" class='form-control' v-model="cursoForm.cupo" />
-              </div>
-            </div>
-
-            <!-- Horarios -->
-            <template v-if="!cursoForm.tipos.instrumento && !cursoForm.tipos.armonico">
-              <div v-for="(h, i) in cursoForm.horarios" :key="i">
-                {{ h.dia }} de {{ h.horario[0] }} a {{ h.horario[1] }}
-                – Aula {{ h.aula }} ({{ h.sede }})
-                <button @click="delCHFromPlHorarios(i)">X</button>
-              </div>
-
-              <label>Agregar día</label>
-              <select v-model="nuevoDia" @change="addCHToPlHorarios">
-                <option disabled value="">Seleccione</option>
-                <option v-for="(d, i) in arrDias" :key="i" :value="i">
-                  {{ d }}
+        <!-- Datos generales -->
+        <section class="form-section">
+          <h6 class="section-title">Datos generales</h6>
+          <div class="row g-3">
+            <div class="col-12">
+              <label class="form-label">Curso</label>
+              <select class="form-select" v-model="cursoForm.codCurso">
+                <option :value="null">Seleccionar</option>
+                <option v-for="c in cursos" :key="c.codigo" :value="c.codigo">
+                  {{ c.nombre }}
                 </option>
               </select>
-            </template>
-
-            <!-- Flags -->
-            <div class="checks">
-              <label><input type="checkbox" v-model="cursoForm.inscrAbierta" /> Inscripción abierta</label>
-              <label><input type="checkbox" v-model="cursoForm.mostrar" /> Mostrar en planilla</label>
-              <label><input type="checkbox" v-model="cursoForm.semiPresencial" /> Semipresencial</label>
             </div>
 
-            <div class="checks">
-              <label><input type="checkbox" v-model="cursoForm.tipos.normal" /> Materia normal</label>
-              <label><input type="checkbox" v-model="cursoForm.tipos.espacioInstitucional" /> Esp. Inst.</label>
-              <label><input type="checkbox" v-model="cursoForm.tipos.espacioAlternativo" /> Esp. Altern.</label>
-            </div>
-
-            <label>
-              <input type="checkbox" v-model="cursoForm.actividades" />
-              Actividades online
-            </label>
-
-            <!-- Materias asociadas -->
-            <div v-if="(cursoForm.materias.tipo & 6) === 0">
-              <label>Materia asociada</label>
-              <select @change="addMateriaAsociada">
-                <option disabled selected>Seleccione</option>
-                <option v-for="m in materias" :key="m.codigo" :value="m.codigo">
-                  {{ m.nombre }}
+            <div class="col-12">
+              <label class="form-label">Profesor</label>
+              <select class="form-select" v-model="cursoForm.codProfesor">
+                <option :value="null">Seleccionar</option>
+                <option v-for="p in profesores" :key="p.codigo" :value="p.codigo">
+                  {{ p.nombre }}
                 </option>
               </select>
+            </div>
 
-              <div>
-                <div v-for="(m, i) in cursoForm.materiasAsociadas" :key="i">
-                  {{ m.nombre }}
-                  <button @click="delMateriaAsociada(i)">X</button>
-                </div>
-              </div>
+            <div class="col-6">
+              <label class="form-label">Comisión</label>
+              <select class="form-select" v-model="cursoForm.comision">
+                <option :value="0">Sin comisión</option>
+                <option v-for="c in arrComision" :key="c" :value="c">{{ c }}</option>
+              </select>
             </div>
-            <!-- Instrumento -->
-            <div>
-              <label>
-                <input type="checkbox" v-model="cursoForm.tipos.instrumento"/> Instrumento / Canto
-              </label>
-              <label>
-                <input type="checkbox" v-model="cursoForm.tipos.armonico"/> Instrumento armónico
-              </label>
+
+            <div class="col-6">
+              <label class="form-label">Cupo</label>
+              <input type="number" class="form-control" v-model="cursoForm.cupo" />
             </div>
-            <template v-if="cursoForm.tipos.instrumento || cursoForm.tipos.armonico">
-            <label>Instrumento asociado</label>
-            <select v-model="cursoForm.codInstrumento">
+          </div>
+        </section>
+
+        <!-- Horarios -->
+        <section class="form-section" v-if="!cursoForm.tipos.instrumento && !cursoForm.tipos.armonico">
+          <h6 class="section-title">Horarios</h6>
+
+          <ul class="list-group mb-3" v-if="cursoForm.horarios?.length">
+            <li
+              class="list-group-item d-flex justify-content-between align-items-center"
+              v-for="(h, i) in cursoForm.horarios"
+              :key="i"
+            >
+              <span>
+                <strong>{{ h.dia }}</strong> de {{ h.horario[0] }} a {{ h.horario[1] }}
+                <span class="text-muted"> — Aula {{ h.aula }} ({{ h.sede }})</span>
+              </span>
+              <button type="button" class="btn btn-sm btn-outline-danger" @click="delCHFromPlHorarios(i)">
+                Quitar
+              </button>
+            </li>
+          </ul>
+          <p class="text-muted small mb-3" v-else>Sin horarios asignados.</p>
+
+          <label class="form-label">Agregar día</label>
+          <select class="form-select" v-model="nuevoDia" @change="addCHToPlHorarios">
+            <option disabled value="">Seleccione</option>
+            <option v-for="(d, i) in arrDias" :key="i" :value="i">
+              {{ d }}
+            </option>
+          </select>
+        </section>
+
+        <!-- Configuración -->
+        <section class="form-section">
+          <h6 class="section-title">Configuración</h6>
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" role="switch" id="chkInscrAbierta" v-model="cursoForm.inscrAbierta" />
+            <label class="form-check-label" for="chkInscrAbierta">Inscripción abierta</label>
+          </div>
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" role="switch" id="chkMostrar" v-model="cursoForm.mostrar" />
+            <label class="form-check-label" for="chkMostrar">Mostrar en planilla</label>
+          </div>
+          <div class="form-check form-switch mb-2">
+            <input class="form-check-input" type="checkbox" role="switch" id="chkSemiPresencial" v-model="cursoForm.semiPresencial" />
+            <label class="form-check-label" for="chkSemiPresencial">Semipresencial</label>
+          </div>
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" role="switch" id="chkActividades" v-model="cursoForm.actividades" />
+            <label class="form-check-label" for="chkActividades">Actividades online</label>
+          </div>
+        </section>
+
+        <!-- Tipo de materia -->
+        <section class="form-section">
+          <h6 class="section-title">Tipo de materia</h6>
+          <div class="d-flex flex-wrap gap-3 mb-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="tipoNormal" v-model="cursoForm.tipos.normal" />
+              <label class="form-check-label" for="tipoNormal">Materia normal</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="tipoEspInst" v-model="cursoForm.tipos.espacioInstitucional" />
+              <label class="form-check-label" for="tipoEspInst">Esp. institucional</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="tipoEspAlt" v-model="cursoForm.tipos.espacioAlternativo" />
+              <label class="form-check-label" for="tipoEspAlt">Esp. alternativo</label>
+            </div>
+          </div>
+
+          <div class="d-flex flex-wrap gap-3">
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="tipoInstrumento" v-model="cursoForm.tipos.instrumento" />
+              <label class="form-check-label" for="tipoInstrumento">Instrumento / Canto</label>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="checkbox" id="tipoArmonico" v-model="cursoForm.tipos.armonico" />
+              <label class="form-check-label" for="tipoArmonico">Instrumento armónico</label>
+            </div>
+          </div>
+
+          <template v-if="cursoForm.tipos.instrumento || cursoForm.tipos.armonico">
+            <label class="form-label mt-3">Instrumento asociado</label>
+            <select class="form-select" v-model="cursoForm.codInstrumento">
               <option :value="null">(Ninguno)</option>
               <option v-for="i in instrumentos" :key="i.codigo" :value="i.codigo">
                 {{ i.nombre }}
               </option>
             </select>
-            </template>
-            <!-- Color -->
-            <label>Color de fondo</label>
-            <input class='form-control w-100' type="color" v-model="cursoForm.bgColor" />
+          </template>
+        </section>
 
-            <!-- Observaciones -->
-            <label>Observaciones</label>
-            <textarea class='form-control w-100' v-model="cursoForm.obs" rows="4"></textarea>
+        <!-- Materias asociadas -->
+        <section class="form-section" v-if="(cursoForm.materias.tipo & 6) === 0">
+          <h6 class="section-title">Materias asociadas</h6>
+          <select class="form-select mb-2" @change="addMateriaAsociada">
+            <option disabled value="">Seleccione</option>
+            <option v-for="m in materiasDisponibles" :key="m.codigo" :value="m.codigo">
+              {{ m.nombre }} ({{ m.codigo }})
+            </option>
+          </select>
 
-            <!-- Acciones -->
-            <div class="modal-actions">
-              <button @click="saveCurso">Guardar</button>
-              <button @click="closeModal">Cerrar</button>
-              <button class="danger" @click="borrarCurso">Borrar curso</button>
-            </div>
+          <ul class="list-group" v-if="materiasAsociadas.length">
+            <li
+              class="list-group-item d-flex justify-content-between align-items-center"
+              v-for="m in materiasAsociadas"
+              :key="m.codigo"
+            >
+              {{ m.nombre }} ({{ m.codigo }})
+              <button type="button" class="btn btn-sm btn-outline-danger" @click="delMateriaAsociada(m.codigo)">
+                Quitar
+              </button>
+            </li>
+          </ul>
+          <p class="text-muted small mb-0" v-else>Sin materias asociadas.</p>
+        </section>
+
+        <!-- Apariencia -->
+        <section class="form-section">
+          <h6 class="section-title">Apariencia</h6>
+          <div class="d-flex align-items-center gap-3">
+            <label class="form-label mb-0" for="colorFondo">Color de fondo</label>
+            <input id="colorFondo" class="form-control form-control-color" type="color" v-model="cursoForm.bgColor" title="Elegir color" />
           </div>
-        </div>
+        </section>
+
+        <!-- Observaciones -->
+        <section class="form-section form-section--last">
+          <h6 class="section-title">Observaciones</h6>
+          <textarea class="form-control" v-model="cursoForm.obs" rows="3" placeholder="Notas adicionales sobre el curso..."></textarea>
+        </section>
+
       </div>
+
+      <!-- Footer -->
+      <div class="modal-footer-custom">
+        <button type="button" class="btn btn-outline-danger me-auto" @click="borrarCurso">Borrar curso</button>
+        <button type="button" class="btn btn-outline-secondary" @click="closeModal">Cancelar</button>
+        <button type="button" class="btn btn-primary" @click="saveCurso">Guardar cambios</button>
+      </div>
+
     </div>
   </div>
   <h3 class="cabecera">Grilla de horarios de cursos</h3>
@@ -429,6 +491,76 @@ const saveCurso = async () => {
   closeModal()
 }
 
+const materiasAsociadas = computed(() => {
+  const codigos = cursoForm.value.materias?.matAsociadas || []
+  return codigos
+    .map(codMateria => materias.value.find(m => m.codigo === codMateria))
+    .filter(Boolean)
+})
+
+const materiasDisponibles = computed(() => {
+  const codigos = cursoForm.value.materias?.matAsociadas || []
+  return materias.value.filter(m => !codigos.includes(m.codigo))
+})
+
+const addMateriaAsociada = async (event) => {
+  const codMateria = Number(event.target.value)
+  event.target.value = ''
+  if (!codMateria) return
+  const ok = await showModal("¿Confirma que desea asociar esta materia al curso?", 1)
+  if (!ok.ok) return
+  const r = await api.post({
+    entity: "cursoshorarios",
+    action: "addMateriaAsociada",
+    payload: {
+      codPlHorarios: cursoForm.value.codPlHorarios,
+      codMateria
+    }
+  })
+  if (r.ok) {
+    cursoForm.value.materias.matAsociadas.push(codMateria)
+  }
+}
+
+const delMateriaAsociada = async (codMateria) => {
+  const ok = await showModal("¿Confirma que desea quitar esta materia asociada?", 1)
+  if (!ok.ok) return
+  const r = await api.post({
+    entity: "cursoshorarios",
+    action: "delMateriaAsociada",
+    payload: {
+      codPlHorarios: cursoForm.value.codPlHorarios,
+      codMateria
+    }
+  })
+  if (r.ok) {
+    cursoForm.value.materias.matAsociadas = cursoForm.value.materias.matAsociadas.filter(
+      c => c !== codMateria
+    )
+  }
+}
+
+const borrarCurso = async () => {
+  const ok = await showModal(
+    "¿Confirma que desea borrar este curso? También se eliminarán sus horarios y materias asociadas.",
+    1
+  )
+  if (!ok.ok) return
+  const r = await api.post({
+    entity: "planillahorarios",
+    action: "delCurso",
+    payload: {
+      codPlHorarios: cursoForm.value.codPlHorarios
+    }
+  })
+  if (r.ok) {
+    grillaHorarios.value = grillaHorarios.value.filter(
+      c => c.codPlHorarios !== cursoForm.value.codPlHorarios
+    )
+    closeModal()
+  }
+}
+
 const closeModal = () => {
   showModalCurso.value = false
 }
@@ -677,17 +809,66 @@ const clearHover = () => {
 .modal-backdrop-custom {
   position: fixed;
   inset: 0;
-  background: rgba(247, 246, 246, 0.65);
+  background: rgba(20, 20, 25, 0.55);
   z-index: 1050;
+  padding: 1rem;
 }
 
 .modal-card-bootstrap {
-  background: #fcfcfc; /* o blanco si preferís */
-  border-radius: 10px;
-  padding: 1.5rem;
+  background: #fcfcfc;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 640px;
   max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+}
+
+.modal-header-custom {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.25rem 1.5rem 1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.modal-body-custom {
+  padding: 1.25rem 1.5rem;
   overflow-y: auto;
-  box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+}
+
+.modal-footer-custom {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 1rem 1.5rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.08);
+  background: #f8f9fa;
+}
+
+.form-section {
+  padding-bottom: 1.25rem;
+  margin-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+}
+
+.form-section--last,
+.form-section:last-child {
+  padding-bottom: 0;
+  margin-bottom: 0;
+  border-bottom: none;
+}
+
+.section-title {
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #6c757d;
+  margin-bottom: 0.75rem;
 }
 
 </style>

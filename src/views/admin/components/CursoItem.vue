@@ -31,6 +31,16 @@ let isDragging = false
 let isResizing = false
 let startX = 0
 let startWidthPx = 0
+// Evita que el click sintético que el navegador dispara tras el mouseup
+// de un drag/resize abra el modal de edición.
+let suppressNextClick = false
+function suppressClickAfterInteraction() {
+  suppressNextClick = true
+  // Fallback por si el click nunca llega a dispararse (p. ej. mouseup
+  // fuera de la ventana): el setTimeout corre después de que el click
+  // sintético ya se haya procesado en el mismo turno de eventos.
+  setTimeout(() => { suppressNextClick = false }, 0)
+}
 function isOnResizeHandle(e) {
   const rect = el.value.getBoundingClientRect()
   return e.clientX >= rect.right - 10
@@ -66,6 +76,7 @@ function onResizeUp() {
 
   document.removeEventListener('mousemove', onResizeMove)
   document.removeEventListener('mouseup', onResizeUp)
+  suppressClickAfterInteraction()
 
   const { unitWidth, padding } = props.config
   const widthPx = el.value.offsetWidth
@@ -83,8 +94,11 @@ function onResizeUp() {
   isResizing = false
 }
 function onClick(e) {
+  if (suppressNextClick) {
+    suppressNextClick = false
+    return
+  }
   if (isOnResizeHandle(e)) return
-  console.log(isResizing)
   emit('select', props.curso.codPlHorarios)
 }
 const emit = defineEmits(['drag-start', 'drag-end', 'resize-end', 'select'])
@@ -128,6 +142,7 @@ function onMouseUp(event) {
   isDragging = false
   document.removeEventListener('mousemove', onMouseMove)
   document.removeEventListener('mouseup', onMouseUp)
+  suppressClickAfterInteraction()
 
   const pointerEndX = event.clientX
   const pointerEndY = event.clientY
