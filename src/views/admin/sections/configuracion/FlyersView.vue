@@ -21,6 +21,80 @@
       </section>
 
       <section class="seccion">
+        <button type="button" class="seccion-header" @click="alternarSeccion('plantilla')">
+          <h3>Plantilla</h3>
+          <span class="chevron" :class="{ colapsado: !secciones.plantilla }">▾</span>
+        </button>
+        <div v-show="secciones.plantilla" class="seccion-body">
+          <div class="opciones">
+            <button
+              type="button"
+              v-for="p in PLANTILLAS"
+              :key="p.clave"
+              :class="{ activo: plantilla === p.clave }"
+              @click="plantilla = p.clave"
+            >{{ p.etiqueta }}</button>
+          </div>
+
+          <template v-if="plantilla !== 'libre'">
+            <label class="campo-imagen">
+              Imagen principal (PNG o JPG)
+              <input type="file" accept="image/png, image/jpeg" @change="cargarImagenPrincipal" />
+            </label>
+
+            <div class="campo-slider">
+              <label>Área de imagen</label>
+              <input type="range" min="35" max="75" v-model.number="proporcionImagenPct" />
+              <span>{{ proporcionImagenPct }}%</span>
+            </div>
+
+            <span class="ajustes-titulo">Borde de la imagen</span>
+            <div class="campo-slider">
+              <label>Recto</label>
+              <input type="range" min="0" max="100" v-model.number="nivelRasgadoPct" title="De recto a rasgado" />
+              <label>Rasgado</label>
+            </div>
+            <button
+              type="button"
+              class="btn-agregar-texto"
+              :disabled="nivelRasgadoPct === 0"
+              title="Sortea una nueva forma para el borde rasgado"
+              @click="nuevoRasgado"
+            >Nuevo rasgado</button>
+
+            <div class="campo-slider">
+              <label>Inclinación</label>
+              <input type="range" min="-100" max="100" v-model.number="inclinacionPct" @dblclick="inclinacionPct = 0" />
+              <span>{{ inclinacionPct }}%</span>
+            </div>
+            <p class="ajustes-hint">
+              {{ plantilla === 'vertical'
+                ? 'Negativo: la línea se corre a la izquierda al descender. Positivo: a la derecha.'
+                : 'Negativo: la línea sube hacia la derecha. Positivo: baja hacia la derecha.' }}
+              Doble click para volver a 0.
+            </p>
+
+            <div class="campo-slider">
+              <label>Curvatura</label>
+              <input type="range" min="-100" max="100" v-model.number="curvaturaPct" @dblclick="curvaturaPct = 0" />
+              <span>{{ curvaturaPct }}%</span>
+            </div>
+            <p class="ajustes-hint">
+              {{ plantilla === 'vertical'
+                ? 'En 0 el corte es recto. Negativo: se curva hacia la izquierda. Positivo: hacia la derecha.'
+                : 'En 0 el corte es recto. Negativo: se curva hacia arriba. Positivo: hacia abajo.' }}
+              Doble click para volver a 0.
+            </p>
+
+            <p class="ajustes-hint">
+              La imagen se recorta para llenar su área sin deformarse; arrastrala sobre el lienzo para elegir qué parte se ve. El área de información usa el color o la
+              imagen de "Fondo", y los textos nuevos se ubican dentro de ella.
+            </p>
+          </template>
+        </div>
+      </section>
+
+      <section class="seccion">
         <button type="button" class="seccion-header" @click="alternarSeccion('fondo')">
           <h3>Fondo</h3>
           <span class="chevron" :class="{ colapsado: !secciones.fondo }">▾</span>
@@ -53,15 +127,44 @@
 
       <section class="seccion">
         <button type="button" class="seccion-header" @click="alternarSeccion('logos')">
-          <h3>Logos</h3>
+          <h3>Logos e imágenes</h3>
           <span class="chevron" :class="{ colapsado: !secciones.logos }">▾</span>
         </button>
         <div v-show="secciones.logos" class="seccion-body">
-          <div class="bloque-logo" v-for="(l, clave) in logos" :key="clave">
-            <label class="fila-logo">
-              <input type="checkbox" v-model="l.visible" />
-              {{ etiquetasLogos[clave] }}
-            </label>
+          <div class="bloque-logo" v-for="l in logos" :key="l.id">
+            <div class="campo-texto-header">
+              <label class="fila-logo">
+                <input type="checkbox" v-model="l.visible" />
+                <span class="nombre-logo" :title="l.nombre">{{ l.nombre }}</span>
+              </label>
+              <button type="button" class="btn-quitar-texto" title="Quitar imagen" @click="eliminarLogo(l.id)">🗑</button>
+            </div>
+
+            <div class="ajustes-fondo-logo">
+              <span class="ajustes-titulo">Color</span>
+              <div class="opciones">
+                <button type="button" :class="{ activo: !l.tintar }" @click="l.tintar = false">Original</button>
+                <button type="button" :class="{ activo: l.tintar }" @click="l.tintar = true">Recolorear</button>
+              </div>
+              <div v-if="l.tintar" class="selector-color">
+                <button
+                  v-for="c in logoSwatches"
+                  :key="c"
+                  type="button"
+                  class="swatch"
+                  :class="{ activo: l.color === c }"
+                  :style="{ background: c, boxShadow: c === '#ffffff' ? '0 0 0 1px #ccc' : undefined }"
+                  @click="l.color = c"
+                />
+                <input type="color" v-model="l.color" title="Color personalizado de la imagen" />
+              </div>
+            </div>
+
+            <div class="campo-slider">
+              <label>Opacidad</label>
+              <input type="range" min="5" max="100" v-model.number="l.opacidadPct" />
+              <span>{{ l.opacidadPct }}%</span>
+            </div>
 
             <div class="ajustes">
               <span class="ajustes-titulo">Tamaño</span>
@@ -69,16 +172,21 @@
               <button type="button" @click="cambiarTamano(l, PASO_TAMANO)">+</button>
               <button type="button" title="Centrar horizontalmente" @click="centrarHorizontal(l)">↔</button>
             </div>
-            <p class="ajustes-hint">Arrastrá el logo directamente sobre el lienzo para moverlo.</p>
+            <p class="ajustes-hint">Arrastrá la imagen directamente sobre el lienzo para moverla.</p>
 
             <div class="ajustes-fondo-logo">
-              <span class="ajustes-titulo">Fondo ({{ clave === 'circulo' ? 'circular' : 'rectangular' }})</span>
+              <span class="ajustes-titulo">Fondo</span>
               <div class="opciones">
                 <button type="button" :class="{ activo: l.bgMode === 'transparent' }" @click="l.bgMode = 'transparent'">Transparente</button>
                 <button type="button" :class="{ activo: l.bgMode === 'color' }" @click="l.bgMode = 'color'">Color</button>
               </div>
 
               <template v-if="l.bgMode === 'color'">
+                <div class="opciones">
+                  <button type="button" :class="{ activo: l.bgForma === 'circulo' }" @click="l.bgForma = 'circulo'">Circular</button>
+                  <button type="button" :class="{ activo: l.bgForma === 'rect' }" @click="l.bgForma = 'rect'">Rectangular</button>
+                </div>
+
                 <div class="selector-color">
                   <button
                     v-for="c in logoBgSwatches"
@@ -107,46 +215,12 @@
             </div>
           </div>
 
-          <span class="ajustes-titulo">Color de los logos</span>
-          <div class="selector-color">
-            <button
-              v-for="c in logoSwatches"
-              :key="c"
-              type="button"
-              class="swatch"
-              :class="{ activo: logoColor === c }"
-              :style="{ background: c }"
-              @click="logoColor = c"
-            />
-            <input type="color" v-model="logoColor" title="Color de logos personalizado" />
-          </div>
-
-          <div class="campo-slider">
-            <label>Opacidad del círculo</label>
-            <input type="range" min="30" max="100" v-model.number="circleOpacityPct" />
-            <span>{{ circleOpacityPct }}%</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="seccion">
-        <button type="button" class="seccion-header" @click="alternarSeccion('colorTexto')">
-          <h3>Color de texto</h3>
-          <span class="chevron" :class="{ colapsado: !secciones.colorTexto }">▾</span>
-        </button>
-        <div v-show="secciones.colorTexto" class="seccion-body">
-          <div class="selector-color">
-            <button
-              v-for="c in textSwatches"
-              :key="c"
-              type="button"
-              class="swatch"
-              :class="{ activo: textColor === c }"
-              :style="{ background: c, boxShadow: c === '#ffffff' ? '0 0 0 1px #ccc' : undefined }"
-              @click="textColor = c"
-            />
-            <input type="color" v-model="textColor" title="Color de texto personalizado" />
-          </div>
+          <label class="btn-agregar-texto btn-agregar-logo">
+            + Agregar imagen PNG
+            <input type="file" accept="image/png" multiple hidden @change="cargarLogos" />
+          </label>
+          <p class="ajustes-hint">Usá PNG con fondo transparente para logos o marcas de agua.</p>
+          <p v-if="errorLogos" class="aviso-fuentes">{{ errorLogos }}</p>
         </div>
       </section>
 
@@ -171,6 +245,20 @@
                 <option v-for="f in fuentesDisponibles" :key="f" :value="f" :style="{ fontFamily: `${f}, sans-serif` }">{{ f }}</option>
               </select>
               <p v-if="errorFuentes" class="aviso-fuentes">{{ errorFuentes }}</p>
+            </div>
+
+            <div class="selector-color">
+              <span class="ajustes-titulo">Color</span>
+              <button
+                v-for="c in textSwatches"
+                :key="c"
+                type="button"
+                class="swatch"
+                :class="{ activo: t.color === c }"
+                :style="{ background: c, boxShadow: c === '#ffffff' ? '0 0 0 1px #ccc' : undefined }"
+                @click="t.color = c"
+              />
+              <input type="color" v-model="t.color" title="Color de texto personalizado" />
             </div>
 
             <div class="ajustes">
@@ -219,9 +307,7 @@
 </template>
 
 <script setup>
-import { reactive, ref, computed, watch, onMounted, nextTick } from 'vue'
-import circuloSrc from '@/assets/flyers/circulo-60-aniversario.png'
-import semanaSrc from '@/assets/flyers/logo-semana-de-las-artes.png'
+import { reactive, ref, shallowRef, computed, watch, onMounted, nextTick } from 'vue'
 
 const PASO_TAMANO = 0.1
 
@@ -239,12 +325,31 @@ const dimensiones = computed(() => {
   return { ancho: ANCHO_BASE, alto: f.alto }
 })
 
+// Plantillas: "libre" no reserva áreas; "horizontal" pone la imagen principal arriba y la información
+// debajo; "vertical" pone la imagen a la izquierda y la información a la derecha.
+// El área de información no se dibuja aparte: es el fondo (color o imagen) que queda visible.
+const PLANTILLAS = [
+  { clave: 'libre', etiqueta: 'Libre' },
+  { clave: 'horizontal', etiqueta: 'Imagen arriba' },
+  { clave: 'vertical', etiqueta: 'Imagen al costado' },
+]
+
+const plantilla = ref('libre')
+const proporcionImagenPct = ref(60) // fracción del alto (horizontal) o del ancho (vertical) para la imagen
+const inclinacionPct = ref(0) // -100 a 100
+const curvaturaPct = ref(0) // -100 a 100: 0 = recto, el signo indica hacia qué lado se arquea
+const nivelRasgadoPct = ref(40) // 0 (recto) a 100 (muy ondulado)
+const imagenPrincipal = shallowRef(null)
+// Desplazamiento de la imagen principal dentro de su área (drag/drop). Se limita para que la
+// imagen siempre cubra el área completa: solo se puede mover lo que sobresale del recorte.
+const encuadre = reactive({ offsetX: 0, offsetY: 0 })
+
 // Colapsado/expandido de cada sección del panel izquierdo
 const secciones = reactive({
   formato: true,
+  plantilla: true,
   fondo: true,
   logos: true,
-  colorTexto: true,
   contenido: true,
 })
 
@@ -309,7 +414,7 @@ async function cargarFuentesDelSistema() {
   }
 }
 
-// Listado libre de textos: cada uno mantiene tamaño, fuente, alineación y posición (drag/drop) propios.
+// Listado libre de textos: cada uno mantiene tamaño, fuente, color, alineación y posición (drag/drop) propios.
 // yBase: posición vertical proporcional al alto del canvas. fontBase: tamaño de fuente proporcional al ancho.
 let idSeqTextos = 0
 function crearTexto(valorInicial, overrides = {}) {
@@ -324,20 +429,33 @@ function crearTexto(valorInicial, overrides = {}) {
     offsetY: 0,
     fuente: 'Arial',
     align: 'center',
+    color: '#1b2452',
     ...overrides,
   }
 }
 
-const textos = reactive([
-  crearTexto('Título del evento', { fontBase: 0.05, yBase: 0.30 }),
-  crearTexto('20/09/2026', { fontBase: 0.035, yBase: 0.36 }),
-  crearTexto('Buenos Aires', { fontBase: 0.035, yBase: 0.40 }),
-])
+const textos = reactive([])
 
 // yBase escalonado para que los textos nuevos no queden apilados uno sobre otro por defecto.
+// Con una plantilla activa, el texto nuevo se ubica dentro del área de información.
 function agregarTexto() {
-  const yBase = 0.3 + ((textos.length * 0.08) % 0.6)
-  textos.push(crearTexto('Nuevo texto', { yBase }))
+  const n = textos.length
+  const p = proporcionImagenPct.value / 100
+
+  if (plantilla.value === 'horizontal') {
+    const rango = Math.max(1 - p - 0.12, 0.06)
+    textos.push(crearTexto('Nuevo texto', { yBase: p + 0.08 + ((n * 0.06) % rango) }))
+  } else if (plantilla.value === 'vertical') {
+    // offsetX desplaza el ancla (centro del lienzo) hasta el centro del panel derecho
+    const centroPanel = ((p + 1) / 2) * ANCHO_BASE
+    textos.push(crearTexto('Nuevo texto', {
+      yBase: 0.12 + ((n * 0.08) % 0.76),
+      offsetX: centroPanel - ANCHO_BASE / 2,
+      fontBase: 0.035,
+    }))
+  } else {
+    textos.push(crearTexto('Nuevo texto', { yBase: 0.3 + ((n * 0.08) % 0.6) }))
+  }
 }
 
 function eliminarTexto(id) {
@@ -348,54 +466,84 @@ function eliminarTexto(id) {
 // --- Fondo y logos (integrado desde vue-flyer-editor/FlyerEditor.vue) ---
 const bgMode = ref('color') // 'color' | 'image'
 const bgColor = ref('#ffffff')
-const logoColor = ref('#1b2452')
-const circleOpacityPct = ref(70)
-const circleOpacity = computed(() => circleOpacityPct.value / 100)
-const textColor = ref('#ffffff')
 
 const bgSwatches = ['#ffffff', '#dceaf5', '#eef2e2', '#f6e6ea', '#f4ecd8', '#e7e5ee']
 const logoSwatches = ['#1b2452', '#000000', '#ffffff', '#3c4470', '#b8863f', '#5c5142']
 const textSwatches = ['#ffffff', '#1b2452', '#000000', '#3c4470', '#8a6d3b', '#333333']
 const logoBgSwatches = ['#ffffff', '#000000', '#1b2452', '#dceaf5', '#f6e6ea', '#f4ecd8']
 
-const etiquetasLogos = {
-  circulo: 'Círculo 60° aniversario',
-  semana: 'Logo Semana de las Artes',
+// Listado libre de imágenes PNG (logos o marcas de agua) cargadas por el usuario.
+// Cada una tiene visibilidad, color (original o recoloreada), opacidad, tamaño, posición y fondo propios.
+// bgMode: 'transparent' | 'color'. bgForma: 'circulo' | 'rect'.
+// Los objetos Image no se guardan en el estado reactivo: viven en imagenesLogos, indexados por id.
+const logos = reactive([])
+const imagenesLogos = new Map()
+const errorLogos = ref('')
+let idSeqLogos = 0
+
+function crearLogo(nombre, ratio) {
+  idSeqLogos += 1
+  return {
+    id: idSeqLogos,
+    nombre,
+    ratio,
+    visible: true,
+    tintar: false,
+    color: '#1b2452',
+    opacidadPct: 100,
+    tamano: 1,
+    // Escalonado para que las imágenes nuevas no queden apiladas una sobre otra por defecto.
+    offsetX: 0,
+    offsetY: (logos.length * 40) % 400,
+    bgMode: 'transparent',
+    bgForma: 'rect',
+    bgColor: '#ffffff',
+    bgOpacityPct: 100,
+    bgFeatherPct: 30,
+  }
 }
 
-// Visibilidad, tamaño, posición y fondo individual de cada logo.
-// bgMode: 'transparent' | 'color'. El fondo del círculo se dibuja circular, el de "semana" rectangular.
-const logos = reactive({
-  circulo: { visible: true, tamano: 1, offsetX: 0, offsetY: 0, bgMode: 'transparent', bgColor: '#ffffff', bgOpacityPct: 100, bgFeatherPct: 30 },
-  semana: { visible: true, tamano: 1, offsetX: 0, offsetY: 0, bgMode: 'transparent', bgColor: '#ffffff', bgOpacityPct: 100, bgFeatherPct: 30 },
-})
+function cargarLogos(event) {
+  errorLogos.value = ''
+  const archivos = [...event.target.files]
+  event.target.value = '' // permite volver a elegir el mismo archivo
 
-const circuloImg = new Image()
-const semanaImg = new Image()
-let circuloRatio = 1
-let semanaRatio = 1
-let logosListos = 0
+  for (const archivo of archivos) {
+    if (archivo.type !== 'image/png') {
+      errorLogos.value = `"${archivo.name}" no es un PNG y no se agregó.`
+      continue
+    }
 
-function alCargarLogo() {
-  logosListos++
-  if (logosListos >= 2) dibujar()
+    const url = URL.createObjectURL(archivo)
+    const img = new Image()
+    img.onload = () => {
+      const logo = crearLogo(archivo.name.replace(/\.png$/i, ''), img.naturalWidth / img.naturalHeight)
+      imagenesLogos.set(logo.id, img)
+      logos.push(logo)
+      URL.revokeObjectURL(url)
+    }
+    img.onerror = () => {
+      errorLogos.value = `No se pudo leer "${archivo.name}".`
+      URL.revokeObjectURL(url)
+    }
+    img.src = url
+  }
 }
-circuloImg.onload = () => {
-  circuloRatio = circuloImg.naturalWidth / circuloImg.naturalHeight
-  alCargarLogo()
-}
-semanaImg.onload = () => {
-  semanaRatio = semanaImg.naturalWidth / semanaImg.naturalHeight
-  alCargarLogo()
-}
-circuloImg.src = circuloSrc
-semanaImg.src = semanaSrc
 
-// Recolorea un logo preservando su forma (conserva el canal alfa del PNG)
-const cacheTinte = new Map()
-function obtenerTintado(img, color) {
-  const clave = color + '|' + img.src
-  if (cacheTinte.has(clave)) return cacheTinte.get(clave)
+function eliminarLogo(id) {
+  const indice = logos.findIndex((l) => l.id === id)
+  if (indice !== -1) logos.splice(indice, 1)
+  imagenesLogos.delete(id)
+  cacheTinte.delete(id)
+}
+
+// Recolorea una imagen preservando su forma (conserva el canal alfa del PNG).
+// Se guarda un único tintado por imagen (el del último color usado) para no acumular
+// un canvas por cada color que se prueba con el selector.
+const cacheTinte = new Map() // id -> { color, canvas }
+function obtenerTintado(id, img, color) {
+  const enCache = cacheTinte.get(id)
+  if (enCache && enCache.color === color) return enCache.canvas
 
   const off = document.createElement('canvas')
   off.width = img.naturalWidth
@@ -406,7 +554,7 @@ function obtenerTintado(img, color) {
   octx.fillStyle = color
   octx.fillRect(0, 0, off.width, off.height)
 
-  cacheTinte.set(clave, off)
+  cacheTinte.set(id, { color, canvas: off })
   return off
 }
 
@@ -414,7 +562,9 @@ const canvasRef = ref(null)
 let ctx = null
 const imagenFondo = ref(null)
 
-const descargaDeshabilitada = computed(() => bgMode.value === 'image' && !imagenFondo.value)
+const descargaDeshabilitada = computed(
+  () => (bgMode.value === 'image' && !imagenFondo.value) || (plantilla.value !== 'libre' && !imagenPrincipal.value)
+)
 
 onMounted(() => {
   ctx = canvasRef.value.getContext('2d')
@@ -431,13 +581,9 @@ function cambiarTamano(item, delta) {
 function centrarHorizontal(item) {
   const { width, height } = canvasRef.value
   // El offsetX de cada ítem se suma linealmente (coeficiente 1) a la posición base de su caja,
-  // sea cual sea esa base (el centro del lienzo para "semana"/textos, o el margen derecho para
-  // "circulo"). Por eso centrar de verdad requiere medir la caja actual y corregir la diferencia,
-  // en vez de solo poner offsetX = 0 (que solo devuelve al ítem a su anclaje de diseño original).
-  let caja
-  if (item === logos.circulo) caja = obtenerCajaLogo('circulo', width, height)
-  else if (item === logos.semana) caja = obtenerCajaLogo('semana', width, height)
-  else caja = obtenerCajaTexto(item, width, height)
+  // sea cual sea esa base. Por eso centrar de verdad requiere medir la caja actual y corregir la
+  // diferencia, en vez de solo poner offsetX = 0 (que solo devuelve al ítem a su anclaje original).
+  const caja = logos.includes(item) ? obtenerCajaLogo(item, width, height) : obtenerCajaTexto(item, width, height)
 
   const centroActual = caja.x + caja.w / 2
   item.offsetX += width / 2 - centroActual
@@ -461,6 +607,163 @@ function cargarImagen(event) {
   img.src = url
 }
 
+function cargarImagenPrincipal(event) {
+  const archivo = event.target.files[0]
+  if (!archivo) return
+
+  const url = URL.createObjectURL(archivo)
+  const img = new Image()
+  img.onload = () => {
+    imagenPrincipal.value = img
+    encuadre.offsetX = 0
+    encuadre.offsetY = 0
+    URL.revokeObjectURL(url)
+  }
+  img.src = url
+}
+
+// Área (x, y, w, h) que ocupa la imagen principal según la plantilla activa.
+function zonaImagen(width, height) {
+  const p = proporcionImagenPct.value / 100
+  if (plantilla.value === 'horizontal') return { x: 0, y: 0, w: width, h: height * p }
+  return { x: 0, y: 0, w: width * p, h: height }
+}
+
+// Pseudoaleatorio (0 a 1) a partir de una semilla. La semilla se sortea al abrir el editor y con el
+// botón "Nuevo rasgado": fuera de eso no cambia (ni al mover sliders ni al redibujar).
+let semillaRasgado = 0
+let faseOnda = 0
+let frecuenciaOnda = 0
+
+function sortearRasgado() {
+  semillaRasgado = Math.random() * 1000
+  faseOnda = Math.random() * Math.PI * 2
+  frecuenciaOnda = 4 + Math.random() * 3
+}
+sortearRasgado()
+
+function nuevoRasgado() {
+  sortearRasgado()
+  dibujar()
+}
+
+function rugosidad(i) {
+  const s = Math.sin((i + semillaRasgado) * 12.9898) * 43758.5453
+  return s - Math.floor(s)
+}
+
+// Desplazamiento máximo del borde por inclinación (a ±100%): una fracción de la dimensión
+// perpendicular al borde, para que la diagonal nunca se coma toda el área de imagen o de información.
+function desplazamientoInclinacion(width, height) {
+  const max = plantilla.value === 'vertical' ? width * 0.25 : height * 0.15
+  return (inclinacionPct.value / 100) * max
+}
+
+// Flecha máxima del arco (a ±100%), con el mismo criterio que la inclinación.
+function flechaCurvatura(width, height) {
+  const max = plantilla.value === 'vertical' ? width * 0.2 : height * 0.12
+  return (curvaturaPct.value / 100) * max
+}
+
+// Amplitud del borde rasgado según el nivel elegido (0 = recto, 100 = muy ondulado).
+function amplitudRasgado(width, height) {
+  return Math.min(width, height) * 0.03 * (nivelRasgadoPct.value / 100)
+}
+
+// Posición del borde (perpendicular a él) en el punto t (0 a 1) a lo largo del borde, relativa a su
+// posición base. Suma la inclinación (recta que va de -d/2 a +d/2), la curvatura (arco de flecha c) y el rasgado (una onda suave
+// más picos irregulares, ambos escalados por amp; con amp = 0 el borde queda recto).
+function desvioBorde(t, i, { d, c, amp }) {
+  const inclinacion = (t - 0.5) * d
+  const curva = Math.sin(t * Math.PI) * c // 0 en los extremos, c en el medio
+  const onda = Math.sin(t * Math.PI * frecuenciaOnda + faseOnda) * 0.5 + (rugosidad(i) - 0.5)
+  return inclinacion + curva + onda * amp
+}
+
+// Traza el contorno del área de imagen. El lado que da al área de información puede ir inclinado
+// curvado y/o rasgado; si es una recta alcanza con un solo segmento.
+function trazarZonaImagen(z, width, height, borde) {
+  const pasos = borde.amp > 0 || borde.c !== 0 ? 60 : 1
+  ctx.beginPath()
+  if (plantilla.value === 'horizontal') {
+    // El borde va de izquierda a derecha: con inclinación positiva baja hacia la derecha
+    ctx.moveTo(0, 0)
+    ctx.lineTo(width, 0)
+    for (let i = pasos; i >= 0; i--) ctx.lineTo((width * i) / pasos, z.h + desvioBorde(i / pasos, i, borde))
+  } else {
+    // El borde va de arriba hacia abajo: con inclinación positiva se corre a la derecha al descender
+    ctx.moveTo(0, 0)
+    for (let i = 0; i <= pasos; i++) ctx.lineTo(z.w + desvioBorde(i / pasos, i, borde), (height * i) / pasos)
+    ctx.lineTo(0, height)
+  }
+  ctx.closePath()
+}
+
+// Dibuja img cubriendo por completo la caja (recorta lo que sobra, sin deformar).
+// Tamaño (dw, dh) con el que img cubre por completo una caja de w × h.
+function medidasCubriendo(img, w, h) {
+  const escala = Math.max(w / img.naturalWidth, h / img.naturalHeight)
+  return { dw: img.naturalWidth * escala, dh: img.naturalHeight * escala }
+}
+
+// Mantiene el encuadre dentro del margen que sobresale de la caja (sin dejar huecos).
+function limitarEncuadre(width, height) {
+  if (!imagenPrincipal.value) return
+  const { w, h } = cajaImagenPrincipal(width, height)
+  const { dw, dh } = medidasCubriendo(imagenPrincipal.value, w, h)
+  const maxX = (dw - w) / 2
+  const maxY = (dh - h) / 2
+  encuadre.offsetX = Math.min(maxX, Math.max(-maxX, encuadre.offsetX))
+  encuadre.offsetY = Math.min(maxY, Math.max(-maxY, encuadre.offsetY))
+}
+
+// Zona, borde y caja (w, h) que debe cubrir la imagen principal. La caja se agranda hacia el área
+// de información lo máximo que puede avanzar el borde (mitad de la inclinación, arco de la curvatura y
+// picos del rasgado), para que la imagen lo cubra siempre.
+function cajaImagenPrincipal(width, height) {
+  const z = zonaImagen(width, height)
+  const borde = {
+    d: desplazamientoInclinacion(width, height),
+    c: flechaCurvatura(width, height),
+    amp: amplitudRasgado(width, height),
+  }
+  // La curvatura solo agranda la caja cuando se arquea hacia el área de información (c > 0)
+  const extension = Math.abs(borde.d) / 2 + Math.max(borde.c, 0) + borde.amp * 1.5
+  const w = plantilla.value === 'vertical' ? z.w + extension : z.w
+  const h = plantilla.value === 'horizontal' ? z.h + extension : z.h
+  return { z, borde, w, h }
+}
+
+function dibujarImagenPrincipal(width, height) {
+  // Si cambió el área (proporción, inclinación, formato), el encuadre guardado puede quedar fuera de rango
+  limitarEncuadre(width, height)
+  const { z, borde, w, h } = cajaImagenPrincipal(width, height)
+
+  ctx.save()
+  trazarZonaImagen(z, width, height, borde)
+  ctx.clip()
+
+  if (imagenPrincipal.value) {
+    const { dw, dh } = medidasCubriendo(imagenPrincipal.value, w, h)
+    ctx.drawImage(
+      imagenPrincipal.value,
+      z.x + (w - dw) / 2 + encuadre.offsetX,
+      z.y + (h - dh) / 2 + encuadre.offsetY,
+      dw,
+      dh
+    )
+  } else {
+    // Marcador mientras no hay imagen cargada (la descarga queda deshabilitada)
+    ctx.fillStyle = '#d9d9d9'
+    ctx.fillRect(z.x, z.y, w, h)
+    ctx.fillStyle = '#888'
+    ctx.font = `${width * 0.03}px Arial`
+    ctx.textAlign = 'center'
+    ctx.fillText('Imagen principal', z.x + z.w / 2, z.y + z.h / 2)
+  }
+  ctx.restore()
+}
+
 function dibujarFondo(width, height) {
   if (bgMode.value === 'image' && imagenFondo.value) {
     // Estira la imagen para llenar todo el canvas según la relación de aspecto seleccionada, sin recortar
@@ -471,8 +774,8 @@ function dibujarFondo(width, height) {
   }
 }
 
-// Dibuja el fondo de un logo detrás de su imagen: circular para "circulo", rectangular para "semana".
-// Su opacidad es independiente del deslizador de opacidad del círculo (que solo afecta al logo).
+// Dibuja el fondo de un logo detrás de su imagen, circular o rectangular.
+// Su opacidad es independiente de la opacidad de la imagen.
 // difuminado (0 a 1): fracción del radio/mitad de lado que se dedica a difuminar el borde hacia
 // opacity 0. Se logra dibujando la forma más chica y aplicándole un blur del mismo tamaño: el blur
 // expande el borde hacia afuera hasta el tamaño original, dejando el centro sólido intacto.
@@ -507,37 +810,26 @@ function dibujarFondoLogo(forma, x, y, w, h, color, opacidad, difuminado) {
 
 // Caja (x, y, w, h) de un logo en coordenadas del canvas. La misma función se usa
 // para dibujar y para detectar sobre qué logo se hizo click al arrastrar.
-function obtenerCajaLogo(clave, width, height) {
-  if (clave === 'circulo') {
-    const cW = width * 0.20625 * logos.circulo.tamano
-    const cH = cW / circuloRatio
-    const cX = width - width * 0.04375 - cW + logos.circulo.offsetX
-    const cY = height * 0.05 + logos.circulo.offsetY
-    return { x: cX, y: cY, w: cW, h: cH }
-  }
-  const sW = width * 0.29375 * logos.semana.tamano
-  const sH = sW / semanaRatio
-  const sX = (width - sW) / 2 + logos.semana.offsetX
-  const sY = height - height * 0.05 - sH + logos.semana.offsetY
-  return { x: sX, y: sY, w: sW, h: sH }
+// Por defecto cada imagen ocupa el 25% del ancho, centrada horizontalmente y cerca del borde superior.
+function obtenerCajaLogo(l, width, height) {
+  const w = width * 0.25 * l.tamano
+  const h = w / l.ratio
+  const x = (width - w) / 2 + l.offsetX
+  const y = height * 0.05 + l.offsetY
+  return { x, y, w, h }
 }
 
 function dibujarLogos(width, height) {
-  const circuloTintado = obtenerTintado(circuloImg, logoColor.value)
-  const semanaTintado = obtenerTintado(semanaImg, logoColor.value)
+  for (const l of logos) {
+    const img = imagenesLogos.get(l.id)
+    if (!l.visible || !img) continue
 
-  if (logos.circulo.visible) {
-    const { x: cX, y: cY, w: cW, h: cH } = obtenerCajaLogo('circulo', width, height)
-    if (logos.circulo.bgMode === 'color') dibujarFondoLogo('circulo', cX, cY, cW, cH, logos.circulo.bgColor, logos.circulo.bgOpacityPct / 100, logos.circulo.bgFeatherPct / 100)
+    const { x, y, w, h } = obtenerCajaLogo(l, width, height)
+    if (l.bgMode === 'color') dibujarFondoLogo(l.bgForma, x, y, w, h, l.bgColor, l.bgOpacityPct / 100, l.bgFeatherPct / 100)
     ctx.save()
-    ctx.globalAlpha = circleOpacity.value
-    ctx.drawImage(circuloTintado, cX, cY, cW, cH)
+    ctx.globalAlpha = l.opacidadPct / 100
+    ctx.drawImage(l.tintar ? obtenerTintado(l.id, img, l.color) : img, x, y, w, h)
     ctx.restore()
-  }
-  if (logos.semana.visible) {
-    const { x: sX, y: sY, w: sW, h: sH } = obtenerCajaLogo('semana', width, height)
-    if (logos.semana.bgMode === 'color') dibujarFondoLogo('rect', sX, sY, sW, sH, logos.semana.bgColor, logos.semana.bgOpacityPct / 100, logos.semana.bgFeatherPct / 100)
-    ctx.drawImage(semanaTintado, sX, sY, sW, sH)
   }
 }
 
@@ -562,8 +854,8 @@ function obtenerCajaTexto(t, width, height) {
   }
 }
 
-// --- Drag & drop de logos y textos sobre el lienzo ---
-// arrastre guarda una referencia directa al ítem (logo o texto): ambos son objetos
+// --- Drag & drop de logos, textos e imagen principal sobre el lienzo ---
+// arrastre guarda una referencia directa al ítem (logo, texto o encuadre): todos son objetos
 // reactivos con .offsetX/.offsetY, así que no hace falta distinguir su tipo.
 let arrastre = null // { item, startX, startY, startOffsetX, startOffsetY }
 
@@ -589,11 +881,19 @@ function elementoEnPunto(x, y) {
     const caja = obtenerCajaTexto(t, width, height)
     if (x >= caja.x && x <= caja.x + caja.w && y >= caja.y && y <= caja.y + caja.h) return t
   }
-  // Orden inverso al de dibujo de logos: "semana" se dibuja último y queda arriba visualmente.
-  for (const clave of ['semana', 'circulo']) {
-    if (!logos[clave].visible) continue
-    const caja = obtenerCajaLogo(clave, width, height)
-    if (x >= caja.x && x <= caja.x + caja.w && y >= caja.y && y <= caja.y + caja.h) return logos[clave]
+  // Mismo criterio para las imágenes: la última de la lista se dibuja arriba.
+  for (let i = logos.length - 1; i >= 0; i--) {
+    const l = logos[i]
+    if (!l.visible) continue
+    const caja = obtenerCajaLogo(l, width, height)
+    if (x >= caja.x && x <= caja.x + caja.w && y >= caja.y && y <= caja.y + caja.h) return l
+  }
+  // Por debajo de todo, la imagen principal de la plantilla: se testea con el mismo contorno
+  // (recto, inclinado o rasgado) con el que se recorta al dibujarla.
+  if (plantilla.value !== 'libre' && imagenPrincipal.value) {
+    const { z, borde } = cajaImagenPrincipal(width, height)
+    trazarZonaImagen(z, width, height, borde)
+    if (ctx.isPointInPath(x, y)) return encuadre
   }
   return null
 }
@@ -625,6 +925,7 @@ function onWindowMouseMoveDrag(event) {
   const { x, y } = coordenadasCanvas(event)
   arrastre.item.offsetX = arrastre.startOffsetX + (x - arrastre.startX)
   arrastre.item.offsetY = arrastre.startOffsetY + (y - arrastre.startY)
+  if (arrastre.item === encuadre) limitarEncuadre(canvasRef.value.width, canvasRef.value.height)
 }
 
 function onWindowMouseUpDrag() {
@@ -647,8 +948,6 @@ function onCanvasMouseLeave() {
 }
 
 function dibujarTextos(width, height) {
-  ctx.fillStyle = textColor.value
-
   for (const t of textos) {
     if (!t.valor.trim()) continue // texto vacío: no se dibuja
 
@@ -658,6 +957,7 @@ function dibujarTextos(width, height) {
     const yInicio = height * t.yBase + t.offsetY - (alturaLinea * (lineas.length - 1)) / 2
 
     ctx.font = `${tamanoFuente}px ${t.fuente}`
+    ctx.fillStyle = t.color
     ctx.textAlign = t.align
     lineas.forEach((linea, i) => {
       ctx.fillText(linea, width / 2 + t.offsetX, yInicio + i * alturaLinea)
@@ -672,11 +972,16 @@ function dibujar() {
   ctx.clearRect(0, 0, width, height)
 
   dibujarFondo(width, height)
-  if (logosListos >= 2) dibujarLogos(width, height)
+  if (plantilla.value !== 'libre') dibujarImagenPrincipal(width, height)
+  dibujarLogos(width, height)
   dibujarTextos(width, height)
 }
 
-watch([bgMode, bgColor, logoColor, circleOpacityPct, textColor, logos, textos], dibujar, { deep: true })
+watch(
+  [bgMode, bgColor, plantilla, proporcionImagenPct, inclinacionPct, curvaturaPct, nivelRasgadoPct, imagenPrincipal, encuadre, logos, textos],
+  dibujar,
+  { deep: true }
+)
 
 // El cambio de ancho/alto del <canvas> se aplica al DOM en el próximo tick; recién ahí se puede redibujar
 watch(formato, () => nextTick(dibujar))
@@ -836,6 +1141,21 @@ input[type='file']::-webkit-file-upload-button {
   font-size: 0.9rem;
 }
 
+.fila-logo {
+  min-width: 0;
+}
+
+.nombre-logo {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 12rem;
+}
+
+.btn-agregar-logo {
+  text-align: center;
+}
+
 .ajustes-fondo-logo {
   display: flex;
   flex-direction: column;
@@ -901,9 +1221,14 @@ input[type='file']::-webkit-file-upload-button {
   padding: 0.5rem;
 }
 
-.btn-agregar-texto:hover {
+.btn-agregar-texto:hover:not(:disabled) {
   border-color: #1b2452;
   color: #1b2452;
+}
+
+.btn-agregar-texto:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
 }
 
 .campo-texto select {
