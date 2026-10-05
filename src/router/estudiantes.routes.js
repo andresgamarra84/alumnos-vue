@@ -101,6 +101,11 @@ export default [
         path: 'solicitudMesa',
         component: () =>
           import('@/views/estudiantes/sections/tramites/SolicitudMesaView.vue')
+      },
+      {
+        path: 'telegram',
+        component: () =>
+          import('@/views/estudiantes/sections/tramites/TelegramView.vue')
       }
     ]
   }

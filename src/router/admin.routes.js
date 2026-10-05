@@ -115,6 +115,14 @@ export default [
                 path: 'pdfHorarios',
                 component: () => import('@/views/admin/sections/cursos/DescargarHorariosView.vue')
             },
+            {
+                path: 'notificacionesPanel',
+                component: () => import('@/views/admin/sections/novedades/NotificacionesPanelView.vue')
+            },
+            {
+                path: 'docentesAusentes',
+                component: () => import('@/views/admin/sections/novedades/DocentesAusentesView.vue')
+            },
         ]
     }
 ]
