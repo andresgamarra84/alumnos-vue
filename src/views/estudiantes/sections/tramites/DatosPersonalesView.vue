@@ -235,6 +235,23 @@
     </div>
     <!-- ================= SALUD ================= -->
     <div class="row recuadro mt-3">
+      <div class="col-12 mb-2"><h5>Ficha de salud</h5></div>
+
+      <div class="col-12 mb-3">
+        <label class="me-3">Enfermedades / antecedentes:</label>
+        <div class="row">
+          <div
+            v-for="ant in arrAntecedentes"
+            :key="ant.key"
+            class="col-6 col-md-4 col-lg-3 mb-2"
+          >
+            <label>
+              <input type="checkbox" v-model="dPers[ant.key]" />
+              {{ ant.label }}
+            </label>
+          </div>
+        </div>
+      </div>
 
       <div class="col-12">
         <label>
@@ -242,22 +259,29 @@
           ¿Tiene alergias?
         </label>
       </div>
-      <div v-if="dPers.alergias" class="col-12 mt-2">
+      <div v-if="dPers.alergias" class="col-12 mt-2 mb-3">
         <textarea
-          v-model="dPers.detalleAlergias"
+          v-model="dPers.aque"
           class="form-control"
-          placeholder="Detalle alergias"
+          placeholder="Detalle a qué es alérgico"
         />
       </div>
+
+      <div class="col-md-6 mb-3">
+        <label>Grupo sanguíneo</label>
+        <input type="text" class="form-control" v-model="dPers.gsanguineo" placeholder="Ej: O+">
+      </div>
+
       <div class="col-12">
         <label>
-          <input type="checkbox" v-model="dPers.problemaParto" />
-          ¿Problemas en el parto?
+          <input type="checkbox" v-model="dPers.partonormal" />
+          Parto normal
         </label>
       </div>
-      <div v-if="dPers.problemaParto" class="col-12 mt-2">
+      <div class="col-12 mt-2">
+        <label>Problemas en el parto (si los hubo):</label>
         <textarea
-          v-model="dPers.detalleParto"
+          v-model="dPers.problemaparto"
           class="form-control"
           placeholder="Detalle problemas en el parto"
         />
@@ -325,6 +349,29 @@ const arrMonths = [
 ]
 const arrDays = ref(31)
 
+const arrAntecedentes = [
+  { key: 'sarampion', label: 'Sarampión' },
+  { key: 'varicela', label: 'Varicela' },
+  { key: 'rubeola', label: 'Rubeola' },
+  { key: 'escarlatina', label: 'Escarlatina' },
+  { key: 'tosconvulsa', label: 'Tos convulsa' },
+  { key: 'paperas', label: 'Paperas' },
+  { key: 'asma', label: 'Asma' },
+  { key: 'epilepsia', label: 'Epilepsia' },
+  { key: 'hepatitis', label: 'Hepatitis' },
+  { key: 'celiaquia', label: 'Celiaquía' },
+  { key: 'diabetes', label: 'Diabetes' },
+  { key: 'congenitas', label: 'Enfermedades congénitas' },
+  { key: 'infecciosas', label: 'Enfermedades infecciosas' },
+  { key: 'metabolicas', label: 'Enfermedades metabólicas' },
+  { key: 'psiquicos', label: 'Trastornos psíquicos' },
+  { key: 'hernias', label: 'Hernias' },
+  { key: 'musculares', label: 'Afecciones musculares' },
+  { key: 'fracturas', label: 'Fracturas' },
+  { key: 'intervenciones', label: 'Intervenciones quirúrgicas' },
+  { key: 'traumatismo', label: 'Traumatismos' },
+]
+
 const day = ref('')
 const month = ref('')
 const year = ref('')
@@ -360,7 +407,7 @@ const getUsrData = async () => {
 }
 
 const postData = async () => {
-  const ok = await showModal(
+  const { ok } = await showModal(
     '¿Confirma que desea guardar la información?',
     1,
     'Confirmación'
@@ -377,7 +424,7 @@ const postData = async () => {
 }
 
 const keyBlank = async () => {
-  const ok = await showModal(
+  const { ok } = await showModal(
     '¿Confirma que desea enviar el correo de blanqueo?',
     1,
     'Confirmación',
