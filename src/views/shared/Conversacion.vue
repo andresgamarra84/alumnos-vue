@@ -4,8 +4,17 @@
             v-for="(m, i) in arrMensajes"
             :key="i"
             :class="['mensaje', getMessageClass(m.clase)]"
-            v-html="m.mensaje"
-        />
+        >
+            <div v-html="m.mensaje" />
+            <div
+                v-if="showVistoIndicator && m.clase === 'admin'"
+                class="visto-indicator"
+                :class="m.visto ? 'visto-leido' : 'visto-pendiente'"
+                :title="m.visto ? 'Visto por el estudiante' : 'No visto todavía'"
+            >
+                &#10003;&#10003;
+            </div>
+        </div>
 
         <div>
             <textarea
@@ -45,6 +54,10 @@ defineProps({
         default: ''
     },
     showArchivar: {
+        type: Boolean,
+        default: false
+    },
+    showVistoIndicator: {
         type: Boolean,
         default: false
     }
@@ -101,6 +114,21 @@ const getMessageClass = (clase) => {
 .fondoAdmin {
     background-color: var(--color-acento);
     color: var(--color-fondo-secundario);
+}
+
+.visto-indicator {
+    font-size: 0.85em;
+    text-align: right;
+    letter-spacing: -1px;
+    margin-top: -4px;
+}
+
+.visto-pendiente {
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.visto-leido {
+    color: #34b7f1;
 }
 
 .t-area-rta {

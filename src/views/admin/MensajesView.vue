@@ -64,6 +64,7 @@
             :arrMensajes="item.mensajes"
             :respuesta="respuesta"
             :show-archivar="true"
+            :show-visto-indicator="true"
             @send-msg="sendMsg(idx)"
             @close-chat="closeChat(idx)"
             @close-thread="closeThread(idx)"
@@ -136,7 +137,8 @@ const getMsg = async (index) => {
   item.mensajes = payload.map(v => ({
     mensaje: v.mensaje,
     fechaIngreso: v.fechaIngreso,
-    clase : v.codTipo
+    clase : v.codTipo,
+    visto: v.visto,
   })) ?? []
 }
 const closeChat = (k) => {
