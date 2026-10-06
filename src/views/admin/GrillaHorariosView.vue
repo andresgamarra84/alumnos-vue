@@ -457,7 +457,7 @@ const delCHFromPlHorarios = async (i) => {
 }
 const saveCurso = async () => {
   const ok = await showModal('¿Confirma que desea guardar los cambios?', 1)
-  if (ok) {
+  if (ok.ok) {
     const tipos = cursoForm.value.tipos
     const c = cursoForm.value
     const tipoMateria = (tipos.normal ? 1: 0) + (tipos.instrumento ? 2 : 0) + (tipos.armonico ? 4 : 0) + (tipos.espacioInstitucional ? 8 : 0) + (tipos.espacioAlternativo ? 16 : 0)

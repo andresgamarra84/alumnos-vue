@@ -22,6 +22,7 @@ import Header from '@/components/Header.vue'
 import { useLoading } from '@/composables/useLoading'
 import Navbar from '@/components/Navbar.vue';
 import ViewContainer from '@/components/ViewContainer.vue'
+import { showModal } from '@/services/uiBus'
 const { isLoading } = useLoading()
 //layoutContainer Para uso de la grilla de horarios y el resize
 const layoutContainer = ref(null)
@@ -70,14 +71,13 @@ const navegarRoute = (item) => {
 }
 // Logout
 const logout = async () => {
-  const confirm = await showModal('Confirmar', '¿Salir de la sesión?', 1);
-  if (confirm) {
-    try {
-      await api.post({ entity: 'auth', action: 'logout' });
-      router.push('/login');
-    } catch (err) {
-      await showModal('Error', 'Error al cerrar sesión: ' + err.message, 0);
-    }
+  const { ok } = await showModal('¿Salir de la sesión?', 1, 'Confirmar');
+  if (!ok) return;
+  try {
+    await api.post({ entity: 'auth', action: 'logout' });
+    router.push('/login');
+  } catch (err) {
+    await showModal('Error al cerrar sesión: ' + err.message, 0, 'Error');
   }
 };
 </script>

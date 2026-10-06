@@ -93,7 +93,7 @@ const checkLinked = async () => {
 }
 
 const unlinkAccount = async () => {
-  const ok = await showModal(
+  const { ok } = await showModal(
     '¿Confirma que desea desvincular su cuenta de Telegram?',
     1,
     'Confirmación'

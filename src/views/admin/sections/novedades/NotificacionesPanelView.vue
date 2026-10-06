@@ -87,7 +87,7 @@ const guardarEntrada = async () => {
 }
 
 const borrarEntrada = async (item) => {
-    const ok = await showModal('¿Confirma borrar esta notificación?', 1, 'Confirmación')
+    const { ok } = await showModal('¿Confirma borrar esta notificación?', 1, 'Confirmación')
     if (!ok) return
     const { ok: deleted } = await api.post({
         entity: 'notificaciones',

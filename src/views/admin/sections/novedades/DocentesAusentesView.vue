@@ -254,7 +254,7 @@ const guardarEntrada = async () => {
     showToast('La ausencia fue registrada.', 'success')
     getAusentes()
 
-    const notificar = await showModal(
+    const { ok: notificar } = await showModal(
         '¿Desea notificar por mail a los estudiantes inscriptos en las clases afectadas por esta ausencia?',
         1,
         'Notificar estudiantes'
@@ -270,7 +270,7 @@ const guardarEntrada = async () => {
 }
 
 const borrarEntrada = async (item) => {
-    const ok = await showModal('¿Confirma borrar esta ausencia?', 1, 'Confirmación')
+    const { ok } = await showModal('¿Confirma borrar esta ausencia?', 1, 'Confirmación')
     if (!ok) return
     const { ok: deleted } = await api.post({
         entity: 'calendario',

@@ -64,7 +64,7 @@ const updEspacioExamen=async(codMateria, k) => {
 }
 
 const delExamen = async (k) => {
-  const ok = await showModal("¿Confirma que desea borrar este examen?", 1, "Atención")
+  const { ok } = await showModal("¿Confirma que desea borrar este examen?", 1, "Atención")
   if (!ok) return
   const r = await api.post({
     entity: "examenes",

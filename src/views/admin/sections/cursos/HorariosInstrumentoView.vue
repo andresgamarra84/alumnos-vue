@@ -340,7 +340,7 @@ const updHorario = async (key, k, clave, j, ev) => {
 }
 
 const delHorario = async (key, k, clave, j) => {
-  const confirm = await showModal("¿Confirma que desea borrar este horario?", 1)
+  const { ok: confirm } = await showModal("¿Confirma que desea borrar este horario?", 1)
   if (!confirm) return
 
   const codigo =

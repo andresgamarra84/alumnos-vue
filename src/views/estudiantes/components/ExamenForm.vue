@@ -77,7 +77,7 @@ onMounted(async () => {
 })
 
 const save = async () => {
-  const ok = await showModal("¿Confirma el ingreso?", 1, "Confirmación");
+  const { ok } = await showModal("¿Confirma el ingreso?", 1, "Confirmación");
   if (!ok) return;
   emit('save-examen', form)
 }

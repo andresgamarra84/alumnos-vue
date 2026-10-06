@@ -239,7 +239,7 @@ const showProfList = (codigo) => {
 const updProf = async (ev) => {
   const s = ev?.target
   if (!s || !s.value) return
-  const ok = await showModal(
+  const { ok } = await showModal(
     `¿Confirma el cambio de docente a ${s.options[s.selectedIndex].text}?`,
     1
   )
@@ -286,7 +286,7 @@ const closeEditModal = () => {
 }
 
 const saveEditReserva = async () => {
-  const {ok} = showModal("¿Confirma cambios en la reserva?",1)
+  const {ok} = await showModal("¿Confirma cambios en la reserva?",1)
   if (!ok) return
   const d = {
     codigo: editReservaInfo.value.codigo,
@@ -308,7 +308,7 @@ const saveEditReserva = async () => {
 }
 
 const delReserva = async (codReserva) => {
-  const ok = await showModal("¿Confirma que desea borrar esta reserva?", 1)
+  const { ok } = await showModal("¿Confirma que desea borrar esta reserva?", 1)
   if (!ok) return false
   const r = await api.post({
     entity: "reservas",

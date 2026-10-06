@@ -279,7 +279,7 @@ const listCambios = async () => {
 };
 
 const updCambio = async (k) => {
-  const confirm = await showModal('¿Confirma que desea borrar esta solicitud?', 1);
+  const { ok: confirm } = await showModal('¿Confirma que desea borrar esta solicitud?', 1);
   if (confirm) {
     const otherData = arrCambios.value[k][0];
     const r = await api.post({ entity: 'cambiocatedra', action: 1, payload: otherData });
@@ -297,7 +297,7 @@ const getInscripcionesMesas = async () => {
 const updMesa = async (k) => {
   const item = arrMesas.value[k];
   const accion = item.deleted ? 'recuperar' : 'borrar';
-  const confirm = await showModal(`¿Confirma que desea ${accion} esta inscripción?`, 1);
+  const { ok: confirm } = await showModal(`¿Confirma que desea ${accion} esta inscripción?`, 1);
   if (confirm) {
     const d = { codigo: item.codigo, deleted: item.deleted };
     const r = await api.post({ entity: 'mesas', action: 'updateInscripcion', payload: d });
@@ -318,7 +318,7 @@ const listReservas = async () => {
 const updReserva = async (k) => {
   const item = arrReservas.value[k];
   const accion = item.deleted ? 'recuperar' : 'borrar';
-  const confirm = await showModal(`¿Confirma que desea ${accion} esta reserva?`, 1);
+  const { ok: confirm } = await showModal(`¿Confirma que desea ${accion} esta reserva?`, 1);
   if (confirm) {
     const d = { codigo: item.codigo, deleted: item.deleted };
     const r = await api.post({ 
