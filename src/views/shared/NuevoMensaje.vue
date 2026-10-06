@@ -16,7 +16,20 @@
                     class="form-control"
                     rows="4"
                     v-model="nuevoMensaje"
+                    :maxlength="maxLength || undefined"
                 ></textarea>
+                <div v-if="maxLength" class="text-end text-muted small">
+                    {{ nuevoMensaje.length }}/{{ maxLength }}
+                </div>
+            </div>
+
+            <div v-if="showFechaHasta" class="mb-2">
+                <label>Mostrar en el panel del estudiante hasta</label>
+                <input
+                    type="date"
+                    class="form-control"
+                    v-model="fechaHasta"
+                />
             </div>
 
             <div class="text-end">
@@ -39,20 +52,38 @@
 </template>
 
 <script setup>
-import { defineEmits, ref } from 'vue'
+import { defineEmits, defineProps, ref } from 'vue'
 import { showToast } from '@/services/uiBus'
+
+const props = defineProps({
+    maxLength: { type: Number, default: null },
+    showFechaHasta: { type: Boolean, default: false },
+})
 
 const emit = defineEmits(['send-msg', 'close'])
 const nuevoAsunto = ref('')
 const nuevoMensaje = ref('')
+
+const diasDefault = 30
+const fechaHasta = ref(
+    new Date(Date.now() + diasDefault * 24 * 60 * 60 * 1000).toISOString().slice(0, 10)
+)
 
 const newMsg = (asunto, mensaje) => {
     if (!asunto?.trim() || !mensaje?.trim()) {
         showToast('El asunto y mensaje no pueden estar vacios.', 'error')
         return
     }
+    if (props.maxLength && mensaje.trim().length > props.maxLength) {
+        showToast(`El mensaje no puede superar los ${props.maxLength} caracteres.`, 'error')
+        return
+    }
 
-    emit('send-msg', { asunto: asunto.trim(), mensaje: mensaje.trim() })
+    emit('send-msg', {
+        asunto: asunto.trim(),
+        mensaje: mensaje.trim(),
+        fechaHasta: props.showFechaHasta ? fechaHasta.value : null,
+    })
     emit('close')
     nuevoAsunto.value = ''
     nuevoMensaje.value = ''

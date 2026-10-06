@@ -1,7 +1,9 @@
 <template>
-  <div class="row">    
+  <div class="row">
     <NuevoMensaje
       v-if="showMsgModal"
+      :max-length="240"
+      :show-fecha-hasta="true"
       @send-msg="newMsg"
       @close="closeMsgModal"
     />
@@ -26,27 +28,51 @@
           </div>
         </div>
       </div>
-      <HiloItem
-        v-for="{ item, idx } in hilosFiltrados"
-        :key="item.codHilo"
-        :item="item"
-        :showNombre="true"
-        @open-panel="openPanel(item.codAlumno)"
-        @click="getMsg(idx)"
-      >
-        <Conversacion
-          v-if="item.mensajes.length>0"
-          :arrMensajes="item.mensajes"
-          :respuesta="respuesta"
-          :show-archivar="true"
-          @send-msg="sendMsg(idx)"
-          @close-chat="closeChat(idx)"
-          @close-thread="closeThread(idx)"
-          @update:respuesta="updateRespuesta"
-        />
-      </HiloItem>
+
+      <template v-if="filtroActivo === 'globales'">
+        <div class="text-end mb-3">
+          <button class="btn btn-primary" @click="showMsgModal = true">
+            Nuevo mensaje global
+          </button>
+        </div>
+        <div v-if="arrGlobales.length === 0" class="text-center"><i>- No hay mensajes globales enviados -</i></div>
+        <div
+          v-for="item in arrGlobales"
+          :key="item.codHilo"
+          class="row lista recuadro"
+          style="padding:15px 10px; margin-bottom:15px;"
+        >
+          <div class="col-12 d-flex justify-content-between">
+            <strong>{{ item.asunto }}</strong>
+            <span class="text-muted small">{{ item.fechaIngreso }}</span>
+          </div>
+          <div class="col-12 mt-1">{{ item.mensaje }}</div>
+        </div>
+      </template>
+
+      <template v-else>
+        <HiloItem
+          v-for="{ item, idx } in hilosFiltrados"
+          :key="item.codHilo"
+          :item="item"
+          :showNombre="true"
+          @open-panel="openPanel(item.codAlumno)"
+          @click="getMsg(idx)"
+        >
+          <Conversacion
+            v-if="item.mensajes.length>0"
+            :arrMensajes="item.mensajes"
+            :respuesta="respuesta"
+            :show-archivar="true"
+            @send-msg="sendMsg(idx)"
+            @close-chat="closeChat(idx)"
+            @close-thread="closeThread(idx)"
+            @update:respuesta="updateRespuesta"
+          />
+        </HiloItem>
+      </template>
     </div>
-  </div> 
+  </div>
 </template>
 <script setup>
 import { ref, computed, onMounted } from 'vue'
@@ -61,6 +87,7 @@ const { openUserPanel } = useImpersonation()
 /* ---------- state ---------- */
 const showMsgModal = ref(false)
 const arrHilos = ref([])
+const arrGlobales = ref([])
 const respuesta = ref('')
 const filtroActivo = ref('todos')
 
@@ -72,6 +99,7 @@ const tabs = computed(() => [
   { key: 'nuevos', label: 'Nuevos', count: arrHilos.value.filter(h => h.estadoMensaje === 0).length },
   { key: 'activos', label: 'Conversaciones activas', count: arrHilos.value.filter(h => esActivo(h.estadoMensaje)).length },
   { key: 'archivados', label: 'Archivados', count: arrHilos.value.filter(h => h.estadoMensaje === 3).length },
+  { key: 'globales', label: 'Mensajes globales', count: arrGlobales.value.length },
 ])
 
 const hilosFiltrados = computed(() =>
@@ -161,22 +189,48 @@ const sendMsg = async (k) => {
   list()
 }
 
-const newMsg = async ({ asunto, mensaje }) => {
-  const c = await showModal(
-    '¿Confirma que desea enviar este mensaje?',
+const newMsg = async ({ asunto, mensaje, fechaHasta }) => {
+  const { ok } = await showModal(
+    '¿Confirma que desea crear este mensaje global?',
     1
   )
-  if (!c.ok) return
+  if (!ok) return
+
   const r = await api.post({
     entity: 'mensajes',
-    action: 'addMessageToThread',
-    payload: { asunto, mensaje }
+    action: 'createGlobalMsg',
+    payload: { asunto, mensaje, fechaHasta }
   })
-  if (r.ok) {
-    showToast('Mensaje enviado', 'success')
-  }
   showMsgModal.value = false
-  list()
+  if (!r.ok) return
+  showToast('Mensaje global creado', 'success')
+  getGlobalMsgs()
+
+  const { ok: enviarMail } = await showModal(
+    '¿Desea enviar este mensaje por correo a todos los estudiantes?',
+    1,
+    'Notificar por email'
+  )
+  if (!enviarMail) return
+
+  await api.post({
+    entity: 'mensajes',
+    action: 'queueGlobalMsgMail',
+    payload: {
+      codMensaje: r.payload.codMensaje,
+      asunto: r.payload.asunto,
+      mensaje: r.payload.mensaje
+    }
+  })
+  showToast('El envío fue encolado, los correos se enviarán en breve.', 'success')
+}
+
+const getGlobalMsgs = async () => {
+  const { payload } = await api.get({
+    entity: 'mensajes',
+    action: 'getGlobalMsgs'
+  })
+  arrGlobales.value = payload ?? []
 }
 
 const updateRespuesta = (str) => {
@@ -186,6 +240,7 @@ const updateRespuesta = (str) => {
 /* ---------- lifecycle ---------- */
 onMounted(() => {
   list()
+  getGlobalMsgs()
 })
 </script>
 
