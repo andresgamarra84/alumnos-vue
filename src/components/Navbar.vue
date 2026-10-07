@@ -1,5 +1,5 @@
 <template>
-  <nav class="navbar navbar-expand-lg navbar-light fondo1">
+  <nav ref="navRef" class="navbar navbar-expand-lg navbar-light fondo1">
     <div class="container-fluid">
       <div class="collapse navbar-collapse" id="navbarNavDropdown">
         <ul class="navbar-nav me-auto">
@@ -18,15 +18,7 @@
                 {{ entry.data.nombre }}
               </a>
               <ul class="dropdown-menu">
-                <li v-for="item in entry.items" :key="item.path">
-                  <a
-                    class="dropdown-item"
-                    href="#"
-                    @click.prevent="navegar(item)"
-                  >
-                    {{ item.label }}
-                  </a>
-                </li>
+                <NavbarItems :items="entry.items" @navegar="navegar" />
               </ul>
             </template>
 
@@ -61,6 +53,9 @@
   </nav>
 </template>
 <script setup>
+import { onMounted, onBeforeUnmount, ref } from "vue"
+import NavbarItems from "@/components/NavbarItems.vue"
+
 const emit = defineEmits(["navegar"])
 const navegar = (item) => {
   emit("navegar", item)
@@ -72,4 +67,17 @@ defineProps({
     required: true,
   },
 })
+
+// Al cerrarse un dropdown raiz se cierran sus submenus abiertos
+const navRef = ref(null)
+const cerrarSubmenus = (e) => {
+  e.target
+    .closest("li")
+    ?.querySelectorAll(".show")
+    .forEach((el) => {
+      if (el !== e.target && !el.contains(e.target)) el.classList.remove("show")
+    })
+}
+onMounted(() => navRef.value?.addEventListener("hidden.bs.dropdown", cerrarSubmenus))
+onBeforeUnmount(() => navRef.value?.removeEventListener("hidden.bs.dropdown", cerrarSubmenus))
 </script>

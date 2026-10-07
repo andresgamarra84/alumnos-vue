@@ -42,18 +42,16 @@ const getNavbarData = async () => {
   const r = await api.get({ entity: 'menu', action: 'getMenu' })
   const payload = r.payload.menu ?? {}
   const user = r.payload.datosPersonales ?? {}
+  // Un hijo con esDropDown es un submenu con sus propios children (anidacion recursiva)
+  const mapChild = d => d.esDropDown
+    ? { label: d.nombre, esDropDown: true, items: (d.children ?? []).map(mapChild) }
+    : { path: d.path, label: d.nombre, external: d.external }
   const menu = Object.entries(payload).map(([key, item]) => {
     return {
       key,
       esDropDown: item.esDropDown,
       data: item.data,
-      items: item.esDropDown
-        ? item.children.map(d => ({
-            path: d.path,
-            label: d.nombre,
-            external: d.external,
-          }))
-        : [],
+      items: item.esDropDown ? item.children.map(mapChild) : [],
     }
   })
   return {
