@@ -18,17 +18,54 @@
     <p v-if="arrConfig.solicitudConstancia">-Solicitud de Constancia de estudiante regular.</p>
     <p v-if="arrConfig.solicitudAnalitico">-Solicitud de Analítico.</p>
   </div>
+
+  <template v-if="puedeVerAusentes">
+    <h3 class="h3cabecera">Docentes ausentes próximos</h3>
+    <div v-if="proximosAusentes.length === 0" class="text-muted"><i>- No hay ausencias próximas -</i></div>
+    <div v-else>
+      <p v-for="item in proximosAusentes" :key="item.codigo">
+        <strong>{{ item.nombreProfesor }}</strong> — {{ formatRangoAusente(item.desde, item.hasta) }}
+      </p>
+    </div>
+  </template>
 </template>
 
 <script setup>
 import { ref, onMounted, computed} from 'vue';
 import { api } from '@/api/api'; // Ajusta path a tu api.js
 import { showModal } from '@/services/uiBus'
+import { usePermisos } from '@/composables/usePermisos'
 
 //import { showModal } from '@/services/uiBus'
+const { tienePermiso } = usePermisos()
 const arrNotif = ref([]);
 const arrInscrMaterias = ref([]);
 const arrConfig = ref({});
+const arrAusentes = ref([]);
+
+const puedeVerAusentes = computed(() => tienePermiso('novedades_ausentes', 'novedades_all'))
+
+const hoyStr = new Date().toISOString().slice(0, 10)
+const proximosAusentes = computed(() =>
+  arrAusentes.value
+    .filter(item => (item.hasta || item.desde) >= hoyStr)
+    .sort((a, b) => a.desde.localeCompare(b.desde))
+    .slice(0, 5)
+)
+
+const formatRangoAusente = (desde, hasta) => {
+  const fmt = (f) => {
+    const [y, m, d] = f.split('-')
+    return `${d}/${m}/${y}`
+  }
+  if (!hasta || hasta === desde) return fmt(desde)
+  return `${fmt(desde)} - ${fmt(hasta)}`
+}
+
+const listAusentes = async () => {
+  const { payload } = await api.get({ entity: 'calendario', action: 'getAusentes' })
+  arrAusentes.value = payload ?? []
+}
 // Dark Mode Toggle
 const toggleDarkMode = () => {
   document.body.classList.toggle('dark-mode');
@@ -54,12 +91,13 @@ const listNotificaciones = async () => {
 
 onMounted(async () => {
   listNotificaciones()
-  const { payload } = await api.get({ 
-    entity: 'config', 
-    action: 'getConfig' 
+  listAusentes()
+  const { payload } = await api.get({
+    entity: 'config',
+    action: 'getConfig'
   })
   arrConfig.value = payload
-  
+
 });
 </script>
 
