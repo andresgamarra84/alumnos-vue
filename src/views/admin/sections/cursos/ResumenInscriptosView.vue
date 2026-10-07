@@ -19,7 +19,7 @@
         </div>
 		<div class='col-4'>({{item.cantidadInscriptos}} inscriptos)</div>
 		<div class='col-12 text-end d-flex justify-content-end flex-wrap gap-3'>
-			<a @click='abrirMensaje(k)'>Enviar mensaje</a>
+			<a v-if="puedeEnviarMensaje" @click='abrirMensaje(k)'>Enviar mensaje</a>
 			<a @click='descargarAsistencia(k)'>Descargar planilla de asistencia</a>
 			<a @click='descargarCuatrimestral(k)'>Descargar planilla cuatrimestral</a>
 			<a @click='listDatosAlumnosHorario(k)'>Mostrar lista</a>
@@ -42,13 +42,16 @@
 </div>
 </template>
 <script setup>
-import { ref, onMounted } from "vue"
+import { ref, computed, onMounted } from "vue"
 import { api } from "@/api/api"
 import { showModal, showToast } from "@/services/uiBus"
 import { useFileDownload } from "@/composables/useFileDownload"
+import { usePermisos } from "@/composables/usePermisos"
 import NuevoMensaje from "@/views/shared/NuevoMensaje.vue"
 
 const { downloadBlob } = useFileDownload()
+const { tienePermiso } = usePermisos()
+const puedeEnviarMensaje = computed(() => tienePermiso('cursos_resumen_inscriptos_mensaje', 'cursos_all'))
 
 const arrCursos = ref([])
 const arrHorarios = ref([])
