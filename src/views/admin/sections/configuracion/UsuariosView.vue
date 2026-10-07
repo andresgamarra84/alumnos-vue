@@ -20,6 +20,24 @@
       <div id="permisos">
         <div class="my-3"><h4>Permisos del usuario</h4></div>
         <div class="mx-2">
+          <div class="d-flex align-items-end gap-2 mb-4">
+            <div class="flex-grow-1">
+              <label class="form-label mb-0">Copiar permisos de otro usuario</label>
+              <select class="form-select" v-model="sourceUserIndex">
+                <option disabled value="">Seleccione...</option>
+                <option v-for="{ item, k } in otrosUsuarios" :key="item.codigo ?? k" :value="k">
+                  {{ item.nombre }}
+                </option>
+              </select>
+            </div>
+            <input
+              type="button"
+              value="Copiar permisos"
+              class="btn btn-secondary"
+              @click="copyPermisosDesdeOtroUsuario"
+            />
+          </div>
+
           <div v-for="section in permissionSections" :key="section.title" class="mb-3">
             <div>{{ section.title }}</div>
             <div class="m-3">
@@ -69,6 +87,7 @@ const arrUsuarios = ref([])
 const permisos = ref({})
 const datoUsuario = ref({})
 const selectedUserIndex = ref("")
+const sourceUserIndex = ref("")
 
 const permissionSections = [
   {
@@ -169,6 +188,12 @@ const allPermissionIds = computed(() =>
   permissionSections.flatMap((section) => section.items.map((item) => item.id)),
 )
 
+const otrosUsuarios = computed(() =>
+  arrUsuarios.value
+    .map((item, k) => ({ item, k }))
+    .filter(({ k }) => String(k) !== String(selectedUserIndex.value)),
+)
+
 const resetPermisos = () => {
   const next = {}
   for (const id of allPermissionIds.value) next[id] = false
@@ -205,6 +230,7 @@ const listPermisos = async () => {
   if (!usuario) return
 
   resetPermisos()
+  sourceUserIndex.value = ""
   datoUsuario.value = usuario
 
   try {
@@ -228,6 +254,34 @@ const listPermisos = async () => {
 
 const onTogglePermission = (id, checked) => {
   permisos.value[id] = checked
+}
+
+const copyPermisosDesdeOtroUsuario = async () => {
+  const idx = Number(sourceUserIndex.value)
+  const usuarioOrigen = arrUsuarios.value[idx]
+  if (!usuarioOrigen) return
+
+  const { ok } = await showModal(
+    `Esto va a reemplazar en pantalla los permisos de ${datoUsuario.value.nombre} por los de ${usuarioOrigen.nombre}. Los cambios no se guardan hasta presionar "Guardar cambios". Desea continuar?`,
+    1,
+  )
+  if (!ok) return
+
+  const { payload } = await api.get({
+    entity: "usuarios",
+    action: "getPermisosUsuario",
+    payload: {
+      codigo: usuarioOrigen.codigo,
+    },
+  })
+
+  resetPermisos()
+  for (const v of payload ?? []) {
+    permisos.value[v.permiso] = v.estado === true || v.estado === 1 || v.estado === "1"
+  }
+
+  sourceUserIndex.value = ""
+  showToast("Permisos copiados. No olvides guardar los cambios.", "success")
 }
 
 const saveConfig = async () => {
