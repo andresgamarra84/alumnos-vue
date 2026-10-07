@@ -128,6 +128,10 @@ const permissionSections = [
     items: [{ id: "reservas_all", label: "Todos los permisos" }],
   },
   {
+    title: "Menu Mensajes:",
+    items: [{ id: "mensajes_all", label: "Todos los permisos" }],
+  },
+  {
     title: "Menu Preinscripciones:",
     items: [
       { id: "preinscripciones_all", label: "Todos los permisos" },
