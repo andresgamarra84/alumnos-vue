@@ -9,7 +9,7 @@
       <!-- Header -->
       <div class="modal-header-custom">
         <div>
-          <h5 class="mb-0">Editar curso</h5>
+          <h5 class="mb-0">{{ puedeEditar ? 'Editar curso' : 'Ver curso' }}</h5>
           <span class="text-muted small">Código #{{ cursoForm.codPlHorarios }}</span>
         </div>
         <button type="button" class="btn-close" aria-label="Cerrar" @click="closeModal"></button>
@@ -24,7 +24,7 @@
           <div class="row g-3">
             <div class="col-12">
               <label class="form-label">Curso</label>
-              <select class="form-select" v-model="cursoForm.codCurso">
+              <select class="form-select" v-model="cursoForm.codCurso" :disabled="!puedeEditar">
                 <option :value="null">Seleccionar</option>
                 <option v-for="c in cursos" :key="c.codigo" :value="c.codigo">
                   {{ c.nombre }}
@@ -34,7 +34,7 @@
 
             <div class="col-12">
               <label class="form-label">Profesor</label>
-              <select class="form-select" v-model="cursoForm.codProfesor">
+              <select class="form-select" v-model="cursoForm.codProfesor" :disabled="!puedeEditar">
                 <option :value="null">Seleccionar</option>
                 <option v-for="p in profesores" :key="p.codigo" :value="p.codigo">
                   {{ p.nombre }}
@@ -44,7 +44,7 @@
 
             <div class="col-6">
               <label class="form-label">Comisión</label>
-              <select class="form-select" v-model="cursoForm.comision">
+              <select class="form-select" v-model="cursoForm.comision" :disabled="!puedeEditar">
                 <option :value="0">Sin comisión</option>
                 <option v-for="c in arrComision" :key="c" :value="c">{{ c }}</option>
               </select>
@@ -52,7 +52,7 @@
 
             <div class="col-6">
               <label class="form-label">Cupo</label>
-              <input type="number" class="form-control" v-model="cursoForm.cupo" />
+              <input type="number" class="form-control" v-model="cursoForm.cupo" :disabled="!puedeEditar" />
             </div>
           </div>
         </section>
@@ -71,39 +71,41 @@
                 <strong>{{ h.dia }}</strong> de {{ h.horario[0] }} a {{ h.horario[1] }}
                 <span class="text-muted"> — Aula {{ h.aula }} ({{ h.sede }})</span>
               </span>
-              <button type="button" class="btn btn-sm btn-outline-danger" @click="delCHFromPlHorarios(i)">
+              <button v-if="puedeEditar" type="button" class="btn btn-sm btn-outline-danger" @click="delCHFromPlHorarios(i)">
                 Quitar
               </button>
             </li>
           </ul>
           <p class="text-muted small mb-3" v-else>Sin horarios asignados.</p>
 
-          <label class="form-label">Agregar día</label>
-          <select class="form-select" v-model="nuevoDia" @change="addCHToPlHorarios">
-            <option disabled value="">Seleccione</option>
-            <option v-for="(d, i) in arrDias" :key="i" :value="i">
-              {{ d }}
-            </option>
-          </select>
+          <template v-if="puedeEditar">
+            <label class="form-label">Agregar día</label>
+            <select class="form-select" v-model="nuevoDia" @change="addCHToPlHorarios">
+              <option disabled value="">Seleccione</option>
+              <option v-for="(d, i) in arrDias" :key="i" :value="i">
+                {{ d }}
+              </option>
+            </select>
+          </template>
         </section>
 
         <!-- Configuración -->
         <section class="form-section">
           <h6 class="section-title">Configuración</h6>
           <div class="form-check form-switch mb-2">
-            <input class="form-check-input" type="checkbox" role="switch" id="chkInscrAbierta" v-model="cursoForm.inscrAbierta" />
+            <input class="form-check-input" type="checkbox" role="switch" id="chkInscrAbierta" v-model="cursoForm.inscrAbierta" :disabled="!puedeEditar" />
             <label class="form-check-label" for="chkInscrAbierta">Inscripción abierta</label>
           </div>
           <div class="form-check form-switch mb-2">
-            <input class="form-check-input" type="checkbox" role="switch" id="chkMostrar" v-model="cursoForm.mostrar" />
+            <input class="form-check-input" type="checkbox" role="switch" id="chkMostrar" v-model="cursoForm.mostrar" :disabled="!puedeEditar" />
             <label class="form-check-label" for="chkMostrar">Mostrar en planilla</label>
           </div>
           <div class="form-check form-switch mb-2">
-            <input class="form-check-input" type="checkbox" role="switch" id="chkSemiPresencial" v-model="cursoForm.semiPresencial" />
+            <input class="form-check-input" type="checkbox" role="switch" id="chkSemiPresencial" v-model="cursoForm.semiPresencial" :disabled="!puedeEditar" />
             <label class="form-check-label" for="chkSemiPresencial">Semipresencial</label>
           </div>
           <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" role="switch" id="chkActividades" v-model="cursoForm.actividades" />
+            <input class="form-check-input" type="checkbox" role="switch" id="chkActividades" v-model="cursoForm.actividades" :disabled="!puedeEditar" />
             <label class="form-check-label" for="chkActividades">Actividades online</label>
           </div>
         </section>
@@ -113,33 +115,33 @@
           <h6 class="section-title">Tipo de materia</h6>
           <div class="d-flex flex-wrap gap-3 mb-3">
             <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="tipoNormal" v-model="cursoForm.tipos.normal" />
+              <input class="form-check-input" type="checkbox" id="tipoNormal" v-model="cursoForm.tipos.normal" :disabled="!puedeEditar" />
               <label class="form-check-label" for="tipoNormal">Materia normal</label>
             </div>
             <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="tipoEspInst" v-model="cursoForm.tipos.espacioInstitucional" />
+              <input class="form-check-input" type="checkbox" id="tipoEspInst" v-model="cursoForm.tipos.espacioInstitucional" :disabled="!puedeEditar" />
               <label class="form-check-label" for="tipoEspInst">Esp. institucional</label>
             </div>
             <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="tipoEspAlt" v-model="cursoForm.tipos.espacioAlternativo" />
+              <input class="form-check-input" type="checkbox" id="tipoEspAlt" v-model="cursoForm.tipos.espacioAlternativo" :disabled="!puedeEditar" />
               <label class="form-check-label" for="tipoEspAlt">Esp. alternativo</label>
             </div>
           </div>
 
           <div class="d-flex flex-wrap gap-3">
             <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="tipoInstrumento" v-model="cursoForm.tipos.instrumento" />
+              <input class="form-check-input" type="checkbox" id="tipoInstrumento" v-model="cursoForm.tipos.instrumento" :disabled="!puedeEditar" />
               <label class="form-check-label" for="tipoInstrumento">Instrumento / Canto</label>
             </div>
             <div class="form-check">
-              <input class="form-check-input" type="checkbox" id="tipoArmonico" v-model="cursoForm.tipos.armonico" />
+              <input class="form-check-input" type="checkbox" id="tipoArmonico" v-model="cursoForm.tipos.armonico" :disabled="!puedeEditar" />
               <label class="form-check-label" for="tipoArmonico">Instrumento armónico</label>
             </div>
           </div>
 
           <template v-if="cursoForm.tipos.instrumento || cursoForm.tipos.armonico">
             <label class="form-label mt-3">Instrumento asociado</label>
-            <select class="form-select" v-model="cursoForm.codInstrumento">
+            <select class="form-select" v-model="cursoForm.codInstrumento" :disabled="!puedeEditar">
               <option :value="null">(Ninguno)</option>
               <option v-for="i in instrumentos" :key="i.codigo" :value="i.codigo">
                 {{ i.nombre }}
@@ -151,7 +153,7 @@
         <!-- Materias asociadas -->
         <section class="form-section" v-if="(cursoForm.materias.tipo & 6) === 0">
           <h6 class="section-title">Materias asociadas</h6>
-          <select class="form-select mb-2" @change="addMateriaAsociada">
+          <select v-if="puedeEditar" class="form-select mb-2" @change="addMateriaAsociada">
             <option disabled value="">Seleccione</option>
             <option v-for="m in materiasDisponibles" :key="m.codigo" :value="m.codigo">
               {{ m.nombre }} ({{ m.codigo }})
@@ -165,7 +167,7 @@
               :key="m.codigo"
             >
               {{ m.nombre }} ({{ m.codigo }})
-              <button type="button" class="btn btn-sm btn-outline-danger" @click="delMateriaAsociada(m.codigo)">
+              <button v-if="puedeEditar" type="button" class="btn btn-sm btn-outline-danger" @click="delMateriaAsociada(m.codigo)">
                 Quitar
               </button>
             </li>
@@ -178,23 +180,26 @@
           <h6 class="section-title">Apariencia</h6>
           <div class="d-flex align-items-center gap-3">
             <label class="form-label mb-0" for="colorFondo">Color de fondo</label>
-            <input id="colorFondo" class="form-control form-control-color" type="color" v-model="cursoForm.bgColor" title="Elegir color" />
+            <input id="colorFondo" class="form-control form-control-color" type="color" v-model="cursoForm.bgColor" title="Elegir color" :disabled="!puedeEditar" />
           </div>
         </section>
 
         <!-- Observaciones -->
         <section class="form-section form-section--last">
           <h6 class="section-title">Observaciones</h6>
-          <textarea class="form-control" v-model="cursoForm.obs" rows="3" placeholder="Notas adicionales sobre el curso..."></textarea>
+          <textarea class="form-control" v-model="cursoForm.obs" rows="3" placeholder="Notas adicionales sobre el curso..." :disabled="!puedeEditar"></textarea>
         </section>
 
       </div>
 
       <!-- Footer -->
       <div class="modal-footer-custom">
-        <button type="button" class="btn btn-outline-danger me-auto" @click="borrarCurso">Borrar curso</button>
-        <button type="button" class="btn btn-outline-secondary" @click="closeModal">Cancelar</button>
-        <button type="button" class="btn btn-primary" @click="saveCurso">Guardar cambios</button>
+        <template v-if="puedeEditar">
+          <button type="button" class="btn btn-outline-danger me-auto" @click="borrarCurso">Borrar curso</button>
+          <button type="button" class="btn btn-outline-secondary" @click="closeModal">Cancelar</button>
+          <button type="button" class="btn btn-primary" @click="saveCurso">Guardar cambios</button>
+        </template>
+        <button v-else type="button" class="btn btn-outline-secondary ms-auto" @click="closeModal">Cerrar</button>
       </div>
 
     </div>
@@ -283,6 +288,7 @@
         :key="curso.codPlHorarios"
         :curso="curso"
         :config="gridConfig"
+        :read-only="!puedeEditar"
         v-show="curso.show"
         @drag-start="onDragStart"
         @drag-end="onDragEnd"
@@ -298,6 +304,10 @@ import { ref, onMounted, watch, computed, inject } from 'vue'
 import CursoItem from '@/views/admin/components/CursoItem.vue'
 import { api } from '@/api/api'
 import { showModal } from '@/services/uiBus'
+import { usePermisos } from '@/composables/usePermisos'
+
+const { tienePermiso } = usePermisos()
+const puedeEditar = computed(() => tienePermiso('cursos_grilla_editar', 'cursos_all'))
 /* estados */
 const diaSeleccionado = ref(2)   // Lunes
 const sedeSeleccionada = ref('S') // Santa Fe

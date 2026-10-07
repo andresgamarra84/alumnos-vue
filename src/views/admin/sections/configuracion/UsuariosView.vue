@@ -116,9 +116,11 @@ const permissionSections = [
     title: "Menu Cursos:",
     items: [
       { id: "cursos_all", label: "Todos los permisos" },
-      { id: "cursos_grilla", label: "Ver/Editar grilla de Horarios" },
+      { id: "cursos_grilla", label: "Ver grilla de Horarios" },
+      { id: "cursos_grilla_editar", label: "Editar grilla de Horarios" },
       { id: "cursos_pdfhorarios", label: "Descargar horarios" },
       { id: "cursos_resumen_inscriptos", label: "Resumen de inscriptos" },
+      { id: "cursos_resumen_inscriptos_mensaje", label: "Enviar mensaje a inscriptos (Resumen de inscriptos)" },
       { id: "cursos_vacantes_instrumento", label: "Carga de vacantes de Instrumento" },
       { id: "cursos_planillas_all", label: "Descarga de planillas (Asistencia, Cuatrimestrales)" },
       { id: "cursos_correlatividades", label: "Ver correlatividades de estudiantes" },

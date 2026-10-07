@@ -2,8 +2,9 @@
 <div
   ref="el"
   class="curso-item shadow-sm transition-all"
+  :class="{ 'curso-item--readonly': readOnly }"
   :style="style"
-  draggable="true"
+  :draggable="!readOnly"
   @dragstart="onDragStart"
   @mousedown="onMouseDown"
   @click.stop="onClick"
@@ -25,7 +26,8 @@ import { computed, ref, useTemplateRef } from 'vue'
 const el = useTemplateRef("el")
 const props = defineProps({
   curso: Object,
-  config: Object
+  config: Object,
+  readOnly: { type: Boolean, default: false }
 })
 let isDragging = false
 let isResizing = false
@@ -47,6 +49,8 @@ function isOnResizeHandle(e) {
 }
 
 function onMouseDown(e) {
+  if (props.readOnly) return
+
   if (isOnResizeHandle(e)) {
     isResizing = true
     startX = e.clientX
@@ -107,7 +111,7 @@ const pointerStartY = ref(0)
 const draggedEl = ref(null)
 
 function onDragStart(event) {
-  if (isResizing) return
+  if (props.readOnly || isResizing) return
   isDragging = true
   event.preventDefault()
   draggedEl.value = event.currentTarget
@@ -222,6 +226,15 @@ const style = computed(() => {
   height: 100%;
   cursor: ew-resize;
   background: transparent;
+}
+
+.curso-item--readonly,
+.curso-item--readonly:active {
+  cursor: pointer;
+}
+
+.curso-item--readonly::after {
+  cursor: pointer;
 }
 
 </style>
