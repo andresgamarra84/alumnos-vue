@@ -23,7 +23,9 @@ import { useLoading } from '@/composables/useLoading'
 import Navbar from '@/components/Navbar.vue';
 import ViewContainer from '@/components/ViewContainer.vue'
 import { showModal } from '@/services/uiBus'
+import { usePermisos } from '@/composables/usePermisos'
 const { isLoading } = useLoading()
+const { cargarPermisos } = usePermisos()
 //layoutContainer Para uso de la grilla de horarios y el resize
 const layoutContainer = ref(null)
 provide('layoutContainer', layoutContainer)
@@ -34,6 +36,7 @@ const navbarData = ref(null)
 // Populate Navbar
 onMounted(async () => {
   navbarData.value = await getNavbarData()
+  if (route.meta.area === 'admin') cargarPermisos()
 })
 const getNavbarData = async () => {
   const r = await api.get({ entity: 'menu', action: 'getMenu' })
