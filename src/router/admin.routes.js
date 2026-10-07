@@ -88,12 +88,32 @@ export default [
                 component: () => import('@/views/admin/sections/configuracion/FlyersView.vue')
             },
             {
+                path: 'vacantesIngresantes',
+                component: () => import('@/views/admin/sections/configuracion/VacantesIngresantesView.vue')
+            },
+            {
                 path: 'agendaActividades',
                 component: () => import('@/views/admin/sections/configuracion/NovedadesView.vue')
             },
             {
                 path: 'mesasExamen',
                 component: () => import ('@/views/admin/sections/MesasExamenView.vue')
+            },
+            {
+                path: 'librosExamen',
+                component: () => import('@/views/admin/sections/calificaciones/LibrosExamenView.vue')
+            },
+            {
+                path: 'calificacionesMesas',
+                component: () => import('@/views/admin/sections/calificaciones/CalificacionesMesasView.vue')
+            },
+            {
+                path: 'preinscripcionesVer',
+                component: () => import('@/views/admin/sections/preinscripciones/PreinscripcionesVerView.vue')
+            },
+            {
+                path: 'preinscripcionesDocumentacion',
+                component: () => import('@/views/admin/sections/preinscripciones/PreinscripcionesDocumentacionView.vue')
             },
             {
                 path: 'reservas',

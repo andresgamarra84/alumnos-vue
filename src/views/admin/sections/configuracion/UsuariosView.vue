@@ -98,12 +98,13 @@ const permissionSections = [
     items: [
       { id: "cursos_all", label: "Todos los permisos" },
       { id: "cursos_grilla", label: "Ver/Editar grilla de Horarios" },
+      { id: "cursos_pdfhorarios", label: "Descargar horarios" },
+      { id: "cursos_resumen_inscriptos", label: "Resumen de inscriptos" },
       { id: "cursos_vacantes_instrumento", label: "Carga de vacantes de Instrumento" },
       { id: "cursos_planillas_all", label: "Descarga de planillas (Asistencia, Cuatrimestrales)" },
       { id: "cursos_correlatividades", label: "Ver correlatividades de estudiantes" },
       { id: "cursos_foba_incompleto", label: "Ver estudiantes con FOBA incompleto" },
       { id: "cursos_matricula", label: "Matricula de estudiantes" },
-      { id: "cursos_nombres", label: "Crear/Eliminar nombres de Curso" },
     ],
   },
   {
@@ -118,7 +119,6 @@ const permissionSections = [
     title: "Menu Calificaciones:",
     items: [
       { id: "calificaciones_all", label: "Todos los permisos" },
-      { id: "calificaciones_cursadas", label: "Calificaciones de cursada" },
       { id: "calificaciones_mesas", label: "Calificaciones de mesas de examen" },
       { id: "calificaciones_libros", label: "Ver datos de libros de examen" },
     ],
@@ -139,13 +139,16 @@ const permissionSections = [
     title: "Menu Configuracion:",
     items: [
       { id: "configuracion_all", label: "Todos los permisos" },
-      { id: "configuracion_carreras", label: "Ver/Editar carreras y materias" },
+      { id: "configuracion_carreras", label: "Ver/Editar carreras" },
+      { id: "configuracion_materias", label: "Ver/Editar materias" },
+      { id: "configuracion_cursos", label: "Ver/Editar cursos" },
+      { id: "configuracion_planes", label: "Planes de estudio y correlativas" },
       { id: "configuracion_instrumentos", label: "Ver/Editar lista de instrumentos" },
       { id: "configuracion_editar", label: "Configuracion de Estudiantes e Ingresantes" },
       { id: "configuracion_vacantes_ingresantes", label: "Vacantes para ingresantes" },
       { id: "configuracion_usuarios", label: "Usuarios y permisos administrativos" },
-      { id: "configuracion_carrusel", label: "Carrusel de pagina Web" },
-      { id: "configuracion_novedades", label: "Entradas de Blog" },
+      { id: "configuracion_flyers", label: "Flyers" },
+      { id: "configuracion_novedades", label: "Agenda de actividades" },
     ],
   },
   {
