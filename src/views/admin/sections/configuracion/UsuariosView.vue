@@ -174,6 +174,7 @@ const permissionSections = [
       { id: "configuracion_usuarios", label: "Usuarios y permisos administrativos" },
       { id: "configuracion_flyers", label: "Flyers" },
       { id: "configuracion_novedades", label: "Agenda de actividades" },
+      { id: "configuracion_qr", label: "Generador de QR" },
     ],
   },
   {

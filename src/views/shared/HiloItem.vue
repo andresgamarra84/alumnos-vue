@@ -8,7 +8,7 @@
         <a v-if="showNombre" @click="emit('open-panel')">
           {{ item.nombreAlumno }} {{ item.apellidoAlumno }} |
         </a>
-        <span :class="{ 'fw-bold': item.estadoMensaje == 0, 'opacity-75': item.estadoMensaje != 0 }">
+        <span :class="{ 'fw-bold': sinLeer, 'opacity-75': !sinLeer }">
           {{ item.asunto }}
         </span>
       </div>
@@ -17,6 +17,7 @@
     </div>
 </template>
 <script setup>
+  import { computed } from 'vue'
   const props = defineProps({
     item : {
       type: Object,
@@ -28,4 +29,6 @@
     }
   })
   const emit = defineEmits(["open-panel"])
+  // 0 = mensaje nuevo del alumno, 2 = el alumno respondio en el hilo; en ambos hay algo para leer
+  const sinLeer = computed(() => props.item.estadoMensaje === 0 || props.item.estadoMensaje === 2)
 </script>

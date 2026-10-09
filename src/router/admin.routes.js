@@ -88,6 +88,10 @@ export default [
                 component: () => import('@/views/admin/sections/configuracion/FlyersView.vue')
             },
             {
+                path: 'generadorQR',
+                component: () => import('@/views/admin/sections/configuracion/GeneradorQRView.vue')
+            },
+            {
                 path: 'vacantesIngresantes',
                 component: () => import('@/views/admin/sections/configuracion/VacantesIngresantesView.vue')
             },
