@@ -40,6 +40,15 @@
             <label class="px-3"><input type="radio" :name="'docFisico' + j" :checked="item.docPresentada[j] === 2" @change="item.docPresentada[j] = 2"> No corresponde</label>
           </div>
         </div>
+        <div class="col-12 mt-3">
+          <label>
+            Comisión de Lenguaje Musical I:
+            <select v-model="item.comisionLM" class="form-select d-inline-block w-auto ms-2">
+              <option value="">Sin asignar</option>
+              <option v-for="c in comisionesLM" :key="c" :value="c">{{ c }}</option>
+            </select>
+          </label>
+        </div>
         <div class="col-12">
           <label><input type="checkbox" v-model="item.addToMailList" @change="addToList"> Copiar correo</label>
         </div>
@@ -60,6 +69,9 @@
 import { ref, onMounted } from "vue"
 import { api } from "@/api/api"
 import { showModal, showToast } from "@/services/uiBus"
+import { useFileDownload } from "@/composables/useFileDownload"
+
+const { downloadBlob } = useFileDownload()
 
 const filtroOn = ref(false)
 const fltMedico = ref(false)
@@ -68,6 +80,7 @@ const fltORL = ref(false)
 const fltEspera = ref(false)
 const fltReincorporacion = ref(false)
 const arrDocIng = ref([])
+const comisionesLM = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I']
 
 const list = async () => {
   const filtro = [filtroOn.value, fltMedico.value, fltEstudios.value, fltORL.value, fltEspera.value, fltReincorporacion.value]
@@ -94,7 +107,7 @@ const sendMailInfo = async (k) => {
   const r = await api.post({
     entity: 'docingresantes',
     action: 'updDocumentacion',
-    payload: { codAlumno: item.codAlumno, docPresentada: item.docPresentada }
+    payload: { codAlumno: item.codAlumno, docPresentada: item.docPresentada, comisionLM: item.comisionLM }
   })
   if (r.ok) showToast('Datos ingresados', 'success')
   item.mostrarInfo = false
@@ -107,14 +120,13 @@ const getPDF = async (k) => {
     action: 'getFichaPDF',
     payload: { codAlumno: item.codAlumno }
   })
-  const url = window.URL.createObjectURL(new Blob([blob], { type: 'application/pdf' }))
-  const link = document.createElement('a')
-  link.href = url
-  link.download = `Ficha_Preinscripcion_${item.codAlumno}.pdf`
-  document.body.appendChild(link)
-  link.click()
-  document.body.removeChild(link)
-  window.URL.revokeObjectURL(url)
+  // Si el BE respondió con un error (JSON) en lugar de un PDF, no descargarlo como si lo fuera
+  if (blob.type && !blob.type.includes('pdf')) {
+    const { message } = JSON.parse(await blob.text())
+    showToast(message || 'No se pudo generar la planilla', 'error')
+    return
+  }
+  downloadBlob(blob, `Ficha_Preinscripcion_${item.codAlumno}.pdf`, 'application/pdf')
 }
 
 const enviarClave = async (k) => {
