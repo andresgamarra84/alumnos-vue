@@ -105,6 +105,23 @@
         </div>
       </div>
     </div>
+
+    <div class="col-12">
+      <h3>Padrones estudiantiles (ciclo lectivo {{ currentYear }})</h3>
+      <div class="row g-3 align-items-end">
+        <div class="col-12 col-md-6">
+          <label class="form-label">Estudiantes:</label>
+          <select v-model="cicloPadron" class="form-select">
+            <option value="foba">FOBA</option>
+            <option value="superior">Superior</option>
+            <option value="todos">Todos</option>
+          </select>
+        </div>
+        <div class="col-12 col-md-6 text-end">
+          <button class="btn btn-primary" @click="padronEstudiantil">Descargar</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -135,6 +152,9 @@ const tipoCuatr = ref("normal")
 const sedeDoc = ref("S")
 const fechaDoc = ref(today)
 const fechaMesas = ref(today)
+
+const cicloPadron = ref("todos")
+const NOMBRES_PADRON = { foba: "FOBA", superior: "Superior", todos: "Todos" }
 
 const plEstudiantes = async () => {
   const payload = {
@@ -201,5 +221,15 @@ const plCuatrimestrales = async () => {
   })
 
   downloadBlob(blob, "cuatrimestrales.pdf", "application/pdf")
+}
+
+const padronEstudiantil = async () => {
+  const blob = await api.getPDF({
+    entity: "planillas",
+    action: "getPadronEstudiantil",
+    payload: { ciclo: cicloPadron.value },
+  })
+
+  downloadBlob(blob, `Padron Estudiantil ${NOMBRES_PADRON[cicloPadron.value]} ${currentYear}.pdf`, "application/pdf")
 }
 </script>
