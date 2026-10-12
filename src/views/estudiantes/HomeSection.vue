@@ -577,7 +577,6 @@ onMounted(async () => {
   align-items: flex-start;
   padding: 14px 16px;
   margin-bottom: 10px;
-  background: var(--color-acento-claro, rgba(74, 144, 226, 0.15));
   border-left: 4px solid var(--color-acento);
   border-radius: 8px;
 }
