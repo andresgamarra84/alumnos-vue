@@ -355,3 +355,28 @@ select option:disabled {
   width: 520px;
   max-width: 95%;
 }
+/* ACCIONES DENTRO DE TARJETAS (InfoCard #actions) */
+.card-link {
+    padding: 4px 12px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-acento);
+    background: transparent;
+    border: 1px solid currentColor;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.card-link:hover {
+    color: #fff;
+    background: var(--color-acento);
+}
+
+.card-link--danger {
+    color: var(--bs-danger, #dc3545);
+}
+
+.card-link--danger:hover {
+    background: var(--bs-danger, #dc3545);
+}

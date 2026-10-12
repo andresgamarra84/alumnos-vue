@@ -12,19 +12,20 @@
     @change="onSelectMateria"
   />
   <!-- Mesas disponibles -->
-  <div v-if="mesasDisponibles.length">
-    <div
+  <InfoCardGrid v-if="mesasDisponibles.length">
+    <InfoCard
       v-for="mesa in mesasDisponibles"
       :key="mesa.codigo"
-      class="lista"
-      style="border:1px solid white; margin:10px; padding:10px; cursor:pointer"
-      @click="onSelectMesa(mesa)"
+      :title="mesa.nombre"
+      variant="success"
+      interactive
+      :selected="codMesa === mesa.codigo"
+      @select="onSelectMesa(mesa)"
     >
-      {{ mesa.nombre }}<br />
-      {{ mesa.fecha }}<br />
-      Prof: {{ mesa.nombreProf }}
-    </div>
-  </div>
+      <InfoMeta icon="📅">{{ mesa.fecha }}</InfoMeta>
+      <InfoMeta icon="👤">Prof. {{ mesa.nombreProf }}</InfoMeta>
+    </InfoCard>
+  </InfoCardGrid>
 
   <!-- Condición -->
   <div v-if="condicionShow" class="row">
@@ -56,6 +57,9 @@ import { api } from '@/api/api.js';
 import { showModal, showToast } from '@/services/uiBus';
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import MateriasSelect from '@/components/MateriasSelect.vue';
+import InfoCard from '@/components/card/InfoCard.vue';
+import InfoCardGrid from '@/components/card/InfoCardGrid.vue';
+import InfoMeta from '@/components/card/InfoMeta.vue';
 const carreras = ref([]);
 const materias = ref([]);
 const mesasDisponibles = ref([]);

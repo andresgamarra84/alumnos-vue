@@ -29,67 +29,50 @@
   <div v-if="ocupaFranja && selectedDia && cursosDelDia.length" class="mt-4">
     <h4 class="mb-3">Horarios disponibles para {{ selectedDia }}</h4>
 
-    <div
-      v-for="(grupo, k) in cursosDelDiaPorDocente"
-      :key="`${grupo.nombreProf}-${k}`"
-      class="lista curso-item curso-item--franjas"
-    >
-      <div class="col-12 col-lg-4">
-        <strong>{{ grupo.nombreProf }}</strong>
-      </div>
-
-      <div class="col-12 col-lg-8"> 
-        <div class="franjas-grid">
-          <button
+    <InfoCardGrid min-width="420px">
+      <InfoCard
+        v-for="(grupo, k) in cursosDelDiaPorDocente"
+        :key="`${grupo.nombreProf}-${k}`"
+        :title="grupo.nombreProf"
+        variant="primary"
+      >
+        <div class="franjas">
+          <InfoChip
             v-for="(curso, j) in grupo.franjas"
             :key="`${curso.codPlHorarios}-${curso.inicio}-${j}`"
-            type="button"
-            class="franja-chip"
+            clickable
             @click="onSelectCursoFranja(curso)"
           >
-            <span class="franja-chip__hora">
-              {{ curso.horario?.[0]?.[0] ?? curso.inicio }}
-            </span>
-            <span class="franja-chip__sede">
-              {{ curso.sede?.[0] ?? 'Sin sede' }}
-            </span>
-          </button>
+            {{ curso.horario?.[0]?.[0] ?? curso.inicio }}
+            <template #secondary>{{ curso.sede?.[0] ?? 'Sin sede' }}</template>
+          </InfoChip>
         </div>
-      </div>
-    </div>
+      </InfoCard>
+    </InfoCardGrid>
   </div>
 
   <!-- Cursos disponibles -->
-  <div v-if="!ocupaFranja && cursosDisponibles.length">
-    <div
+  <InfoCardGrid v-if="!ocupaFranja && cursosDisponibles.length">
+    <InfoCard
       v-for="(curso, k) in cursosDisponibles"
       :key="curso.codPlHorarios"
-      :class="['lista', 'curso-item', { 'curso-item--disabled': curso.cupoCompleto }]"
-      @click="!curso.cupoCompleto && onSelectCurso(k)"
+      :title="curso.comision != 0 ? `${curso.titulo} &quot;${curso.comision}&quot;` : curso.titulo"
+      :badge="curso.cupoCompleto ? 'Cupo completo' : ''"
+      badge-variant="danger"
+      variant="primary"
+      interactive
+      :disabled="curso.cupoCompleto"
+      @select="onSelectCurso(k)"
     >
-      <div class="col-12 col-md-6 col-lg-4">
-        {{ curso.titulo }}
-        <span v-if="curso.comision != 0">
-          "{{ curso.comision }}"
-        </span>
+      <InfoMeta icon="👤">Prof. {{ curso.nombreProf }}</InfoMeta>
+      <div class="franjas">
+        <InfoChip v-for="(dia, key) in curso.dia" :key="key">
+          {{ dia }} {{ curso.horario[key][0] }} a {{ curso.horario[key][1] }}
+          <template #secondary>Sede {{ curso.sede[key] }}</template>
+        </InfoChip>
       </div>
-
-      <div class="col-12 col-md-6 col-lg-4">
-        <div v-for="(dia, key) in curso.dia" :key="key">
-          {{ dia }} de {{ curso.horario[key][0] }} a {{ curso.horario[key][1] }},
-          Sede: {{ curso.sede[key] }}
-        </div>
-      </div>
-
-      <div class="col-12 col-md-6 col-lg-4">
-        Prof. {{ curso.nombreProf }}
-      </div>
-
-      <div class="col-12" v-if="curso.cupoCompleto">
-        (CUPO COMPLETO)
-      </div>
-    </div>
-  </div>
+    </InfoCard>
+  </InfoCardGrid>
 </template>
 
 <script setup>
@@ -98,6 +81,10 @@ import { api } from '@/api/api.js';
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import MateriasSelect from '@/components/MateriasSelect.vue';
 import { showModal, showToast } from '@/services/uiBus';
+import InfoCard from '@/components/card/InfoCard.vue';
+import InfoCardGrid from '@/components/card/InfoCardGrid.vue';
+import InfoChip from '@/components/card/InfoChip.vue';
+import InfoMeta from '@/components/card/InfoMeta.vue';
 
 const carreras = ref([]);
 const materias = ref([]);
@@ -268,89 +255,5 @@ const onSelectCursoFranja = async (curso) => {
 </script>
 
 <style scoped>
-.curso-item {
-  border: 1px solid white;
-  margin: 10px;
-  padding: 10px;
-  cursor: pointer;
-}
-
-.curso-item--disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-  pointer-events: none;
-}
-
-.curso-item--franjas {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.franjas-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  width: 100%;
-  min-width: 0;
-}
-
-.franja-chip {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2px;
-  min-width: 130px;
-  padding: 8px 10px;
-  border: 1px solid rgba(255, 255, 255, 0.35);
-  border-radius: 4px;
-  background: rgba(255, 255, 255, 0.08);
-  color: inherit;
-  cursor: pointer;
-  text-align: left;
-  max-width: 100%;
-  transition: background-color 0.18s ease, border-color 0.18s ease, transform 0.18s ease, box-shadow 0.18s ease;
-}
-
-.franja-chip:hover {
-  background: rgba(255, 255, 255, 0.2);
-  border-color: rgba(255, 255, 255, 0.75);
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
-}
-
-.franja-chip:focus-visible {
-  outline: none;
-  background: rgba(255, 255, 255, 0.22);
-  border-color: rgba(255, 255, 255, 0.85);
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.18);
-}
-
-.franja-chip__hora {
-  font-weight: 600;
-}
-
-.franja-chip__sede {
-  font-size: 0.9rem;
-  opacity: 0.8;
-}
-
-@media (max-width: 767px) {
-  .curso-item--franjas {
-    gap: 10px;
-  }
-
-  .franja-chip {
-    min-width: calc(50% - 4px);
-    flex: 1 1 calc(50% - 4px);
-  }
-}
-
-@media (max-width: 480px) {
-  .franja-chip {
-    min-width: 100%;
-    flex-basis: 100%;
-  }
-}
+.franjas { display: flex; flex-wrap: wrap; gap: 8px; }
 </style>

@@ -56,45 +56,45 @@
   </div>
 
   <!-- Lista de Carreras -->
-  <div
-    v-for="(item, k) in carrerasAlumno"
-    class="col-12 row carrera-item"
-    style="margin: 20px 0;"
-  >
-    <div class="col-6 col-md-4 titulo">{{ item.nombre }}</div>
-    <div class="col-6 col-md-4" @click="update(3, k)">
-      {{ item.fechaIngreso }}
-    </div>
-    <div class="col-12 col-md-4 d-flex justify-content-around">
-      <a v-if="item.estado == 0" @click="update(2, k)">Bloquear</a>
-      <a v-else v-on:click="update(0, k)">Desbloquear</a>
-      <a v-on:click="update(1, k)">Borrar</a>
-    </div>
-
-    <!-- Opciones Adicionales -->
-    <div class="col-12">
-      <input
-        type="checkbox"
-        v-model ="item.esEspera"
-        v-on:click="update(7, k)"
-      />
-      <label>Lista de Espera</label>
-    </div>
-    <div class="col-12">
-      <input
-        type="checkbox"
-        v-model="item.esCondicional"
-        v-on:click="update(8, k)"
-      />
-      <label>Condicional</label>
-    </div>
-  </div>
+  <InfoCardGrid class="col-12">
+    <InfoCard
+      v-for="(item, k) in carrerasAlumno"
+      :key="item.codigo ?? k"
+      :title="item.nombre"
+      :badge="item.estado == 0 ? '' : 'Bloqueada'"
+      badge-variant="danger"
+      :variant="item.estado == 0 ? 'primary' : 'neutral'"
+      :muted="item.estado != 0"
+    >
+      <InfoMeta icon="📅" label="Ingreso:">
+        <a @click="update(3, k)" title="Modificar fecha">{{ item.fechaIngreso }}</a>
+      </InfoMeta>
+      <div class="opciones">
+        <label class="opcion">
+          <input type="checkbox" v-model="item.esEspera" @click="update(7, k)" />
+          Lista de Espera
+        </label>
+        <label class="opcion">
+          <input type="checkbox" v-model="item.esCondicional" @click="update(8, k)" />
+          Condicional
+        </label>
+      </div>
+      <template #actions>
+        <button v-if="item.estado == 0" type="button" class="card-link" @click="update(2, k)">Bloquear</button>
+        <button v-else type="button" class="card-link" @click="update(0, k)">Desbloquear</button>
+        <button type="button" class="card-link card-link--danger" @click="update(1, k)">Borrar</button>
+      </template>
+    </InfoCard>
+  </InfoCardGrid>
 </template>
 <script setup>
 import { ref, onMounted } from 'vue';
 import { api } from '@/api/api.js';
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import InstrumentosSelect from '@/components/InstrumentosSelect.vue';
+import InfoCard from '@/components/card/InfoCard.vue';
+import InfoCardGrid from '@/components/card/InfoCardGrid.vue';
+import InfoMeta from '@/components/card/InfoMeta.vue';
 import { showModal, showToast } from '@/services/uiBus'
 const carreras = ref([]);
 const arrInstrumentos = ref([]);
@@ -197,3 +197,8 @@ const update = async (tipo, k) => {
     }
 }
 </script>
+
+<style scoped>
+.opciones { display: flex; flex-wrap: wrap; gap: 4px 20px; }
+.opcion { display: flex; align-items: center; margin: 0; font-weight: normal; }
+</style>

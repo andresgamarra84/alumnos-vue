@@ -19,157 +19,190 @@
     <p v-if="arrConfig.solicitudConstancia">-Para realizar su solicitud de Constancia de estudiante regular ingrese en la sección "Trámites online" -> "Constancia de estudiante regular".</p>
     <p v-if="arrConfig.solicitudAnalitico">-Para realizar su solicitud de Analítico ingrese en la sección "Trámites online" -> "Solicitud de analítico".</p>
   </div>
+  <!-- Inscripciones a Materias -->
   <div v-if="arrInscrMaterias.length > 0" class="margen-bottom">
-    <!-- Inscripciones a Materias -->
     <h3 class="h3cabecera">Inscripciones a Materias</h3>
-    <div class="row lista recuadro" style="padding:20px 10px;" v-for="(item, key) in materiasVigentes" :key="key">
-      <div class="col-6 col-md-3">
-        <div class="titulo">{{ item.infoCurso.nombreCurso }} {{ item.infoInscripcion.esCondicional ? '(Condicional)' : '' }}</div>
-        <div>({{ item.infoInscripcion.nombreCarrera }})</div>
-      </div>
-      <div class="col-6 col-md-2">Prof. {{ item.infoCurso.nombreProf.apellido }}</div>
-      <div class="col-12 col-md-5">
-        <div v-for="it in item.infoCurso.horarios" :key="it.dia">{{ it.dia }} {{ it.horario }} Aula {{ it.aula }} - Sede {{ it.sede }}</div>
-      </div>
-      <div class="col-6">
-        Calif. 1º cuatrimestre: 
-        <template v-if="item.infoInscripcion.esConceptual">{{ item.infoInscripcion.notaConceptual1 }}</template>
-        <template v-else>{{ item.infoInscripcion.notaNumerica1[0] }} ({{ item.infoInscripcion.notaNumerica1[1] }})</template>
-      </div>
-      <div class="col-6">
-        Calif. 2º cuatrimestre: 
-        <template v-if="item.infoInscripcion.esConceptual">{{ item.infoInscripcion.notaConceptual2 }}</template>
-        <template v-else>{{ item.infoInscripcion.notaNumerica2[0] }} ({{ item.infoInscripcion.notaNumerica2[1] }})</template>
-      </div>
-      <div class="col-12 text-end" v-if="arrConfig.inscrMaterias || esAutoridad">
-        <a @click="updMateria(item)" style="color:var(--bs-danger);">Borrar inscripción</a>
-      </div>
-    </div>
+    <InfoCardGrid>
+      <InfoCard
+        v-for="(item, key) in materiasVigentes"
+        :key="key"
+        :title="item.infoCurso.nombreCurso"
+        :subtitle="item.infoInscripcion.nombreCarrera"
+        :badge="item.infoInscripcion.esCondicional ? 'Condicional' : ''"
+        badge-variant="warning"
+        variant="primary"
+      >
+        <InfoMeta icon="👤">Prof. {{ item.infoCurso.nombreProf.apellido }}</InfoMeta>
+        <div class="chips">
+          <InfoChip v-for="it in item.infoCurso.horarios" :key="it.dia">
+            {{ it.dia }} {{ it.horario }}
+            <template #secondary>Aula {{ it.aula }} · Sede {{ it.sede }}</template>
+          </InfoChip>
+        </div>
+        <div class="stats">
+          <InfoStat v-for="n in [1, 2]" :key="n" :label="`${n}º cuatrimestre`" :empty="!nota(item, n).valor">
+            {{ nota(item, n).valor }}
+            <template #caption v-if="nota(item, n).detalle">{{ nota(item, n).detalle }}</template>
+          </InfoStat>
+        </div>
+        <template #actions v-if="arrConfig.inscrMaterias || esAutoridad">
+          <button type="button" class="card-link card-link--danger" @click="updMateria(item)">Borrar inscripción</button>
+        </template>
+      </InfoCard>
+    </InfoCardGrid>
 
     <!-- Eliminadas (solo autoridad) -->
-    <div class="mt-4" v-if="materiasBorradas.length>0">
+    <div v-if="materiasBorradas.length > 0">
       <div class="text-end">
         <a @click="toggleDeleted(0)">{{ showDeleted[0] ? 'Ocultar eliminadas' : 'Mostrar eliminadas' }}</a>
       </div>
-      <div v-show="showDeleted[0]">
-        <div v-for="(item, key) in materiasBorradas" :key="key" class="row lista recuadro" style="padding:20px 10px;opacity:0.5;">
-          <!-- Similar estructura arriba, con Recuperar -->
-          <div class="col-6 col-md-3">
-            <div class="titulo">{{ item.infoCurso.nombreCurso }} {{ item.infoInscripcion.esCondicional ? '(Condicional)' : '' }}</div>
-            <div>({{ item.infoInscripcion.nombreCarrera }})</div>
-          </div>
-          <div class="col-6 col-md-2">Prof. {{ item.infoCurso.nombreProf.apellido }}</div>
-          <div class="col-12 col-md-5">
-            <div v-for="it in item.infoCurso.horarios" :key="it.dia">{{ it.dia }} {{ it.horario }} Aula {{ it.aula }} - Sede {{ it.sede }}</div>
-          </div>
-          <!-- Notas similares -->
-          <div class="col-12 text-end">
-            <a @click="updMateria(item)">Recuperar inscripción</a>
-          </div>
-        </div>
-      </div>
+      <InfoCardGrid v-show="showDeleted[0]">
+        <InfoCard
+          v-for="(item, key) in materiasBorradas"
+          :key="key"
+          :title="item.infoCurso.nombreCurso"
+          :subtitle="item.infoInscripcion.nombreCarrera"
+          :badge="item.infoInscripcion.esCondicional ? 'Condicional' : ''"
+          badge-variant="warning"
+          variant="neutral"
+          muted
+        >
+          <InfoMeta icon="👤">Prof. {{ item.infoCurso.nombreProf.apellido }}</InfoMeta>
+          <template #actions>
+            <button type="button" class="card-link" @click="updMateria(item)">Recuperar inscripción</button>
+          </template>
+        </InfoCard>
+      </InfoCardGrid>
     </div>
   </div>
-  <!-- Mesas de Examen (similar patrón) -->
+
+  <!-- Mesas de Examen -->
   <div v-if="arrMesas.length > 0" class="margen-bottom">
     <h3 class="h3cabecera">Inscripciones a Mesas de Examen</h3>
-    <template v-for="(item, key) in mesasVigentes" :key="key">
-    <div class="row lista recuadro" style="padding:20px 10px;">
-      <div class="col-6 col-md-3"><span class="titulo">{{ item.Curso }} {{ item.nombreInstr }}</span><br>({{ item.nombreCarrera }})</div>
-      <div class="col-6 col-md-4">Prof. {{ item.nombreProf }}</div>
-      <div class="col-12 col-md-5">{{ item.fecha }}</div>
-      <div class="col-12 text-end">
-        <a @click="updMesa(key)" style="color:var(--bs-danger);">Borrar inscripción</a>
-      </div>
-    </div>
-    </template>
-    <div class="mt-4" v-if="mesasBorradas.length>0">
+    <InfoCardGrid>
+      <InfoCard
+        v-for="item in mesasVigentes"
+        :key="item.codigo"
+        :title="`${item.Curso} ${item.nombreInstr}`"
+        :subtitle="item.nombreCarrera"
+        variant="success"
+      >
+        <InfoMeta icon="📅">{{ item.fecha }}</InfoMeta>
+        <InfoMeta icon="👤">Prof. {{ item.nombreProf }}</InfoMeta>
+        <template #actions>
+          <button type="button" class="card-link card-link--danger" @click="updMesa(item)">Borrar inscripción</button>
+        </template>
+      </InfoCard>
+    </InfoCardGrid>
+    <div v-if="mesasBorradas.length > 0">
       <div class="text-end">
         <a @click="toggleDeleted(1)">{{ showDeleted[1] ? 'Ocultar inscripciones eliminadas' : 'Mostrar inscripciones eliminadas' }}</a>
       </div>
-      <div v-show="showDeleted[1]">
-        <template v-for="(item, key) in mesasBorradas" :key="key">
-        <div class="row lista recuadro" style="padding:20px 10px;opacity:0.5">
-          <div class="col-6 col-md-3"><span class="titulo">{{ item.Curso }} {{ item.nombreInstr }}</span><br>({{ item.nombreCarrera }})</div>
-          <div class="col-6 col-md-4">Prof. {{ item.nombreProf }}</div>
-          <div class="col-12 col-md-5">{{ item.fecha }}</div>
-          <div class="col-12 text-end">
-            <a @click="updMesa(key)">Recuperar inscripción</a>
-          </div>
-        </div>
-        </template>
-        
-      </div>
+      <InfoCardGrid v-show="showDeleted[1]">
+        <InfoCard
+          v-for="item in mesasBorradas"
+          :key="item.codigo"
+          :title="`${item.Curso} ${item.nombreInstr}`"
+          :subtitle="item.nombreCarrera"
+          variant="neutral"
+          muted
+        >
+          <InfoMeta icon="📅">{{ item.fecha }}</InfoMeta>
+          <InfoMeta icon="👤">Prof. {{ item.nombreProf }}</InfoMeta>
+          <template #actions>
+            <button type="button" class="card-link" @click="updMesa(item)">Recuperar inscripción</button>
+          </template>
+        </InfoCard>
+      </InfoCardGrid>
     </div>
-
   </div>
-  <div v-if='arrReservas.length>0' class='margen-bottom'>
-    <h3 class='h3cabecera'>Reservas de vacante</h3>
-    <div v-for='(item, key) in reservasVigentes' :key="key" class='lista row recuadro' style="padding:20px 10px;">
-      <div class='col-12 col-md-3 titulo'>
-        <template v-if='item.materia'>{{item.materia}}</template>
-      </div>
-      <div class='col-12 col-md-4'>
-        {{item.nombreProf}}
-      </div>
-      <div class='col-12 col-md-5'>
-        {{item.carrera}}    ({{item.instrumento}})<template v-if='item.leyenda'>- ({{item.leyenda}})</template>
-      </div>
-      <div class='col-12 text-end'>
-        <a @click='updReserva(key)'  style='color:var(--bs-danger);'>Borrar reserva</a>
-      </div>
-    </div>
-    <div class="mt-4" v-if='reservasBorradas.length>0'>
-      <div class='text-end'>
+
+  <!-- Reservas de vacante -->
+  <div v-if="arrReservas.length > 0" class="margen-bottom">
+    <h3 class="h3cabecera">Reservas de vacante</h3>
+    <InfoCardGrid>
+      <InfoCard
+        v-for="item in reservasVigentes"
+        :key="item.codigo"
+        :title="item.materia"
+        :subtitle="`${item.carrera} (${item.instrumento})`"
+        :badge="item.leyenda"
+        variant="info"
+      >
+        <InfoMeta v-if="item.nombreProf" icon="👤">{{ item.nombreProf }}</InfoMeta>
+        <template #actions>
+          <button type="button" class="card-link card-link--danger" @click="updReserva(item)">Borrar reserva</button>
+        </template>
+      </InfoCard>
+    </InfoCardGrid>
+    <div v-if="reservasBorradas.length > 0">
+      <div class="text-end">
         <a @click="toggleDeleted(2)">{{ showDeleted[2] ? 'Ocultar eliminadas' : 'Mostrar eliminadas' }}</a>
       </div>
-      <div v-show="showDeleted[2]">
-        <div v-for='(item, key) in reservasBorradas' :key="key" class='lista row recuadro' style="padding:20px 10px;opacity:0.5">
-          <div class='col-12 col-md-3 titulo'>
-            <template v-if='item.materia'>{{item.materia}}</template></div>
-          <div class='col-12 col-md-4'>
-            <template v-if='item.nombreProf'> (Prof. {{item.nombreProf}})</template>
-          </div>
-          <div class='col-12 col-md-5'>
-            {{item.carrera}} ({{item.instrumento}})<template v-if='item.cambio'>- ({{item.cambio}})</template>
-          </div>
-          <div class='col-12 text-end'>
-            <a @click='updReserva(key)'>Recuperar reserva</a>
-          </div>
-        </div>
-      </div>
-    </div>	
-  </div>
-  <div v-if='arrSolicitudes.length>0' class='margen-bottom'>
-    <h3 class='h3cabecera'>Solicitudes de mesa de examen</h3>
-    <div v-for='(item, key) in arrSolicitudes' v-if='!item.deleted' class='lista row recuadro' style="padding:20px 10px;">
-      <div class='col-12 col-md-5 titulo'>{{item.nombre}} ({{item.carrera}})</div>
-      <div class='col-12 col-md-5'>Prof. {{item.nombreProf}}</div>
-      <div class='col-12 col-md-2 text-end'>
-        <a @click='updSolicitud(key)'  style='color:var(--bs-danger);'>Borrar solicitud</a>
-      </div>
+      <InfoCardGrid v-show="showDeleted[2]">
+        <InfoCard
+          v-for="item in reservasBorradas"
+          :key="item.codigo"
+          :title="item.materia"
+          :subtitle="`${item.carrera} (${item.instrumento})`"
+          :badge="item.cambio"
+          variant="neutral"
+          muted
+        >
+          <InfoMeta v-if="item.nombreProf" icon="👤">{{ item.nombreProf }}</InfoMeta>
+          <template #actions>
+            <button type="button" class="card-link" @click="updReserva(item)">Recuperar reserva</button>
+          </template>
+        </InfoCard>
+      </InfoCardGrid>
     </div>
-    <div class="mt-4" v-if='esAutoridad'>
-      <div class='text-end'>
+  </div>
+
+  <!-- Solicitudes de mesa de examen -->
+  <div v-if="arrSolicitudes.length > 0" class="margen-bottom">
+    <h3 class="h3cabecera">Solicitudes de mesa de examen</h3>
+    <InfoCardGrid>
+      <template v-for="(item, key) in arrSolicitudes" :key="item.codigo ?? key">
+        <InfoCard v-if="!item.deleted" :title="item.nombre" :subtitle="item.carrera" variant="warning">
+          <InfoMeta icon="👤">Prof. {{ item.nombreProf }}</InfoMeta>
+          <template #actions>
+            <button type="button" class="card-link card-link--danger" @click="updSolicitud(key)">Borrar solicitud</button>
+          </template>
+        </InfoCard>
+      </template>
+    </InfoCardGrid>
+    <div v-if="esAutoridad">
+      <div class="text-end">
         <a @click="toggleDeleted(3)">{{ showDeleted[3] ? 'Ocultar eliminadas' : 'Mostrar eliminadas' }}</a>
       </div>
-      <div v-show="showDeleted[3]">
-        <div v-for='(item, key) in arrSolicitudes'  v-if='item.deleted' class='lista row recuadro' style="padding:20px 10px;opacity:0.5;">
-          <div class='col-12 col-md-5 titulo'>{{item.nombre}} ({{item.carrera}})</div>
-          <div class='col-12 col-md-5'>Prof. {{item.nombreProf}}</div>
-          <div class='col-12 col-md-2 text-end'>
-            <a @click='updSolicitud(key)'>Recuperar solicitud</a>
-          </div>
-        </div>
-      </div>
+      <InfoCardGrid v-show="showDeleted[3]">
+        <template v-for="(item, key) in arrSolicitudes" :key="item.codigo ?? key">
+          <InfoCard v-if="item.deleted" :title="item.nombre" :subtitle="item.carrera" variant="neutral" muted>
+            <InfoMeta icon="👤">Prof. {{ item.nombreProf }}</InfoMeta>
+            <template #actions>
+              <button type="button" class="card-link" @click="updSolicitud(key)">Recuperar solicitud</button>
+            </template>
+          </InfoCard>
+        </template>
+      </InfoCardGrid>
     </div>
   </div>
-  <div v-if='arrSolicConstancias.length>0' class='margen-bottom'>
-    <h3 class='h3cabecera'>Solicitudes de constancia</h3>
-    <div v-for='(item, key) in arrSolicConstancias' class='lista row recuadro' style='opacity:1;padding:20px 10px;'>
-      <div class='col-12 col-md-5 titulo'>{{item.destino}} {{item.info}}</div>
-      <div class='col-12 col-md-2 text-end'><a @click='updSolicitud(key, true)'  style='color:var(--bs-danger);'>Borrar solicitud</a></div>
-    </div>
+
+  <!-- Solicitudes de constancia -->
+  <div v-if="arrSolicConstancias.length > 0" class="margen-bottom">
+    <h3 class="h3cabecera">Solicitudes de constancia</h3>
+    <InfoCardGrid>
+      <InfoCard
+        v-for="(item, key) in arrSolicConstancias"
+        :key="item.codigo ?? key"
+        :title="`${item.destino} ${item.info ?? ''}`"
+        variant="info"
+      >
+        <template #actions>
+          <button type="button" class="card-link card-link--danger" @click="updSolicitud(key, true)">Borrar solicitud</button>
+        </template>
+      </InfoCard>
+    </InfoCardGrid>
   </div>
 </template>
 
@@ -177,6 +210,11 @@
 import { ref, onMounted, computed} from 'vue';
 import { api } from '../../api/api.js'; // Ajusta path a tu api.js
 import { showModal, showToast } from '@/services/uiBus'
+import InfoCard from '@/components/card/InfoCard.vue';
+import InfoCardGrid from '@/components/card/InfoCardGrid.vue';
+import InfoMeta from '@/components/card/InfoMeta.vue';
+import InfoChip from '@/components/card/InfoChip.vue';
+import InfoStat from '@/components/card/InfoStat.vue';
 const arrNotif = ref([]);
 const arrInscrMaterias = ref([]);
 const arrCambios = ref([]);
@@ -249,6 +287,14 @@ const showGlobalMessages = async () => {
   }
 };
 
+// Nota de un cuatrimestre: { valor, detalle } según sea conceptual o numérica
+const nota = (item, n) => {
+  const insc = item.infoInscripcion;
+  if (insc.esConceptual) return { valor: insc[`notaConceptual${n}`], detalle: '' };
+  const [valor, detalle] = insc[`notaNumerica${n}`] ?? [];
+  return { valor, detalle };
+};
+
 const toggleDeleted = (k = 0) => {
   showDeleted.value[k] = !showDeleted.value[k];
 };
@@ -294,8 +340,7 @@ const getInscripcionesMesas = async () => {
   arrMesas.value = r.payload;
 };
 
-const updMesa = async (k) => {
-  const item = arrMesas.value[k];
+const updMesa = async (item) => {
   const accion = item.deleted ? 'recuperar' : 'borrar';
   const { ok: confirm } = await showModal(`¿Confirma que desea ${accion} esta inscripción?`, 1);
   if (confirm) {
@@ -315,8 +360,7 @@ const listReservas = async () => {
   }
 };
 
-const updReserva = async (k) => {
-  const item = arrReservas.value[k];
+const updReserva = async (item) => {
   const accion = item.deleted ? 'recuperar' : 'borrar';
   const { ok: confirm } = await showModal(`¿Confirma que desea ${accion} esta reserva?`, 1);
   if (confirm) {
@@ -383,6 +427,8 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.chips { display: flex; flex-wrap: wrap; gap: 6px; }
+.stats { display: flex; gap: 10px; }
 .h3cabecera {
   font-size: 1.5rem;
   font-weight: bold;
