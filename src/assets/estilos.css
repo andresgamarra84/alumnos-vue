@@ -204,6 +204,28 @@ div.text-end a:hover {
     color: var(--color-texto-principal);
 }
 
+/* DROPDOWNS DE BOOTSTRAP (menu de navegacion y menus tipo "Descargar analitico") */
+.dropdown-menu {
+    color: var(--color-texto-principal);
+    background-color: var(--color-fondo-secundario);
+    border: 1px solid var(--color-borde);
+    box-shadow: 0px 4px 8px var(--sombra-suave);
+}
+
+.dropdown-item {
+    color: var(--color-texto-principal);
+}
+
+.dropdown-item:hover,
+.dropdown-item:focus {
+    color: var(--color-texto-principal);
+    background-color: var(--color-fondo-principal);
+}
+
+.dropdown-divider {
+    border-top-color: var(--color-borde);
+}
+
 #loading .spinner-border {
     color: var(--color-acento); /* Ajustado a tu paleta */
 }
