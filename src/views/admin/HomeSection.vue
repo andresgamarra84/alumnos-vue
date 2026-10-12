@@ -1,10 +1,4 @@
 <template>
-  <div class="home-topbar">
-    <button type="button" class="dark-toggle" @click="toggleDarkMode" :title="isDark ? 'Modo claro' : 'Modo oscuro'">
-      {{ isDark ? '☀️' : '🌙' }}
-    </button>
-  </div>
-
   <!-- Notificaciones -->
   <div v-if="arrNotif.length > 0" class="margen-bottom">
     <h3 class="h3cabecera">Notificaciones</h3>
@@ -106,13 +100,6 @@ const listAusentes = async () => {
   const { payload } = await api.get({ entity: 'calendario', action: 'getAusentes' })
   arrAusentes.value = payload ?? []
 }
-// Dark Mode Toggle
-const isDark = ref(document.body.classList.contains('dark-mode'));
-const toggleDarkMode = () => {
-  document.body.classList.toggle('dark-mode');
-  isDark.value = document.body.classList.contains('dark-mode');
-};
-
 const listNotificaciones = async () => {
   const r = await api.get({ entity: 'notificaciones', action: 'getAll' });
   let notif = r.payload
@@ -153,20 +140,6 @@ onMounted(async () => {
   border-bottom: 2px solid var(--color-acento);
   color: var(--color-texto-principal);
 }
-
-.home-topbar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
-.dark-toggle {
-  width: 42px;
-  height: 42px;
-  font-size: 1.2rem;
-  line-height: 1;
-  background: var(--color-fondo-secundario);
-  border: 1px solid var(--color-borde);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.dark-toggle:hover { transform: scale(1.05); box-shadow: 0 2px 6px var(--sombra-hover); }
 
 .notif-banner {
   display: flex;

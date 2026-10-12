@@ -1,10 +1,4 @@
 <template>
-  <div class="home-topbar">
-    <button type="button" class="dark-toggle" @click="toggleDarkMode" :title="isDark ? 'Modo claro' : 'Modo oscuro'">
-      {{ isDark ? '☀️' : '🌙' }}
-    </button>
-  </div>
-
   <!-- Resumen -->
   <div v-if="hasAnyData" class="summary-row">
     <InfoStat label="Materias" :empty="materiasVigentes.length === 0">{{ materiasVigentes.length }}</InfoStat>
@@ -293,13 +287,6 @@ const showDeleted = ref([false, false, false, false]);
 const esAutoridad = ref(true);
 const collapsed = ref({ materias: false, mesas: false, reservas: false, solicitudes: false, constancias: false });
 
-// Dark Mode Toggle
-const isDark = ref(document.body.classList.contains('dark-mode'));
-const toggleDarkMode = () => {
-  document.body.classList.toggle('dark-mode');
-  isDark.value = document.body.classList.contains('dark-mode');
-};
-
 // Métodos adaptados con nueva API
 const getInscripcionesMaterias = async () => {
   arrInscrMaterias.value = [];
@@ -552,19 +539,6 @@ onMounted(async () => {
   color: var(--color-texto-principal);
 }
 
-.home-topbar { display: flex; justify-content: flex-end; margin-bottom: 10px; }
-.dark-toggle {
-  width: 42px;
-  height: 42px;
-  font-size: 1.2rem;
-  line-height: 1;
-  background: var(--color-fondo-secundario);
-  border: 1px solid var(--color-borde);
-  border-radius: 50%;
-  cursor: pointer;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-.dark-toggle:hover { transform: scale(1.05); box-shadow: 0 2px 6px var(--sombra-hover); }
 
 .summary-row {
   display: flex;
