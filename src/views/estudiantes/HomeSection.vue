@@ -30,15 +30,17 @@
   <div v-if="tramitesHabilitados.length > 0" class="margen-bottom">
     <h3 class="h3cabecera">Trámites habilitados</h3>
     <div class="tramites-grid">
-      <RouterLink
+      <component
+        :is="tramite.to ? 'RouterLink' : 'span'"
         v-for="tramite in tramitesHabilitados"
-        :key="tramite.to"
+        :key="tramite.label"
         :to="tramite.to"
         class="tramite-btn"
+        :class="{ 'tramite-btn--static': !tramite.to }"
       >
         <span class="tramite-btn__icon" aria-hidden="true">{{ tramite.icon }}</span>
         {{ tramite.label }}
-      </RouterLink>
+      </component>
     </div>
   </div>
 
@@ -348,7 +350,7 @@ const tramitesHabilitados = computed(() => {
     { key: 'inscrExamenes', icon: '📝', label: 'Inscripción a Exámenes', to: '/estudiantes/inscrExamenes' },
     { key: 'reserva', icon: '🎯', label: 'Reserva de vacante', to: '/estudiantes/reservas' },
     { key: 'solicitudConstancia', icon: '📄', label: 'Constancia de estudiante regular', to: '/estudiantes/constanciaEstudianteRegular' },
-    { key: 'solicitudAnalitico', icon: '🎓', label: 'Solicitud de analítico', to: '/estudiantes/materiasAprobadas' },
+    { key: 'solicitudAnalitico', icon: '🎓', label: 'Solicitud de analítico', to: null },
   ];
   return todos.filter(t => arrConfig.value[t.key]);
 });
@@ -605,4 +607,11 @@ onMounted(async () => {
   text-decoration: none;
 }
 .tramite-btn__icon { font-size: 1.1rem; }
+.tramite-btn--static { cursor: default; opacity: 0.75; }
+.tramite-btn--static:hover {
+  color: var(--color-texto-principal);
+  background: var(--color-fondo-secundario);
+  border-color: var(--color-borde);
+  transform: none;
+}
 </style>
