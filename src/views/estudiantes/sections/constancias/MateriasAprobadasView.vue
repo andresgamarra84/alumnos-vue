@@ -6,11 +6,31 @@
     @change="listExamenes"
   />
   <div v-if='arrExamenes.length>0' class="text-end">
-    <button 
-        class="btn btn-primary" 
+    <button
+        v-if="arrIntermedias.length === 0"
+        class="btn btn-primary"
         @click="getAnalitico">
             Descargar analítico
     </button>
+    <div v-else class="dropdown-analitico" v-click-outside="() => showMenuAnalitico = false">
+      <button
+          class="btn btn-primary dropdown-toggle"
+          @click="showMenuAnalitico = !showMenuAnalitico">
+              Descargar analítico
+      </button>
+      <ul v-if="showMenuAnalitico" class="dropdown-menu show dropdown-menu-end">
+        <li>
+          <a class="dropdown-item" href="#" @click.prevent="showMenuAnalitico = false; getAnalitico()">
+            Carrera completa
+          </a>
+        </li>
+        <li v-for="i in arrIntermedias" :key="i.codigo">
+          <a class="dropdown-item" href="#" @click.prevent="showMenuAnalitico = false; getAnaliticoIntermedia(i)">
+            {{ i.nombre }}
+          </a>
+        </li>
+      </ul>
+    </div>
   </div>
   <MateriaList
     v-if="selectedCarrera !== null"
@@ -48,6 +68,17 @@ import { showModal } from '@/services/uiBus';
 const arrCarreras = ref([])
 const codAlC = ref(null)
 const arrExamenes = ref([])
+const arrIntermedias = ref([])
+const showMenuAnalitico = ref(false)
+const vClickOutside = {
+    mounted(el, binding) {
+        el._clickOutside = (e) => { if (!el.contains(e.target)) binding.value() }
+        document.addEventListener('click', el._clickOutside)
+    },
+    unmounted(el) {
+        document.removeEventListener('click', el._clickOutside)
+    },
+}
 const selectedCarrera = ref(null)
 const codMCNuevoExamen = ref(null)
 const showModalExamen = ref(false)
@@ -110,6 +141,19 @@ const listExamenes = async () => {
         },
     })
     arrExamenes.value = r.payload
+    listIntermedias(carrera)
+}
+const listIntermedias = async (carrera) => {
+    arrIntermedias.value = [];
+    const r = await api.get({
+        entity: "analiticos",
+        action: "getIntermediasFinalizadas",
+        payload: {
+            codAlC: carrera.codigo,
+            codCarrera: carrera.codCarrera,
+        },
+    })
+    arrIntermedias.value = r.payload
 }
 const saveExamen = async (d) => {
     const r = await api.post({
@@ -150,6 +194,25 @@ const getAnalitico = async () => {
     })
     downloadBlob(blob, `analitico.pdf`)
 }
+const getAnaliticoIntermedia = async (intermedia) => {
+    const carrera = arrCarreras.value[selectedCarrera.value];
+    let input = await showModal("Lugar de nacimiento:", 2)
+    const lugarNac = input.value
+    input = await showModal("Para presentar ante:", 2)
+    const lugarPresenta = input.value
+    const blob = await api.getPDF({
+        entity: "analiticos",
+        action: "getAnaliticoIntermedia",
+        payload: {
+            codAlC: codAlC.value,
+            codCarrera: carrera.codCarrera,
+            codIntermedia: intermedia.codigo,
+            lugarNac,
+            lugarPresenta
+        },
+    })
+    downloadBlob(blob, `analitico_${intermedia.nombre}.pdf`)
+}
 onMounted(() => {
     listCarreras();
     listMaterias();
@@ -157,6 +220,10 @@ onMounted(() => {
 
 </script>
 <style>
+.dropdown-analitico {
+  position: relative;
+  display: inline-block;
+}
 .modal-overlay {
   position: fixed;
   inset: 0;               /* top, right, bottom, left = 0 */
