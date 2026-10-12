@@ -69,7 +69,7 @@
     </div>
   </div>
 
-  <div class="row">
+  <InfoCardGrid>
     <BusquedaItem
       v-for="(item, k) in arrBusqueda"
       :key="item.codigo"
@@ -82,7 +82,7 @@
       @del-user="delUser(k)"
       @show-message="toggleMsgForm"
     />
-  </div>
+  </InfoCardGrid>
 
   <MessagePopup
     v-if="showMessage"
@@ -95,6 +95,7 @@
 import { ref } from 'vue'
 import { api } from '@/api/api'
 import BusquedaItem from '@/views/admin/components/BusquedaItem.vue'
+import InfoCardGrid from '@/components/card/InfoCardGrid.vue'
 
 import MessagePopup from '@/views/admin/components/MessagePopup.vue'
 import { showToast } from '@/services/uiBus'
