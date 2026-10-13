@@ -825,7 +825,8 @@ const clearHover = () => {
 }
 
 .modal-card-bootstrap {
-  background: #fcfcfc;
+  background: var(--color-fondo-secundario);
+  color: var(--color-texto-principal);
   border-radius: 12px;
   width: 100%;
   max-width: 640px;
@@ -842,7 +843,7 @@ const clearHover = () => {
   justify-content: space-between;
   gap: 1rem;
   padding: 1.25rem 1.5rem 1rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: 1px solid var(--color-borde);
 }
 
 .modal-body-custom {
@@ -855,14 +856,14 @@ const clearHover = () => {
   align-items: center;
   gap: 0.5rem;
   padding: 1rem 1.5rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.08);
-  background: #f8f9fa;
+  border-top: 1px solid var(--color-borde);
+  background: var(--color-fondo-principal);
 }
 
 .form-section {
   padding-bottom: 1.25rem;
   margin-bottom: 1.25rem;
-  border-bottom: 1px solid rgba(0, 0, 0, 0.07);
+  border-bottom: 1px solid var(--color-borde);
 }
 
 .form-section--last,
@@ -877,7 +878,7 @@ const clearHover = () => {
   letter-spacing: 0.05em;
   font-size: 0.72rem;
   font-weight: 700;
-  color: #6c757d;
+  color: var(--color-texto-secundario);
   margin-bottom: 0.75rem;
 }
 

@@ -164,6 +164,19 @@ function onMouseUp(event) {
 }
 
 
+// El fondo de la celda lo elige el admin (color de "Apariencia" del curso) y
+// no cambia con el tema. Por eso el texto no puede heredar el color de texto
+// de la pagina (en modo oscuro pasa a ser claro y queda ilegible sobre un
+// fondo claro): se calcula en base al contraste contra ese fondo puntual.
+const getContrastText = (hex) => {
+  const m = /^#?([0-9a-f]{6})$/i.exec(hex || '')
+  if (!m) return '#1a1a1a'
+  const n = parseInt(m[1], 16)
+  const r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255
+  const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255
+  return luminance > 0.6 ? '#1a1a1a' : '#f5f5f5'
+}
+
 const style = computed(() => {
   const { l, t, w } = props.curso.posicion
   const { unitWidth, unitHeight, padding } = props.config
@@ -177,6 +190,7 @@ const style = computed(() => {
     maxWidth: "100%",
     height: unitHeight - padding + 'px',
     backgroundColor: props.curso.bgColor,
+    color: getContrastText(props.curso.bgColor),
   }
 })
 
