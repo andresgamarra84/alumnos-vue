@@ -1,21 +1,34 @@
 <template>
-  <div v-for='(item, key) in arrSolicitudes' :key='key' :class="['row recuadro lista', item.codEstado==1?'fw-bold':'']" :id="'solicitud_'+key">
-    <div class="row">
-      <div class='col-12 col-md-5'>
-        <span style='cursor:pointer' @click="openPanel(item.codalumno)">{{item.apellido}}, {{item.nombre}} DNI {{item.nrodoc}}</span>
+  <InfoCardGrid min-width="480px">
+    <InfoCard
+      v-for="(item, key) in arrSolicitudes"
+      :key="key"
+      :id="'solicitud_'+key"
+      :subtitle="`DNI ${item.nrodoc}`"
+      :badge="item.codEstado == 1 ? 'Pendiente' : ''"
+      badge-variant="warning"
+      :variant="item.codEstado == 1 ? 'warning' : 'primary'"
+    >
+      <template #title>
+        <span class="link-like" @click="openPanel(item.codalumno)">{{ item.apellido }}, {{ item.nombre }}</span>
+      </template>
+
+      <InfoMeta icon="📅">{{ item.fecha }}</InfoMeta>
+      <InfoMeta icon="🎓" label="Destino:">{{ item.destino }} {{ item.dato }}</InfoMeta>
+
+      <div v-if="item.inscripciones.length > 0" class="chips">
+        <InfoChip v-for="(it, i) in item.inscripciones" :key="i">
+          {{ it.nombreCurso }}
+          <template #secondary>Prof. {{ it.nombreProf.apellido }} · Sede {{ it.sede }}</template>
+        </InfoChip>
       </div>
-      <div class='col-12 col-md-3'>{{item.fecha}}</div>
-      <div class='col-12 col-md-4'>Destino: {{item.destino}} {{item.dato}}</div>
-    </div>
-    <div class="row">
-      <div class='col-6'><a v-on:click='mostrarCursos(key)'>Ver inscripciones</a></div>
-      <div class='col-6'><a v-on:click='getConstancia(key)'>Descargar constancia</a></div>
-    </div>
-    <div v-if="item.inscripciones.length>0" class='col-12' style='padding:10px'>
-      <div>Inscripto en:</div>
-      <div v-for='it in item.inscripciones'>{{it.nombreCurso}}, Prof. {{it.nombreProf.apellido}} - Sede {{it.sede}}</div> 
-    </div>
-	</div>
+
+      <template #actions>
+        <button type="button" class="card-link" @click="mostrarCursos(key)">Ver inscripciones</button>
+        <button type="button" class="card-link" @click="getConstancia(key)">Descargar constancia</button>
+      </template>
+    </InfoCard>
+  </InfoCardGrid>
 </template>
 <script setup>
   import { ref, onMounted } from 'vue'
@@ -23,6 +36,10 @@
   import { showModal } from '@/services/uiBus'
   import { useFileDownload } from '@/composables/useFileDownload'
   import { useImpersonation } from '@/views/admin/composables/useImpersonation'
+  import InfoCard from '@/components/card/InfoCard.vue'
+  import InfoCardGrid from '@/components/card/InfoCardGrid.vue'
+  import InfoMeta from '@/components/card/InfoMeta.vue'
+  import InfoChip from '@/components/card/InfoChip.vue'
   const { openUserPanel } = useImpersonation()
   const { downloadBlob } = useFileDownload()
   const arrSolicitudes = ref([])
@@ -65,3 +82,16 @@
     openUserPanel({area: 'estudiantes',codigo})
   }
 </script>
+<style scoped>
+.link-like {
+  cursor: pointer;
+}
+.link-like:hover {
+  color: var(--color-acento);
+}
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+</style>
