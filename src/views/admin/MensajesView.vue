@@ -8,25 +8,18 @@
       @close="closeMsgModal"
     />
     <div class="col-12">
-      <div class="row g-2 mb-3">
-        <div
+      <div class="tabs-row">
+        <button
           v-for="tab in tabs"
           :key="tab.key"
-          class="col-6 col-md-3"
+          type="button"
+          class="tab-btn"
+          :class="{ 'tab-btn--active': filtroActivo === tab.key }"
+          @click="filtroActivo = tab.key"
         >
-          <div
-            class="border rounded text-center py-2"
-            :class="filtroActivo === tab.key ? 'bg-primary text-white' : 'bg-light'"
-            style="cursor:pointer"
-            @click="filtroActivo = tab.key"
-          >
-            {{ tab.label }}
-            <span
-              class="badge rounded-pill ms-1"
-              :class="filtroActivo === tab.key ? 'bg-white text-primary' : 'bg-secondary'"
-            >{{ tab.count }}</span>
-          </div>
-        </div>
+          {{ tab.label }}
+          <span class="tab-btn__count">{{ tab.count }}</span>
+        </button>
       </div>
 
       <template v-if="filtroActivo === 'globales'">
@@ -245,4 +238,54 @@ onMounted(() => {
   getGlobalMsgs()
 })
 </script>
+
+<style scoped>
+.tabs-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1rem;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.tab-btn {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  font-weight: 600;
+  white-space: nowrap;
+  color: var(--color-texto-principal);
+  background: var(--color-fondo-secundario);
+  border: 1px solid var(--color-borde);
+  border-radius: 999px;
+  cursor: pointer;
+  transition: border-color 0.2s ease, background-color 0.2s ease, color 0.2s ease;
+}
+
+.tab-btn:hover {
+  border-color: var(--color-acento);
+}
+
+.tab-btn--active {
+  color: #fff;
+  background: var(--color-acento);
+  border-color: var(--color-acento);
+}
+
+.tab-btn__count {
+  padding: 1px 8px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--color-texto-principal);
+  background: var(--color-fondo-principal);
+  border-radius: 999px;
+}
+
+.tab-btn--active .tab-btn__count {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.25);
+}
+</style>
 
