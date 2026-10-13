@@ -230,12 +230,19 @@ div.text-end a:hover {
     color: var(--color-acento); /* Ajustado a tu paleta */
 }
 
-#toggler {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(10, 10, 30, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+/* Boton hamburguesa del navbar (navbar-toggler + navbar-toggler-icon de
+   Bootstrap). El borde y el icono por defecto son oscuros y fijos; en modo
+   oscuro quedan casi invisibles sobre el fondo oscuro del navbar. */
+.navbar-toggler {
+    border-color: var(--color-borde);
 }
 
-.dark-mode #toggler {
-    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(200, 200, 220, 0.8)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
+.navbar-toggler:focus {
+    box-shadow: 0 0 0 0.2rem var(--color-acento-claro, rgba(74, 144, 226, 0.35));
+}
+
+.dark-mode .navbar-toggler-icon {
+    background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' width='30' height='30' viewBox='0 0 30 30'%3e%3cpath stroke='rgba(224, 224, 224, 0.85)' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e");
 }
 
 /* Bootstrap dibuja la flecha de .form-select con un SVG de trazo oscuro fijo,
