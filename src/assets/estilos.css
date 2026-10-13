@@ -1,5 +1,5 @@
 /* Variables CSS para la nueva paleta */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@300;400;500;600;700&display=swap');
 
 /* VARIABLES DE DISEÑO */
 :root {
@@ -32,7 +32,7 @@
 body {
     background-color: var(--color-fondo-principal);
     color: var(--color-texto-principal);
-    font-family: 'Inter', sans-serif;
+    font-family: 'Public Sans', sans-serif;
     font-size: 16px;
     transition: background-color 0.3s ease, color 0.3s ease; /* Suave en dark mode */
 }
@@ -241,7 +241,7 @@ div.text-end a:hover {
 /* General para contenedores de selects e inputs */
 div[id^='sel'], .form-container {
     margin-bottom: 20px;
-    font-family: 'Inter', sans-serif;
+    font-family: 'Public Sans', sans-serif;
 }
 
 .form-container {
