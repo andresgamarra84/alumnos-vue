@@ -33,19 +33,6 @@
               </select>
               <span class="fw-bold">{{ m.nombres.nombreTitulo }}</span>
 
-              <div class="form-check form-check-inline mb-0">
-                <input
-                  class="form-check-input"
-                  type="checkbox"
-                  v-model="m.esPromocional"
-                  :id="`chkPromo-${m.codigo}`"
-                  @change="updateMateriaCarrera(m)"
-                >
-                <label class="form-check-label small" :for="`chkPromo-${m.codigo}`">
-                  Es promocional
-                </label>
-              </div>
-
               <div class="small ms-auto">
                 <a
                   v-if="m.linkPrograma"
@@ -445,5 +432,25 @@ const updateMateriaCarrera = async (m) => {
     })
 }
 </script>
+
+<style scoped>
+/* .card/.card-header/.border son de Bootstrap: fondo blanco y bordes
+   oscuros fijos, no respetan el modo oscuro. Se llevan a la paleta. */
+.card {
+    color: var(--color-texto-principal);
+    background-color: var(--color-fondo-secundario);
+    border-color: var(--color-borde);
+}
+
+.card-header {
+    color: var(--color-texto-principal);
+    background-color: var(--color-fondo-principal);
+    border-color: var(--color-borde);
+}
+
+.border {
+    border-color: var(--color-borde) !important;
+}
+</style>
 
 

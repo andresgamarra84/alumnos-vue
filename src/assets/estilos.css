@@ -412,11 +412,13 @@ select option:disabled {
 }
 
 .modal-card {
-  background: white;
+  background: var(--color-fondo-secundario);
+  color: var(--color-texto-principal);
   padding: 25px;
   border-radius: 15px;
   width: 520px;
   max-width: 95%;
+  box-shadow: 0 20px 45px var(--sombra-hover);
 }
 /* ACCIONES DENTRO DE TARJETAS (InfoCard #actions) */
 .card-link {
