@@ -50,10 +50,22 @@
       />
 
       <template v-if="materia.esAprobada">
-        <InfoMeta icon="📖" label="Libro:">{{ materia.infoExamen.libroletra }}{{ materia.infoExamen.libro }} · Acta {{ materia.infoExamen.acta }}</InfoMeta>
-        <InfoMeta icon="📝" label="Nota:">{{ materia.infoExamen.notanumerica || 'Aprobado' }}</InfoMeta>
-        <InfoMeta icon="📅" label="Fecha:">{{ materia.infoExamen.fechaexamen }}</InfoMeta>
-        <InfoMeta icon="🏫" label="Institución:">{{ materia.infoExamen.nombreinstitucion }}</InfoMeta>
+        <InfoMeta label="Libro:">
+          <template #icon><BookOpen /></template>
+          {{ materia.infoExamen.libroletra }}{{ materia.infoExamen.libro }} · Acta {{ materia.infoExamen.acta }}
+        </InfoMeta>
+        <InfoMeta label="Nota:">
+          <template #icon><FileCheck2 /></template>
+          {{ materia.infoExamen.notanumerica || 'Aprobado' }}
+        </InfoMeta>
+        <InfoMeta label="Fecha:">
+          <template #icon><CalendarDays /></template>
+          {{ materia.infoExamen.fechaexamen }}
+        </InfoMeta>
+        <InfoMeta label="Institución:">
+          <template #icon><Building2 /></template>
+          {{ materia.infoExamen.nombreinstitucion }}
+        </InfoMeta>
       </template>
 
       <template #actions>
@@ -96,6 +108,7 @@ import ExamenForm from '../../components/ExamenForm.vue';
 import InfoCard from '@/components/card/InfoCard.vue';
 import InfoCardGrid from '@/components/card/InfoCardGrid.vue';
 import InfoMeta from '@/components/card/InfoMeta.vue';
+import { BookOpen, FileCheck2, CalendarDays, Building2 } from '@lucide/vue';
 import { useFileDownload } from '@/composables/useFileDownload';
 const { downloadBlob } = useFileDownload()
 

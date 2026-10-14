@@ -22,8 +22,8 @@
       :selected="codMesa === mesa.codigo"
       @select="onSelectMesa(mesa)"
     >
-      <InfoMeta icon="📅">{{ mesa.fecha }}</InfoMeta>
-      <InfoMeta icon="👤">Prof. {{ mesa.nombreProf }}</InfoMeta>
+      <InfoMeta><template #icon><CalendarDays /></template>{{ mesa.fecha }}</InfoMeta>
+      <InfoMeta><template #icon><User /></template>Prof. {{ mesa.nombreProf }}</InfoMeta>
     </InfoCard>
   </InfoCardGrid>
 
@@ -60,6 +60,7 @@ import MateriasSelect from '@/components/MateriasSelect.vue';
 import InfoCard from '@/components/card/InfoCard.vue';
 import InfoCardGrid from '@/components/card/InfoCardGrid.vue';
 import InfoMeta from '@/components/card/InfoMeta.vue';
+import { CalendarDays, User } from '@lucide/vue';
 const carreras = ref([]);
 const materias = ref([]);
 const mesasDisponibles = ref([]);

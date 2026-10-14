@@ -32,7 +32,7 @@
         class="tramite-btn"
         :class="{ 'tramite-btn--static': !tramite.to }"
       >
-        <span class="tramite-btn__icon" aria-hidden="true">{{ tramite.icon }}</span>
+        <component :is="tramite.icon" class="tramite-btn__icon" aria-hidden="true" />
         {{ tramite.label }}
       </component>
     </div>
@@ -57,7 +57,7 @@
           badge-variant="warning"
           variant="primary"
         >
-          <InfoMeta icon="👤">Prof. {{ item.infoCurso.nombreProf.apellido }}</InfoMeta>
+          <InfoMeta><template #icon><User /></template>Prof. {{ item.infoCurso.nombreProf.apellido }}</InfoMeta>
           <div class="chips">
             <InfoChip v-for="it in item.infoCurso.horarios" :key="it.dia">
               {{ it.dia }} {{ it.horario }}
@@ -92,7 +92,7 @@
             variant="neutral"
             muted
           >
-            <InfoMeta icon="👤">Prof. {{ item.infoCurso.nombreProf.apellido }}</InfoMeta>
+            <InfoMeta><template #icon><User /></template>Prof. {{ item.infoCurso.nombreProf.apellido }}</InfoMeta>
             <template #actions>
               <button type="button" class="card-link" @click="updMateria(item)">Recuperar inscripción</button>
             </template>
@@ -124,8 +124,8 @@
           <template #media v-if="fechaMesa(item.fecha).valida">
             <InfoDate :top="fechaMesa(item.fecha).mes" :big="fechaMesa(item.fecha).dia" />
           </template>
-          <InfoMeta icon="📅">{{ item.fecha }}</InfoMeta>
-          <InfoMeta icon="👤">Prof. {{ item.nombreProf }}</InfoMeta>
+          <InfoMeta><template #icon><CalendarDays /></template>{{ item.fecha }}</InfoMeta>
+          <InfoMeta><template #icon><User /></template>Prof. {{ item.nombreProf }}</InfoMeta>
           <template #actions>
             <button type="button" class="card-link card-link--danger" @click="updMesa(item)">Borrar inscripción</button>
           </template>
@@ -144,8 +144,8 @@
             variant="neutral"
             muted
           >
-            <InfoMeta icon="📅">{{ item.fecha }}</InfoMeta>
-            <InfoMeta icon="👤">Prof. {{ item.nombreProf }}</InfoMeta>
+            <InfoMeta><template #icon><CalendarDays /></template>{{ item.fecha }}</InfoMeta>
+            <InfoMeta><template #icon><User /></template>Prof. {{ item.nombreProf }}</InfoMeta>
             <template #actions>
               <button type="button" class="card-link" @click="updMesa(item)">Recuperar inscripción</button>
             </template>
@@ -173,7 +173,7 @@
           :badge="item.leyenda"
           variant="info"
         >
-          <InfoMeta v-if="item.nombreProf" icon="👤">{{ item.nombreProf }}</InfoMeta>
+          <InfoMeta v-if="item.nombreProf"><template #icon><User /></template>{{ item.nombreProf }}</InfoMeta>
           <template #actions>
             <button type="button" class="card-link card-link--danger" @click="updReserva(item)">Borrar reserva</button>
           </template>
@@ -193,7 +193,7 @@
             variant="neutral"
             muted
           >
-            <InfoMeta v-if="item.nombreProf" icon="👤">{{ item.nombreProf }}</InfoMeta>
+            <InfoMeta v-if="item.nombreProf"><template #icon><User /></template>{{ item.nombreProf }}</InfoMeta>
             <template #actions>
               <button type="button" class="card-link" @click="updReserva(item)">Recuperar reserva</button>
             </template>
@@ -215,7 +215,7 @@
       <InfoCardGrid>
         <template v-for="(item, key) in arrSolicitudes" :key="item.codigo ?? key">
           <InfoCard v-if="!item.deleted" :title="item.nombre" :subtitle="item.carrera" variant="warning">
-            <InfoMeta icon="👤">Prof. {{ item.nombreProf }}</InfoMeta>
+            <InfoMeta><template #icon><User /></template>Prof. {{ item.nombreProf }}</InfoMeta>
             <template #actions>
               <button type="button" class="card-link card-link--danger" @click="updSolicitud(key)">Borrar solicitud</button>
             </template>
@@ -229,7 +229,7 @@
         <InfoCardGrid v-show="showDeleted[3]">
           <template v-for="(item, key) in arrSolicitudes" :key="item.codigo ?? key">
             <InfoCard v-if="item.deleted" :title="item.nombre" :subtitle="item.carrera" variant="neutral" muted>
-              <InfoMeta icon="👤">Prof. {{ item.nombreProf }}</InfoMeta>
+              <InfoMeta><template #icon><User /></template>Prof. {{ item.nombreProf }}</InfoMeta>
               <template #actions>
                 <button type="button" class="card-link" @click="updSolicitud(key)">Recuperar solicitud</button>
               </template>
@@ -274,6 +274,7 @@ import InfoChip from '@/components/card/InfoChip.vue';
 import InfoStat from '@/components/card/InfoStat.vue';
 import InfoDate from '@/components/card/InfoDate.vue';
 import SectionHeader from '@/components/card/SectionHeader.vue';
+import { User, CalendarDays, Library, ClipboardList, Target, FileText, GraduationCap } from '@lucide/vue';
 
 const arrNotif = ref([]);
 const arrInscrMaterias = ref([]);
@@ -333,11 +334,11 @@ const tramitesPendientes = computed(() =>
 // Trámites habilitados por configuración, con su ruta de acceso directo
 const tramitesHabilitados = computed(() => {
   const todos = [
-    { key: 'inscrMaterias', icon: '📚', label: 'Inscripción a Materias', to: '/estudiantes/inscrMaterias' },
-    { key: 'inscrExamenes', icon: '📝', label: 'Inscripción a Exámenes', to: '/estudiantes/inscrExamenes' },
-    { key: 'reserva', icon: '🎯', label: 'Reserva de vacante', to: '/estudiantes/reservas' },
-    { key: 'solicitudConstancia', icon: '📄', label: 'Constancia de estudiante regular', to: '/estudiantes/constanciaEstudianteRegular' },
-    { key: 'solicitudAnalitico', icon: '🎓', label: 'Solicitud de analítico', to: null },
+    { key: 'inscrMaterias', icon: Library, label: 'Inscripción a Materias', to: '/estudiantes/inscrMaterias' },
+    { key: 'inscrExamenes', icon: ClipboardList, label: 'Inscripción a Exámenes', to: '/estudiantes/inscrExamenes' },
+    { key: 'reserva', icon: Target, label: 'Reserva de vacante', to: '/estudiantes/reservas' },
+    { key: 'solicitudConstancia', icon: FileText, label: 'Constancia de estudiante regular', to: '/estudiantes/constanciaEstudianteRegular' },
+    { key: 'solicitudAnalitico', icon: GraduationCap, label: 'Solicitud de analítico', to: null },
   ];
   return todos.filter(t => arrConfig.value[t.key]);
 });
@@ -580,7 +581,7 @@ onMounted(async () => {
   transform: translateY(-1px);
   text-decoration: none;
 }
-.tramite-btn__icon { font-size: 1.1rem; }
+.tramite-btn__icon { width: 18px; height: 18px; flex-shrink: 0; }
 .tramite-btn--static { cursor: default; opacity: 0.75; }
 .tramite-btn--static:hover {
   color: var(--color-texto-principal);

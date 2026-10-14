@@ -13,8 +13,11 @@
         <span class="link-like" @click="openPanel(item.codalumno)">{{ item.apellido }}, {{ item.nombre }}</span>
       </template>
 
-      <InfoMeta icon="📅">{{ item.fecha }}</InfoMeta>
-      <InfoMeta icon="🎓" label="Destino:">{{ item.destino }} {{ item.dato }}</InfoMeta>
+      <InfoMeta><template #icon><CalendarDays /></template>{{ item.fecha }}</InfoMeta>
+      <InfoMeta label="Destino:">
+        <template #icon><GraduationCap /></template>
+        {{ item.destino }} {{ item.dato }}
+      </InfoMeta>
 
       <div v-if="item.inscripciones.length > 0" class="chips">
         <InfoChip v-for="(it, i) in item.inscripciones" :key="i">
@@ -40,6 +43,7 @@
   import InfoCardGrid from '@/components/card/InfoCardGrid.vue'
   import InfoMeta from '@/components/card/InfoMeta.vue'
   import InfoChip from '@/components/card/InfoChip.vue'
+  import { CalendarDays, GraduationCap } from '@lucide/vue'
   const { openUserPanel } = useImpersonation()
   const { downloadBlob } = useFileDownload()
   const arrSolicitudes = ref([])

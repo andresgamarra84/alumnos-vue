@@ -17,7 +17,7 @@
     <h3 class="h3cabecera">Trámites habilitados</h3>
     <div class="tramites-grid">
       <span v-for="tramite in tramitesHabilitados" :key="tramite.label" class="tramite-chip">
-        <span class="tramite-chip__icon" aria-hidden="true">{{ tramite.icon }}</span>
+        <component :is="tramite.icon" class="tramite-chip__icon" aria-hidden="true" />
         {{ tramite.label }}
       </span>
     </div>
@@ -40,7 +40,7 @@
           :title="item.nombreProfesor"
           variant="warning"
         >
-          <InfoMeta icon="📅">{{ formatRangoAusente(item.desde, item.hasta) }}</InfoMeta>
+          <InfoMeta><template #icon><CalendarDays /></template>{{ formatRangoAusente(item.desde, item.hasta) }}</InfoMeta>
         </InfoCard>
       </InfoCardGrid>
     </div>
@@ -56,6 +56,7 @@ import InfoCard from '@/components/card/InfoCard.vue';
 import InfoCardGrid from '@/components/card/InfoCardGrid.vue';
 import InfoMeta from '@/components/card/InfoMeta.vue';
 import SectionHeader from '@/components/card/SectionHeader.vue';
+import { CalendarDays, Library, ClipboardList, Target, FileText, GraduationCap } from '@lucide/vue';
 
 //import { showModal } from '@/services/uiBus'
 const { tienePermiso } = usePermisos()
@@ -78,11 +79,11 @@ const proximosAusentes = computed(() =>
 // Trámites habilitados por configuración (informativo, no son links del admin)
 const tramitesHabilitados = computed(() => {
   const todos = [
-    { key: 'inscrMaterias', icon: '📚', label: 'Inscripción a Materias' },
-    { key: 'inscrExamenes', icon: '📝', label: 'Inscripción a Mesas de examen' },
-    { key: 'reserva', icon: '🎯', label: 'Reserva de vacante' },
-    { key: 'solicitudConstancia', icon: '📄', label: 'Solicitud de Constancia de estudiante regular' },
-    { key: 'solicitudAnalitico', icon: '🎓', label: 'Solicitud de Analítico' },
+    { key: 'inscrMaterias', icon: Library, label: 'Inscripción a Materias' },
+    { key: 'inscrExamenes', icon: ClipboardList, label: 'Inscripción a Mesas de examen' },
+    { key: 'reserva', icon: Target, label: 'Reserva de vacante' },
+    { key: 'solicitudConstancia', icon: FileText, label: 'Solicitud de Constancia de estudiante regular' },
+    { key: 'solicitudAnalitico', icon: GraduationCap, label: 'Solicitud de Analítico' },
   ];
   return todos.filter(t => arrConfig.value[t.key]);
 });
@@ -165,5 +166,5 @@ onMounted(async () => {
   border-radius: 8px;
   font-weight: 600;
 }
-.tramite-chip__icon { font-size: 1.1rem; }
+.tramite-chip__icon { width: 18px; height: 18px; flex-shrink: 0; }
 </style>

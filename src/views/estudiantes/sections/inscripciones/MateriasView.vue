@@ -64,7 +64,7 @@
       :disabled="curso.cupoCompleto"
       @select="onSelectCurso(k)"
     >
-      <InfoMeta icon="👤">Prof. {{ curso.nombreProf }}</InfoMeta>
+      <InfoMeta><template #icon><User /></template>Prof. {{ curso.nombreProf }}</InfoMeta>
       <div class="franjas">
         <InfoChip v-for="(dia, key) in curso.dia" :key="key">
           {{ dia }} {{ curso.horario[key][0] }} a {{ curso.horario[key][1] }}
@@ -85,6 +85,7 @@ import InfoCard from '@/components/card/InfoCard.vue';
 import InfoCardGrid from '@/components/card/InfoCardGrid.vue';
 import InfoChip from '@/components/card/InfoChip.vue';
 import InfoMeta from '@/components/card/InfoMeta.vue';
+import { User } from '@lucide/vue';
 
 const carreras = ref([]);
 const materias = ref([]);

@@ -66,7 +66,8 @@
       :variant="item.estado == 0 ? 'primary' : 'neutral'"
       :muted="item.estado != 0"
     >
-      <InfoMeta icon="📅" label="Ingreso:">
+      <InfoMeta label="Ingreso:">
+        <template #icon><CalendarDays /></template>
         <a @click="update(3, k)" title="Modificar fecha">{{ item.fechaIngreso }}</a>
       </InfoMeta>
       <div class="opciones">
@@ -95,6 +96,7 @@ import InstrumentosSelect from '@/components/InstrumentosSelect.vue';
 import InfoCard from '@/components/card/InfoCard.vue';
 import InfoCardGrid from '@/components/card/InfoCardGrid.vue';
 import InfoMeta from '@/components/card/InfoMeta.vue';
+import { CalendarDays } from '@lucide/vue';
 import { showModal, showToast } from '@/services/uiBus'
 const carreras = ref([]);
 const arrInstrumentos = ref([]);
