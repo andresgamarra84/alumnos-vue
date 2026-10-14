@@ -334,7 +334,9 @@ import { usePermisos } from '@/composables/usePermisos'
 const { tienePermiso } = usePermisos()
 const puedeEditar = computed(() => tienePermiso('cursos_grilla_editar', 'cursos_all'))
 /* estados */
-const diaSeleccionado = ref(2)   // Lunes
+// Dia de hoy (2 = Lunes ... 7 = Sábado, igual que DAYS del backend); domingo no tiene grilla, queda Lunes
+const diaHoy = new Date().getDay() + 1
+const diaSeleccionado = ref(diaHoy >= 2 && diaHoy <= 7 ? diaHoy : 2)
 const sedeSeleccionada = ref('S') // Santa Fe
 const profesorSeleccionado = ref(null)
 onMounted(async () => {
