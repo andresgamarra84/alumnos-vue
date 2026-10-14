@@ -130,7 +130,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, watch, onMounted } from 'vue'
 import { api } from '@/api/api'
 import { showToast, showModal } from '@/services/uiBus'
 
@@ -145,6 +145,11 @@ const showForm = ref(false)
 const codProfesor = ref('')
 const fechaDesde = ref('')
 const fechaHasta = ref('')
+
+// Al elegir la fecha Desde, Hasta se iguala para que por defecto sea un solo día
+watch(fechaDesde, (nueva) => {
+    fechaHasta.value = nueva
+})
 
 const showEditForm = ref(false)
 const editCodigo = ref(null)
