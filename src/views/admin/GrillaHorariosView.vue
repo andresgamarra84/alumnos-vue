@@ -258,10 +258,12 @@
       </select>
     </div>
   </div>
-  
+  <div class="small mt-2 ms-2 d-flex align-items-center gap-2">
+    <span class="leyenda-ausente"></span> Docente ausente en la semana en curso
+  </div>
 
-  <div 
-    ref='gridWrapper' 
+  <div
+    ref='gridWrapper'
     class="horarios-layout m-2"
    
     :style="{
@@ -810,6 +812,13 @@ const clearHover = () => {
   display: grid;
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr;
+}
+.leyenda-ausente {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 3px;
+  background-color: #e57373;
 }
 .corner {
  /* background: #111;*/

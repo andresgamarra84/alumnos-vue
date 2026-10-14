@@ -2,7 +2,8 @@
 <div
   ref="el"
   class="curso-item shadow-sm transition-all"
-  :class="{ 'curso-item--readonly': readOnly }"
+  :class="{ 'curso-item--readonly': readOnly, 'curso-item--ausente': curso.ausente }"
+  :title="curso.ausente ? 'Docente ausente esta semana' : null"
   :style="style"
   :draggable="!readOnly"
   @dragstart="onDragStart"
@@ -177,8 +178,12 @@ const getContrastText = (hex) => {
   return luminance > 0.6 ? '#1a1a1a' : '#f5f5f5'
 }
 
+// Color que pisa el de apariencia cuando el docente esta ausente en la semana
+const COLOR_AUSENTE = '#e57373'
+
 const style = computed(() => {
   const { l, t, w } = props.curso.posicion
+  const bg = props.curso.ausente ? COLOR_AUSENTE : props.curso.bgColor
   const { unitWidth, unitHeight, padding } = props.config
 
   return {
@@ -189,8 +194,8 @@ const style = computed(() => {
     minWidth: "43px",
     maxWidth: "100%",
     height: unitHeight - padding + 'px',
-    backgroundColor: props.curso.bgColor,
-    color: getContrastText(props.curso.bgColor),
+    backgroundColor: bg,
+    color: getContrastText(bg),
   }
 })
 
