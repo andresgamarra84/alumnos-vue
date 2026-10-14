@@ -32,14 +32,46 @@
       </ul>
     </div>
   </div>
-  <MateriaList
-    v-if="selectedCarrera !== null"
-    :materiasCarrera="arrExamenes"
-    :materias="arrMaterias"
-    @delete ="delExamen"
-    @nuevo-examen="showFormNuevoExamen"
-    @update-espacio="updEspacioExamen"
-  />
+  <InfoCardGrid v-if="selectedCarrera !== null" min-width="340px">
+    <InfoCard
+      v-for="(materia, i) in arrExamenes"
+      :key="i"
+      :title="materia.nombres?.nombre"
+      :badge="materia.esAprobada ? 'Aprobada' : 'Pendiente'"
+      :badge-variant="materia.esAprobada ? 'success' : 'neutral'"
+      :variant="materia.esAprobada ? 'success' : 'neutral'"
+    >
+      <MateriasSelect
+        v-if="materia.esEspacio"
+        :showLabel="true"
+        :materias="arrMaterias"
+        :modelValue="materia.infoExamen.codmateriaespacio"
+        @change="codMateria => updEspacioExamen(codMateria, i)"
+      />
+
+      <template v-if="materia.esAprobada">
+        <InfoMeta icon="📖" label="Libro:">{{ materia.infoExamen.libroletra }}{{ materia.infoExamen.libro }} · Acta {{ materia.infoExamen.acta }}</InfoMeta>
+        <InfoMeta icon="📝" label="Nota:">{{ materia.infoExamen.notanumerica || 'Aprobado' }}</InfoMeta>
+        <InfoMeta icon="📅" label="Fecha:">{{ materia.infoExamen.fechaexamen }}</InfoMeta>
+        <InfoMeta icon="🏫" label="Institución:">{{ materia.infoExamen.nombreinstitucion }}</InfoMeta>
+      </template>
+
+      <template #actions>
+        <button
+          v-if="materia.esAprobada"
+          type="button"
+          class="card-link card-link--danger"
+          @click="delExamen(i)"
+        >Borrar examen</button>
+        <button
+          v-else
+          type="button"
+          class="card-link"
+          @click="showFormNuevoExamen(i)"
+        >Agregar examen</button>
+      </template>
+    </InfoCard>
+  </InfoCardGrid>
   <Teleport to="body">
   <div
     v-if="showModalExamen"
@@ -59,8 +91,11 @@
 import { ref, onMounted } from 'vue';
 import { api } from '@/api/api'
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
-import MateriaList from '@/components/MateriaList.vue';
+import MateriasSelect from '@/components/MateriasSelect.vue';
 import ExamenForm from '../../components/ExamenForm.vue';
+import InfoCard from '@/components/card/InfoCard.vue';
+import InfoCardGrid from '@/components/card/InfoCardGrid.vue';
+import InfoMeta from '@/components/card/InfoMeta.vue';
 import { useFileDownload } from '@/composables/useFileDownload';
 const { downloadBlob } = useFileDownload()
 
