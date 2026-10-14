@@ -5,24 +5,27 @@
             Nueva entrada
         </button>
     </div>
-    <div v-if="arrAusentes.length === 0" class="text-center"><i>- No hay ausencias cargadas -</i></div>
+    <div v-if="!hayAusentes" class="text-center"><i>- No hay ausencias cargadas -</i></div>
 
     <template v-else>
         <div class="grupo-header grupo-header--seccion" @click="toggleSeccion('proximos')">
             <span class="chevron" :class="{ 'is-open': expandedSecciones.proximos }">❯</span>
             <span class="grupo-titulo">Próximos</span>
-            <span class="grupo-contador">{{ proximos.length }}</span>
+            <span class="grupo-contador">{{ contarItems(proximos) }}</span>
         </div>
         <div v-show="expandedSecciones.proximos" class="grupo-contenido grupo-contenido--items-seccion mb-4">
             <div v-if="proximos.length === 0" class="text-muted"><i>- No hay ausencias próximas -</i></div>
-            <div v-for="item in proximos" :key="item.codigo" class="row lista recuadro align-items-center" style="padding:15px 10px; margin-bottom:15px;">
-                <div class="col-8">
-                    <div class="titulo">{{ item.nombreProfesor }}</div>
-                    <div class="text-muted small">{{ formatRango(item.desde, item.hasta) }}</div>
-                </div>
-                <div class="col-4 text-end">
-                    <button class="btn btn-sm btn-secondary me-2" @click="editarEntrada(item)">Editar</button>
-                    <button class="btn btn-sm btn-danger" @click="borrarEntrada(item)">Borrar</button>
+            <div v-for="grupoFecha in proximos" :key="grupoFecha.fecha">
+                <div class="fecha-titulo">{{ formatFecha(grupoFecha.fecha) }}</div>
+                <div v-for="item in grupoFecha.items" :key="item.codigo" class="row lista recuadro align-items-center" style="padding:15px 10px; margin-bottom:15px;">
+                    <div class="col-8">
+                        <div class="titulo">{{ item.nombreProfesor }}</div>
+                        <div class="text-muted small">{{ formatRango(item.desde, item.hasta) }}</div>
+                    </div>
+                    <div class="col-4 text-end">
+                        <button class="btn btn-sm btn-secondary me-2" @click="editarEntrada(item)">Editar</button>
+                        <button class="btn btn-sm btn-danger" @click="borrarEntrada(item)">Borrar</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -43,16 +46,19 @@
                         <div class="grupo-header grupo-header--mes" @click="toggleMes(grupoAnio.anio, grupoMes.mes)">
                             <span class="chevron" :class="{ 'is-open': expandedMeses[claveMes(grupoAnio.anio, grupoMes.mes)] }">❯</span>
                             <span class="grupo-titulo">{{ grupoMes.label }}</span>
-                            <span class="grupo-contador">{{ grupoMes.items.length }}</span>
+                            <span class="grupo-contador">{{ contarItems(grupoMes.fechas) }}</span>
                         </div>
                         <div v-show="expandedMeses[claveMes(grupoAnio.anio, grupoMes.mes)]" class="grupo-contenido grupo-contenido--items-mes">
-                            <div v-for="item in grupoMes.items" :key="item.codigo" class="row lista recuadro align-items-center" style="padding:15px 10px; margin-bottom:15px;">
-                                <div class="col-8">
-                                    <div class="titulo">{{ item.nombreProfesor }}</div>
-                                    <div class="text-muted small">{{ formatRango(item.desde, item.hasta) }}</div>
-                                </div>
-                                <div class="col-4 text-end">
-                                    <button class="btn btn-sm btn-danger" @click="borrarEntrada(item)">Borrar</button>
+                            <div v-for="grupoFecha in grupoMes.fechas" :key="grupoFecha.fecha">
+                                <div class="fecha-titulo">{{ formatFecha(grupoFecha.fecha) }}</div>
+                                <div v-for="item in grupoFecha.items" :key="item.codigo" class="row lista recuadro align-items-center" style="padding:15px 10px; margin-bottom:15px;">
+                                    <div class="col-8">
+                                        <div class="titulo">{{ item.nombreProfesor }}</div>
+                                        <div class="text-muted small">{{ formatRango(item.desde, item.hasta) }}</div>
+                                    </div>
+                                    <div class="col-4 text-end">
+                                        <button class="btn btn-sm btn-danger" @click="borrarEntrada(item)">Borrar</button>
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -133,7 +139,7 @@ const arrMonths = [
     'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'
 ]
 
-const arrAusentes = ref([])
+const arrAusentes = ref({ proximos: [], anteriores: [] })
 const arrDocentes = ref([])
 const showForm = ref(false)
 const codProfesor = ref('')
@@ -166,38 +172,22 @@ const toggleMes = (anio, mes) => {
     expandedMeses[clave] = !expandedMeses[clave]
 }
 
-const hoyStr = new Date().toISOString().slice(0, 10)
+const proximos = computed(() => arrAusentes.value.proximos ?? [])
 
-const proximos = computed(() =>
-    arrAusentes.value
-        .filter(item => (item.hasta || item.desde) >= hoyStr)
-        .sort((a, b) => a.desde.localeCompare(b.desde))
+// Los meses llegan del BE como "01".."12"; se les agrega el nombre para mostrarlos
+const anteriores = computed(() =>
+    (arrAusentes.value.anteriores ?? []).map(grupoAnio => ({
+        ...grupoAnio,
+        meses: grupoAnio.meses.map(grupoMes => ({
+            ...grupoMes,
+            label: arrMonths[parseInt(grupoMes.mes, 10) - 1],
+        })),
+    }))
 )
 
-const anteriores = computed(() => {
-    const porAnio = {}
-    arrAusentes.value
-        .filter(item => (item.hasta || item.desde) < hoyStr)
-        .forEach(item => {
-            const [anio, mes] = item.desde.split('-')
-            porAnio[anio] ??= {}
-            porAnio[anio][mes] ??= []
-            porAnio[anio][mes].push(item)
-        })
+const contarItems = (fechas) => fechas.reduce((total, f) => total + f.items.length, 0)
 
-    return Object.keys(porAnio)
-        .sort((a, b) => b - a)
-        .map(anio => ({
-            anio,
-            meses: Object.keys(porAnio[anio])
-                .sort((a, b) => b - a)
-                .map(mes => ({
-                    mes,
-                    label: arrMonths[parseInt(mes, 10) - 1],
-                    items: porAnio[anio][mes].sort((a, b) => b.desde.localeCompare(a.desde)),
-                })),
-        }))
-})
+const hayAusentes = computed(() => proximos.value.length > 0 || anteriores.value.length > 0)
 
 onMounted(() => {
     getDocentes()
@@ -205,13 +195,20 @@ onMounted(() => {
 })
 
 const getAusentes = async () => {
-    const { payload } = await api.get({ entity: 'calendario', action: 'getAusentes' })
-    arrAusentes.value = payload ?? []
+    const { payload } = await api.get({ entity: 'calendario', action: 'getAusentesAgrupados' })
+    arrAusentes.value = payload ?? { proximos: [], anteriores: [] }
 }
 
 const getDocentes = async () => {
     const { payload } = await api.get({ entity: 'profesores', action: 'getProfesores' })
     arrDocentes.value = payload ?? []
+}
+
+const arrDiasSemana = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']
+
+const formatFecha = (f) => {
+    const [y, m, d] = f.split('-')
+    return `${arrDiasSemana[new Date(y, m - 1, d).getDay()]} ${d}/${m}/${y}`
 }
 
 const formatRango = (desde, hasta) => {
@@ -406,6 +403,13 @@ const guardarEdicion = async () => {
 
 .grupo-contenido {
     margin-bottom: 6px;
+}
+
+.fecha-titulo {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: var(--color-texto-secundario);
+    margin: 0 0 8px 4px;
 }
 
 .grupo-contenido--items-seccion {
