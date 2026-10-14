@@ -277,8 +277,7 @@ import { showModal } from '@/services/uiBus';
 const carreras = ref([])
 const materias = ref([])
 const materiasFiltered = computed(() => {
-    console.log(materias.value[carreras.value[selectedCarreraIndex.value].tipo])
-    return materias.value[carreras.value[selectedCarreraIndex.value]?.tipo] || []
+    return materias.value[carreras.value[selectedCarreraIndex.value]?.tipo] || { ciclo: '', materias: [] }
 })
 const newMateria = ref({
     cupo: 0,
