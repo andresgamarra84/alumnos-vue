@@ -57,6 +57,29 @@
           </div>
         </section>
 
+        <!-- Historial de docentes -->
+        <section class="form-section">
+          <div class="d-flex justify-content-between align-items-center">
+            <h6 class="section-title mb-0">Historial de docentes</h6>
+            <a v-if="historialProfesores.length" class="small" @click="showHistorial = !showHistorial">
+              {{ showHistorial ? 'Ocultar' : 'Ver historial' }}
+            </a>
+          </div>
+          <p class="text-muted small mb-0 mt-2" v-if="!historialProfesores.length">Sin cambios de docente registrados.</p>
+          <ul class="list-group mt-2" v-show="showHistorial && historialProfesores.length">
+            <li
+              class="list-group-item d-flex justify-content-between align-items-center"
+              v-for="h in historialProfesores"
+              :key="h.codigo"
+            >
+              <span>{{ h.nombreProf }}</span>
+              <span class="text-muted small">
+                {{ formatFechaHistorial(h.fechadesde) }} – {{ h.fechahasta ? formatFechaHistorial(h.fechahasta) : 'actual' }}
+              </span>
+            </li>
+          </ul>
+        </section>
+
         <!-- Horarios -->
         <section class="form-section" v-if="!cursoForm.tipos.instrumento && !cursoForm.tipos.armonico">
           <h6 class="section-title">Horarios</h6>
@@ -419,6 +442,26 @@ const cursoForm = ref({})
 const arrComision = ref([])
 const arrDias = ref([])
 const nuevoDia = ref(null)
+const historialProfesores = ref([])
+const showHistorial = ref(false)
+
+const loadHistorialProfesores = async (codPlHorarios) => {
+  historialProfesores.value = []
+  const r = await api.get({
+    entity: "planillahorarios",
+    action: "getHistorialProfesores",
+    payload: { codPlHorarios }
+  })
+  historialProfesores.value = r.payload ?? []
+}
+
+// Convierte "YYYY-MM-DD HH:MM:SS" (formato MySQL) a "DD/MM/YYYY"
+const formatFechaHistorial = (fecha) => {
+  if (!fecha) return ''
+  const [y, m, d] = fecha.slice(0, 10).split('-')
+  return `${d}/${m}/${y}`
+}
+
 const openCursoModal = async (codPlHorarios) => {
   if (dragContext.value) return
   const r = await api.get({
@@ -429,6 +472,8 @@ const openCursoModal = async (codPlHorarios) => {
   cursoForm.value = r.payload
   cursoForm.value.tipos = hydrateTiposFromMask(cursoForm.value.materias.tipo)
   showModalCurso.value = true
+  showHistorial.value = false
+  loadHistorialProfesores(codPlHorarios)
 }
 
 const addCHToPlHorarios = async () => {
