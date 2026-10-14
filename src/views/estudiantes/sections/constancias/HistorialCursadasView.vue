@@ -7,20 +7,31 @@
 </select>
 <div v-for='item in arrAllCursadas' style='padding-bottom:30px;'>
     <h3>{{item.nombreCarrera}} <template v-if='item.instrumento'>({{item.instrumento}})</template></h3>
-    <div v-for='(it, key) in item.cursada' class='lista delimitador text-center row centrado'>
-        <div class='col-12 col-sm-3 flex-container'>{{it.nombreCurso}} <template v-if="it.inscripcionBorrada"> - (Inscripción borrada)</template></div>
-        <div class='col-6 col-sm-3 flex-container'>
-            <div>Nota 1er cuatr.: <template v-if='it.notaNumerica1'>{{it.notaNumerica1}}</template><template v-else>{{it.notaConceptual1}}</template></div>
-            <div>Nota 2do cuatr.: <template v-if='it.notaNumerica2'>{{it.notaNumerica2}}</template><template v-else>{{it.notaConceptual2}}</template></div>
-        </div>
-        <div class='col-6 col-sm-3'>{{it.fechaInscripcion}}</div>
-        <div class='col-12 col-sm-3'>{{it.nombreProfesor}}</div>
-    </div>	
+    <InfoCardGrid>
+        <InfoCard
+            v-for='(it, key) in item.cursada'
+            :key='key'
+            :title='it.nombreCurso'
+            :badge="it.inscripcionBorrada ? 'Inscripción borrada' : ''"
+            badge-variant='neutral'
+            :variant="it.inscripcionBorrada ? 'neutral' : 'primary'"
+            :muted='it.inscripcionBorrada'
+        >
+            <InfoMeta label='1er cuatr.:'>{{ it.notaNumerica1 || it.notaConceptual1 }}</InfoMeta>
+            <InfoMeta label='2do cuatr.:'>{{ it.notaNumerica2 || it.notaConceptual2 }}</InfoMeta>
+            <InfoMeta><template #icon><CalendarDays /></template>{{ it.fechaInscripcion }}</InfoMeta>
+            <InfoMeta><template #icon><User /></template>Prof. {{ it.nombreProfesor }}</InfoMeta>
+        </InfoCard>
+    </InfoCardGrid>
 </div>
 </template>
 <script setup>
 import { ref, onMounted } from 'vue'
 import { api } from '@/api/api';
+import InfoCard from '@/components/card/InfoCard.vue';
+import InfoCardGrid from '@/components/card/InfoCardGrid.vue';
+import InfoMeta from '@/components/card/InfoMeta.vue';
+import { CalendarDays, User } from '@lucide/vue';
 const arrAllCursadas = ref([])
 const ciclolectivo = ref("")
 const arrAnios = ref([])

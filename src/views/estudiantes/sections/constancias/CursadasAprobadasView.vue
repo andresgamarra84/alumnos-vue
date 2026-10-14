@@ -10,32 +10,37 @@
             />
         </div>
     </div>
-    <div v-for='(item, key) in arrCursadas' class='lista delimitador text-center'>
-        <div class='row centrado'>
-            <div class='col-12 col-sm-6 col-md-3 flex-container'>
-                <div>{{item.nombre}}</div>
-            </div>
-            <template v-if="!item.deleted">
-                <div class='col-6 col-sm-6 col-md-3 flex-container'>
-                    <div>1º Cuatr: {{item.calificacion1}}</div>
-                    <div>2º Cuatr: {{item.calificacion2}}</div>
-                    <div>Calificación final: {{ item.calificacionFinal }}</div>
-                </div>
-                <div class='col-6 col-sm-6 col-md-3'>{{item.fechaInscripcion}}</div>
-                <div class='col-12 col-sm-6 col-md-3'>
-                    <a @click='delCursada(key)'>Borrar cursada</a>
-                </div>
+    <InfoCardGrid>
+        <InfoCard
+            v-for='(item, key) in arrCursadas'
+            :key='item.codcursosalumnos ?? key'
+            :title='item.nombre'
+            :badge="item.deleted ? 'Adeuda cursada' : ''"
+            badge-variant='neutral'
+            :variant="item.deleted ? 'neutral' : 'primary'"
+            :muted='item.deleted'
+        >
+            <template v-if='!item.deleted'>
+                <InfoMeta label='1º Cuatr:'>{{ item.calificacion1 }}</InfoMeta>
+                <InfoMeta label='2º Cuatr:'>{{ item.calificacion2 }}</InfoMeta>
+                <InfoMeta label='Calificación final:'>{{ item.calificacionFinal }}</InfoMeta>
+                <InfoMeta><template #icon><CalendarDays /></template>{{ item.fechaInscripcion }}</InfoMeta>
             </template>
-            <template v-else>
-                <div class='col-12 col-sm-6 col-md-9'>Adeuda cursada</div>
+
+            <template #actions v-if='!item.deleted'>
+                <button type='button' class='card-link card-link--danger' @click='delCursada(key)'>Borrar cursada</button>
             </template>
-        </div>
-    </div>
+        </InfoCard>
+    </InfoCardGrid>
 </template>
 <script setup>
     import { ref, onMounted } from 'vue';
     import { api } from '@/api/api';
     import CarrerasSelect from '@/components/CarrerasSelect.vue';
+    import InfoCard from '@/components/card/InfoCard.vue';
+    import InfoCardGrid from '@/components/card/InfoCardGrid.vue';
+    import InfoMeta from '@/components/card/InfoMeta.vue';
+    import { CalendarDays } from '@lucide/vue';
     const arrCarreras = ref([])
     const arrCursadas = ref([])
     onMounted(async ()=>{
