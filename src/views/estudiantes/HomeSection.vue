@@ -1,4 +1,17 @@
 <template>
+  <!-- Ciclo lectivo (solo admin) -->
+  <div v-if="master && ciclos.length" class="ciclo-select margen-bottom">
+    <label for="cicloLectivo">Ciclo lectivo</label>
+    <select
+      id="cicloLectivo"
+      class="form-select"
+      :value="codCicloLectivo"
+      @change="onCambioCiclo($event.target.value)"
+    >
+      <option v-for="c in ciclos" :key="c.codigo" :value="c.codigo">{{ c.anio }}</option>
+    </select>
+  </div>
+
   <!-- Resumen -->
   <div v-if="hasAnyData" class="summary-row">
     <InfoStat label="Materias" :empty="materiasVigentes.length === 0">{{ materiasVigentes.length }}</InfoStat>
@@ -275,6 +288,11 @@ import InfoStat from '@/components/card/InfoStat.vue';
 import InfoDate from '@/components/card/InfoDate.vue';
 import SectionHeader from '@/components/card/SectionHeader.vue';
 import { User, CalendarDays, Library, ClipboardList, Target, FileText, GraduationCap } from '@lucide/vue';
+import { usePermisos } from '@/composables/usePermisos';
+import { useCicloLectivo } from '@/composables/useCicloLectivo';
+
+const { master } = usePermisos();
+const { ciclos, codCicloLectivo, seleccionar, cargarCiclos, payloadCiclo } = useCicloLectivo();
 
 const arrNotif = ref([]);
 const arrInscrMaterias = ref([]);
@@ -292,7 +310,7 @@ const collapsed = ref({ materias: false, mesas: false, reservas: false, solicitu
 const getInscripcionesMaterias = async () => {
   arrInscrMaterias.value = [];
   try {
-    const r = await api.get({ entity: 'materias', action: 'getInscripcionesMaterias' });
+    const r = await api.get({ entity: 'materias', action: 'getInscripcionesMaterias', payload: payloadCiclo() });
     if (r.ok) {
       arrInscrMaterias.value = r.payload;
     }
@@ -437,7 +455,7 @@ const updCambio = async (k) => {
 };
 
 const getInscripcionesMesas = async () => {
-  const r = await api.get({ entity: 'mesas', action: 'getInscripcionesMesas' });
+  const r = await api.get({ entity: 'mesas', action: 'getInscripcionesMesas', payload: payloadCiclo() });
   arrMesas.value = r.payload;
 };
 
@@ -455,7 +473,7 @@ const updMesa = async (item) => {
 
 const listReservas = async () => {
   arrReservas.value = [];
-  const r = await api.get({ entity: 'reservas', action: 'listReservas' });
+  const r = await api.get({ entity: 'reservas', action: 'listReservas', payload: payloadCiclo() });
   if (r.ok) {
     r.payload.forEach(value => arrReservas.value.push(value));
   }
@@ -510,11 +528,21 @@ const updSolicitud = async (k, i = false) => {
   }
 }
 
+const onCambioCiclo = async (cod) => {
+  seleccionar(cod);
+  await Promise.all([
+    getInscripcionesMaterias(),
+    getInscripcionesMesas(),
+    listReservas(),
+  ]);
+};
+
 onMounted(async () => {
   const configRes = await api.get({ entity: 'config', action: 'getConfig' }); // Action 0 default
   arrConfig.value = configRes.payload || {};
   /*const authRes = await api.get({ entity: 'config', action: 'authCheck' });
   esAutoridad.value = authRes.payload || false;*/
+  await cargarCiclos(); // define el ciclo antes de pedir las inscripciones
   await Promise.all([
     getInscripcionesMaterias(),
     //listCambios(),
@@ -528,6 +556,8 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.ciclo-select { max-width: 240px; }
+.ciclo-select label { font-weight: 600; margin-bottom: 4px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .stats { display: flex; gap: 10px; }
 .h3cabecera {
