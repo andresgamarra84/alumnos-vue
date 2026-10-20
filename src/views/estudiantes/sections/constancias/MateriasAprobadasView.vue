@@ -32,9 +32,12 @@
       </ul>
     </div>
   </div>
-  <InfoCardGrid v-if="selectedCarrera !== null" min-width="340px">
+  <template v-if="selectedCarrera !== null">
+  <section v-for="grupo in examenesPorAnio" :key="grupo.anio" class="grupo-anio">
+  <h4 class="grupo-anio__titulo">{{ tituloAnio(grupo.anio) }}</h4>
+  <InfoCardGrid min-width="340px">
     <InfoCard
-      v-for="(materia, i) in arrExamenes"
+      v-for="{ materia, i } in grupo.items"
       :key="i"
       :title="materia.nombres?.nombre"
       :badge="materia.esAprobada ? 'Aprobada' : 'Pendiente'"
@@ -84,6 +87,8 @@
       </template>
     </InfoCard>
   </InfoCardGrid>
+  </section>
+  </template>
   <Teleport to="body">
   <div
     v-if="showModalExamen"
@@ -100,7 +105,7 @@
 </Teleport>
 </template>
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { api } from '@/api/api'
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import MateriasSelect from '@/components/MateriasSelect.vue';
@@ -117,6 +122,17 @@ const arrCarreras = ref([])
 const codAlC = ref(null)
 const arrExamenes = ref([])
 const arrIntermedias = ref([])
+// Agrupa por año de carrera conservando el índice original para las acciones sobre arrExamenes
+const examenesPorAnio = computed(() => {
+    const grupos = new Map()
+    arrExamenes.value.forEach((materia, i) => {
+        const anio = materia.anioCarrera
+        if (!grupos.has(anio)) grupos.set(anio, { anio, items: [] })
+        grupos.get(anio).items.push({ materia, i })
+    })
+    return [...grupos.values()].sort((a, b) => a.anio - b.anio)
+})
+const tituloAnio = (anio) => anio > 0 ? `${anio}° año` : 'Otras materias'
 const showMenuAnalitico = ref(false)
 const vClickOutside = {
     mounted(el, binding) {
@@ -268,6 +284,14 @@ onMounted(() => {
 
 </script>
 <style>
+.grupo-anio {
+  margin-top: 1.5rem;
+}
+.grupo-anio__titulo {
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.4rem;
+  border-bottom: 2px solid #dee2e6;
+}
 .dropdown-analitico {
   position: relative;
   display: inline-block;
