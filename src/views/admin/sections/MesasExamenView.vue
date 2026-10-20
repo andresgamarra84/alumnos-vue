@@ -265,6 +265,9 @@
 
   <!-- Descargar todas -->
   <div v-if="arrMesas.length > 0" class="text-end mt-3">
+    <button class="btn btn-outline-primary me-2" @click="downloadCitaciones">
+      Descargar citaciones
+    </button>
     <button class="btn btn-outline-primary" @click="downloadActaAll">
       Descargar actas
     </button>
@@ -410,6 +413,18 @@ const downloadActaAll = async () => {
     }
   })
   downloadBlob(blob, "ActasMesas.pdf", "application/pdf")
+}
+
+const downloadCitaciones = async () => {
+  const blob = await api.getPDF({
+    entity: "mesasexamen",
+    action: "descargarCitaciones",
+    payload: {
+      desde: filtro.value.desde,
+      hasta: filtro.value.hasta,
+    }
+  })
+  downloadBlob(blob, "Citaciones.pdf", "application/pdf")
 }
 
 const showListProf = (key, tipo) =>{
