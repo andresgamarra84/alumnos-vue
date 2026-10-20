@@ -86,6 +86,9 @@ import InfoCardGrid from '@/components/card/InfoCardGrid.vue';
 import InfoChip from '@/components/card/InfoChip.vue';
 import InfoMeta from '@/components/card/InfoMeta.vue';
 import { User } from '@lucide/vue';
+import { useCicloLectivo } from '@/composables/useCicloLectivo';
+
+const { cargarCiclos, payloadCiclo } = useCicloLectivo();
 
 const carreras = ref([]);
 const materias = ref([]);
@@ -130,6 +133,7 @@ const cursosDelDiaPorDocente = computed(() => {
 /* ---------- lifecycle ---------- */
 
 onMounted(() => {
+  cargarCiclos(); // el admin ($master) inscribe sobre el ciclo elegido en el inicio
   getCarrerasAlumno();
 });
 
@@ -159,7 +163,7 @@ const onSelectCarrera = async () => {
     const r = await api.get({
       entity: 'materias',
       action: 'getMateriasCarrera',
-      payload: { codigo: codAlC },
+      payload: { codigo: codAlC, ...payloadCiclo() },
     });
     materias.value = r.payload ?? [];
   } catch (e) {
@@ -182,6 +186,7 @@ const onSelectMateria = async () => {
         codAlC,
         codMC: selectedMateria.value,
         test: true,
+        ...payloadCiclo(),
       },
     });
     ocupaFranja.value = r.payload.ocupaFranja ?? false;
@@ -217,6 +222,7 @@ const onSelectCurso = async (k) => {
       //codVLibres: curso.codVLibres ?? null,
       ocupaFranja: ocupaFranja.value,
       esCondicional: esCondicional.value,
+      ...payloadCiclo(),
     },
   });
 
@@ -243,6 +249,7 @@ const onSelectCursoFranja = async (curso) => {
       ocupaFranja: ocupaFranja.value,
       esCondicional: esCondicional.value,
       inicio: curso.inicio,
+      ...payloadCiclo(),
     },
   });
 
