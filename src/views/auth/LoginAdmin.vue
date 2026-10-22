@@ -71,7 +71,7 @@
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { api } from '@/api/api'
-import { showToast } from '@/services/uiBus'
+import { showToast, showModal } from '@/services/uiBus'
 import { SESSION_NAME } from '@/config/app.config'
 
 const router = useRouter()
@@ -80,6 +80,7 @@ const step = ref('login')
 const password = ref('')
 const users = ref([])
 const userId = ref('')
+const id = ref('')
 const newPwd = ref('')
 const newPwdRepeat = ref('')
 onMounted(async () => {
@@ -91,15 +92,26 @@ onMounted(async () => {
     users.value = r.payload
 })
 const login = async () => {
-  const r = await api.post({
-    entity: 'login',
-    action: 'login',
-    type: 0,
-    payload: {
-      user: userId.value,
-      pwd: password.value
-    }
-  })
+  let r
+  try {
+    r = await api.post({
+      entity: 'login',
+      action: 'login',
+      type: 0,
+      payload: {
+        user: userId.value,
+        pwd: password.value
+      }
+    }, {}, { silent: true })
+  } catch (e) {
+    showModal(e.message || 'Usuario o contraseña incorrectos')
+    return
+  }
+
+  if (!r.ok || !r.payload) {
+    showModal(r.message || 'Usuario o contraseña incorrectos')
+    return
+  }
 
   if (r.payload.state === 'updPwd') {
     step.value = 'changePwd'

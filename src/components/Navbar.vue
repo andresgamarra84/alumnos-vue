@@ -32,6 +32,9 @@
               </a>
             </template>
           </li>
+          <li class="nav-item">
+            <a class="nav-link" href="#" @click.prevent="salir">Salir</a>
+          </li>
         </ul>
       </div>
 
@@ -55,6 +58,18 @@
 <script setup>
 import { onMounted, onBeforeUnmount, ref } from "vue"
 import NavbarItems from "@/components/NavbarItems.vue"
+import { useRouter, useRoute } from "vue-router"
+import { SESSION_NAME } from "@/config/app.config"
+
+const router = useRouter()
+const route = useRoute()
+
+// Cierra la sesión y vuelve al login del rol actual
+const salir = () => {
+  sessionStorage.removeItem(SESSION_NAME)
+  const rol = ["admin", "docentes"].find(r => route.path.startsWith(`/${r}`)) ?? "estudiantes"
+  router.push(`/${rol}/login`)
+}
 
 const emit = defineEmits(["navegar"])
 const navegar = (item) => {

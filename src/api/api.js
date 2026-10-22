@@ -40,12 +40,12 @@ const request = async (options = {}) => {
                 return data
             }
         }
-        if (response.status == 401) {
+        if (response.status == 401 && token) {
             window.dispatchEvent(new CustomEvent('session-expired'))
             throw new Error('SESSION_EXPIRED')
         }
         if (!data.ok) {
-            showToast(data.message, 'error')
+            if (!options.silent) showToast(data.message, 'error')
         }
         else if (!response.ok){
             throw new Error(data.message || 'Error en la solicitud');
@@ -64,7 +64,8 @@ const request = async (options = {}) => {
 };
 
 export const api = {
-    post: (body, headers = {}) => request({ type:'json', method: 'POST', body, headers }),
+    // opts.silent: no muestra el toast de error automático (el llamador maneja el error)
+    post: (body, headers = {}, opts = {}) => request({ type:'json', method: 'POST', body, headers, ...opts }),
     get: (params, headers = {}) => request({ type:'json', method: 'GET', body: params, headers }),
     getPDF: (params, headers = {}) => request({ type: 'pdf', method: 'GET', body: params, headers }),
 };

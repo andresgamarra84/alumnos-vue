@@ -97,6 +97,29 @@
     </div>
   </div>
 
+  <!-- Filtro por docente y tipo de autoridad -->
+  <div v-if="arrMesas.length > 0" class="row g-3 mb-3 align-items-end">
+    <div class="col-12 col-md-6">
+      <label class="form-label">Docente:</label>
+      <select class="form-select" v-model="filtroDocente">
+        <option value="">-- Todos --</option>
+        <option v-for="d in arrDocentesMesas" :key="d" :value="d">{{ d }}</option>
+      </select>
+    </div>
+
+    <div class="col-12 col-md-6">
+      <label v-for="t in tiposAutoridad" :key="t" class="me-3">
+        <input
+          type="checkbox"
+          :value="t"
+          v-model="filtroAutoridades"
+          :disabled="!filtroDocente"
+        />
+        {{ t }}
+      </label>
+    </div>
+  </div>
+
   <!-- Encabezado -->
   <div v-if="arrMesas.length > 0" class="row fw-bold text-center border-bottom py-2">
     <div class="col-md-1" @click="listMesas(0)">Mesa</div>
@@ -108,9 +131,9 @@
   </div>
 
   <!-- Mesas -->
+  <template v-for="(mesa, key) in arrMesas" :key="mesa.codigo">
   <div
-    v-for="(mesa, key) in arrMesas"
-    :key="mesa.codigo"
+    v-if="mesaVisible(mesa)"
     class="row text-center border rounded py-3 my-2"
   >
     <!-- Código -->
@@ -262,6 +285,7 @@
       </label>
     </div>
   </div>
+  </template>
 
   <!-- Descargar todas -->
   <div v-if="arrMesas.length > 0" class="text-end mt-3">
@@ -288,7 +312,7 @@
 </template>
 <script setup>
 import CursosSelect from "@/components/CursosSelect.vue"
-import { ref, onMounted } from "vue"
+import { ref, computed, onMounted } from "vue"
 import { api } from "@/api/api"
 import { showModal, showToast } from "@/services/uiBus"
 import { useFileDownload } from "@/composables/useFileDownload"
@@ -320,6 +344,26 @@ const filtro = ref({
   desde: "",
   hasta: "",
 })
+
+/* FILTRO POR DOCENTE */
+const tiposAutoridad = ["Presidente", "Vocal", "Suplente", "Pianista"]
+const filtroDocente = ref("")
+const filtroAutoridades = ref([...tiposAutoridad])
+
+// Docentes que figuran en las mesas listadas (sin repetir, ordenados)
+const arrDocentesMesas = computed(() => {
+  const nombres = new Set()
+  arrMesas.value.forEach(m => m.autoridades.forEach(a => nombres.add(a.nombreProf)))
+  return [...nombres].sort((a, b) => a.localeCompare(b))
+})
+
+const mesaVisible = (mesa) => {
+  if (!filtroDocente.value) return true
+  return mesa.autoridades.some(a =>
+    a.nombreProf === filtroDocente.value &&
+    filtroAutoridades.value.includes(a.tipoAutoridad)
+  )
+}
 
 /* FUNCIONES */
 onMounted(() => {
@@ -370,6 +414,7 @@ const listMesas = async (criterio=0) => {
     payload: filtro.value,
   })
   arrMesas.value = payload
+  if (!arrDocentesMesas.value.includes(filtroDocente.value)) filtroDocente.value = ""
 }
 
 const borrarMesa = async (key) => {
