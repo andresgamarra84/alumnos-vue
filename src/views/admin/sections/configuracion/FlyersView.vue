@@ -86,6 +86,15 @@
               Doble click para volver a 0.
             </p>
 
+            <div class="campo-slider">
+              <label>Definido</label>
+              <input type="range" min="0" max="100" v-model.number="desvanecidoPct" title="De borde definido a difuminado" />
+              <label>Difuminado</label>
+            </div>
+            <p class="ajustes-hint">
+              En "Definido" la línea de corte es nítida. Hacia "Difuminado" la imagen se funde gradualmente con el fondo.
+            </p>
+
             <p class="ajustes-hint">
               La imagen se recorta para llenar su área sin deformarse; arrastrala sobre el lienzo para elegir qué parte se ve. El área de información usa el color o la
               imagen de "Fondo", y los textos nuevos se ubican dentro de ella.
@@ -339,6 +348,7 @@ const proporcionImagenPct = ref(60) // fracción del alto (horizontal) o del anc
 const inclinacionPct = ref(0) // -100 a 100
 const curvaturaPct = ref(0) // -100 a 100: 0 = recto, el signo indica hacia qué lado se arquea
 const nivelRasgadoPct = ref(40) // 0 (recto) a 100 (muy ondulado)
+const desvanecidoPct = ref(0) // 0 (borde nítido) a 100 (imagen que se funde con el fondo)
 const imagenPrincipal = shallowRef(null)
 // Desplazamiento de la imagen principal dentro de su área (drag/drop). Se limita para que la
 // imagen siempre cubra el área completa: solo se puede mover lo que sobresale del recorte.
@@ -680,23 +690,37 @@ function desvioBorde(t, i, { d, c, amp }) {
   return inclinacion + curva + onda * amp
 }
 
+// Desviación estándar (px) del difuminado del corte. Es una fracción de la dimensión perpendicular
+// al borde, para que a 100% el degradé sea amplio pero no se coma toda el área de imagen.
+function sigmaDesvanecido(width, height) {
+  const dimension = plantilla.value === 'vertical' ? width : height
+  return dimension * 0.08 * (desvanecidoPct.value / 100)
+}
+
 // Traza el contorno del área de imagen. El lado que da al área de información puede ir inclinado
 // curvado y/o rasgado; si es una recta alcanza con un solo segmento.
-function trazarZonaImagen(z, width, height, borde) {
+// margen: prolonga el contorno hacia afuera del lienzo por los otros tres lados (para que el
+// difuminado de la máscara no clarée también en los bordes del lienzo).
+function trazarZonaImagen(z, width, height, borde, margen = 0, c = ctx) {
   const pasos = borde.amp > 0 || borde.c !== 0 ? 60 : 1
-  ctx.beginPath()
+  const m = margen
+  c.beginPath()
   if (plantilla.value === 'horizontal') {
     // El borde va de izquierda a derecha: con inclinación positiva baja hacia la derecha
-    ctx.moveTo(0, 0)
-    ctx.lineTo(width, 0)
-    for (let i = pasos; i >= 0; i--) ctx.lineTo((width * i) / pasos, z.h + desvioBorde(i / pasos, i, borde))
+    c.moveTo(-m, -m)
+    c.lineTo(width + m, -m)
+    if (m) c.lineTo(width + m, z.h + desvioBorde(1, pasos, borde))
+    for (let i = pasos; i >= 0; i--) c.lineTo((width * i) / pasos, z.h + desvioBorde(i / pasos, i, borde))
+    if (m) c.lineTo(-m, z.h + desvioBorde(0, 0, borde))
   } else {
     // El borde va de arriba hacia abajo: con inclinación positiva se corre a la derecha al descender
-    ctx.moveTo(0, 0)
-    for (let i = 0; i <= pasos; i++) ctx.lineTo(z.w + desvioBorde(i / pasos, i, borde), (height * i) / pasos)
-    ctx.lineTo(0, height)
+    c.moveTo(-m, -m)
+    if (m) c.lineTo(z.w + desvioBorde(0, 0, borde), -m)
+    for (let i = 0; i <= pasos; i++) c.lineTo(z.w + desvioBorde(i / pasos, i, borde), (height * i) / pasos)
+    if (m) c.lineTo(z.w + desvioBorde(1, pasos, borde), height + m)
+    c.lineTo(-m, height + m)
   }
-  ctx.closePath()
+  c.closePath()
 }
 
 // Dibuja img cubriendo por completo la caja (recorta lo que sobra, sin deformar).
@@ -728,24 +752,32 @@ function cajaImagenPrincipal(width, height) {
     amp: amplitudRasgado(width, height),
   }
   // La curvatura solo agranda la caja cuando se arquea hacia el área de información (c > 0)
-  const extension = Math.abs(borde.d) / 2 + Math.max(borde.c, 0) + borde.amp * 1.5
+  // El difuminado también avanza hacia el área de información (hasta ~3 sigmas).
+  const extension = Math.abs(borde.d) / 2 + Math.max(borde.c, 0) + borde.amp * 1.5 + sigmaDesvanecido(width, height) * 3
   const w = plantilla.value === 'vertical' ? z.w + extension : z.w
   const h = plantilla.value === 'horizontal' ? z.h + extension : z.h
   return { z, borde, w, h }
 }
 
-function dibujarImagenPrincipal(width, height) {
-  // Si cambió el área (proporción, inclinación, formato), el encuadre guardado puede quedar fuera de rango
-  limitarEncuadre(width, height)
-  const { z, borde, w, h } = cajaImagenPrincipal(width, height)
+// Lienzos auxiliares (reutilizados) para fundir la imagen con el fondo: uno con la imagen y otro con la máscara.
+let lienzoImagen = null
+let lienzoMascara = null
 
-  ctx.save()
-  trazarZonaImagen(z, width, height, borde)
-  ctx.clip()
+function lienzoAuxiliar(actual, width, height) {
+  const l = actual || document.createElement('canvas')
+  if (l.width !== width) l.width = width
+  if (l.height !== height) l.height = height
+  const c = l.getContext('2d')
+  c.setTransform(1, 0, 0, 1, 0, 0)
+  c.clearRect(0, 0, width, height)
+  return l
+}
 
+// Dibuja la imagen principal (o su marcador) en el contexto c, dentro de la caja que debe cubrir.
+function pintarContenidoImagen(c, z, w, h, width) {
   if (imagenPrincipal.value) {
     const { dw, dh } = medidasCubriendo(imagenPrincipal.value, w, h)
-    ctx.drawImage(
+    c.drawImage(
       imagenPrincipal.value,
       z.x + (w - dw) / 2 + encuadre.offsetX,
       z.y + (h - dh) / 2 + encuadre.offsetY,
@@ -754,14 +786,50 @@ function dibujarImagenPrincipal(width, height) {
     )
   } else {
     // Marcador mientras no hay imagen cargada (la descarga queda deshabilitada)
-    ctx.fillStyle = '#d9d9d9'
-    ctx.fillRect(z.x, z.y, w, h)
-    ctx.fillStyle = '#888'
-    ctx.font = `${width * 0.03}px Arial`
-    ctx.textAlign = 'center'
-    ctx.fillText('Imagen principal', z.x + z.w / 2, z.y + z.h / 2)
+    c.fillStyle = '#d9d9d9'
+    c.fillRect(z.x, z.y, w, h)
+    c.fillStyle = '#888'
+    c.font = `${width * 0.03}px Arial`
+    c.textAlign = 'center'
+    c.fillText('Imagen principal', z.x + z.w / 2, z.y + z.h / 2)
   }
-  ctx.restore()
+}
+
+function dibujarImagenPrincipal(width, height) {
+  // Si cambió el área (proporción, inclinación, formato), el encuadre guardado puede quedar fuera de rango
+  limitarEncuadre(width, height)
+  const { z, borde, w, h } = cajaImagenPrincipal(width, height)
+  const sigma = sigmaDesvanecido(width, height)
+
+  if (sigma < 0.5) {
+    ctx.save()
+    trazarZonaImagen(z, width, height, borde)
+    ctx.clip()
+    pintarContenidoImagen(ctx, z, w, h, width)
+    ctx.restore()
+    return
+  }
+
+  // Borde difuminado: la imagen se multiplica por una máscara (la forma del área, desenfocada).
+  // La forma se prolonga fuera del lienzo para que el desenfoque solo afecte al lado del corte.
+  lienzoImagen = lienzoAuxiliar(lienzoImagen, width, height)
+  lienzoMascara = lienzoAuxiliar(lienzoMascara, width, height)
+  const cImg = lienzoImagen.getContext('2d')
+  const cMask = lienzoMascara.getContext('2d')
+
+  pintarContenidoImagen(cImg, z, w, h, width)
+
+  cMask.filter = `blur(${sigma}px)`
+  cMask.fillStyle = '#000'
+  trazarZonaImagen(z, width, height, borde, sigma * 4, cMask)
+  cMask.fill()
+  cMask.filter = 'none'
+
+  cImg.globalCompositeOperation = 'destination-in'
+  cImg.drawImage(lienzoMascara, 0, 0)
+  cImg.globalCompositeOperation = 'source-over'
+
+  ctx.drawImage(lienzoImagen, 0, 0)
 }
 
 function dibujarFondo(width, height) {
@@ -978,7 +1046,7 @@ function dibujar() {
 }
 
 watch(
-  [bgMode, bgColor, plantilla, proporcionImagenPct, inclinacionPct, curvaturaPct, nivelRasgadoPct, imagenPrincipal, encuadre, logos, textos],
+  [bgMode, bgColor, plantilla, proporcionImagenPct, inclinacionPct, curvaturaPct, nivelRasgadoPct, desvanecidoPct, imagenPrincipal, encuadre, logos, textos],
   dibujar,
   { deep: true }
 )
