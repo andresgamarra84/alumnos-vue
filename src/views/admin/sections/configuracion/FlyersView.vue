@@ -234,6 +234,35 @@
       </section>
 
       <section class="seccion">
+        <button type="button" class="seccion-header" @click="alternarSeccion('iconos')">
+          <h3>Íconos</h3>
+          <span class="chevron" :class="{ colapsado: !secciones.iconos }">▾</span>
+        </button>
+        <div v-show="secciones.iconos" class="seccion-body">
+          <div class="grilla-iconos">
+            <button
+              v-for="ic in ICONOS"
+              :key="ic.clave"
+              type="button"
+              class="btn-icono"
+              :title="'Agregar ' + ic.etiqueta"
+              @click="agregarIcono(ic)"
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true"><path :d="ic.d" fill="currentColor" /></svg>
+              <span>{{ ic.etiqueta }}</span>
+            </button>
+          </div>
+          <label class="btn-agregar-texto btn-agregar-logo">
+            + Agregar SVG propio
+            <input type="file" accept="image/svg+xml,.svg" multiple hidden @change="cargarLogos" />
+          </label>
+          <p class="ajustes-hint">
+            Los íconos se agregan a "Logos e imágenes", donde podés recolorearlos, cambiar su tamaño y moverlos sobre el lienzo.
+          </p>
+        </div>
+      </section>
+
+      <section class="seccion">
         <button type="button" class="seccion-header" @click="alternarSeccion('contenido')">
           <h3>Contenido</h3>
           <span class="chevron" :class="{ colapsado: !secciones.contenido }">▾</span>
@@ -360,6 +389,7 @@ const secciones = reactive({
   plantilla: true,
   fondo: true,
   logos: true,
+  iconos: true,
   contenido: true,
 })
 
@@ -513,31 +543,69 @@ function crearLogo(nombre, ratio) {
   }
 }
 
+// Agrega una imagen (URL o blob) a la lista de logos una vez cargada. opciones pisa los valores por defecto.
+function agregarLogoDesdeUrl(url, nombre, opciones = {}, alTerminar = () => {}) {
+  const img = new Image()
+  img.onload = () => {
+    // Un SVG sin width/height puede reportar 0 en algunos navegadores: se asume cuadrado
+    const ratio = img.naturalWidth && img.naturalHeight ? img.naturalWidth / img.naturalHeight : 1
+    const logo = Object.assign(crearLogo(nombre, ratio), opciones)
+    imagenesLogos.set(logo.id, img)
+    logos.push(logo)
+    alTerminar()
+  }
+  img.onerror = () => {
+    errorLogos.value = `No se pudo leer "${nombre}".`
+    alTerminar()
+  }
+  img.src = url
+}
+
 function cargarLogos(event) {
   errorLogos.value = ''
   const archivos = [...event.target.files]
   event.target.value = '' // permite volver a elegir el mismo archivo
 
   for (const archivo of archivos) {
-    if (archivo.type !== 'image/png') {
-      errorLogos.value = `"${archivo.name}" no es un PNG y no se agregó.`
+    const esSvg = archivo.type === 'image/svg+xml'
+    if (archivo.type !== 'image/png' && !esSvg) {
+      errorLogos.value = `"${archivo.name}" no es un PNG ni un SVG y no se agregó.`
       continue
     }
 
     const url = URL.createObjectURL(archivo)
-    const img = new Image()
-    img.onload = () => {
-      const logo = crearLogo(archivo.name.replace(/\.png$/i, ''), img.naturalWidth / img.naturalHeight)
-      imagenesLogos.set(logo.id, img)
-      logos.push(logo)
-      URL.revokeObjectURL(url)
-    }
-    img.onerror = () => {
-      errorLogos.value = `No se pudo leer "${archivo.name}".`
-      URL.revokeObjectURL(url)
-    }
-    img.src = url
+    // Los SVG se agregan recoloreables (suelen ser íconos de un solo color) y chicos
+    agregarLogoDesdeUrl(
+      url,
+      archivo.name.replace(/\.(png|svg)$/i, ''),
+      esSvg ? { tintar: true, tamano: 0.25 } : {},
+      () => URL.revokeObjectURL(url)
+    )
   }
+}
+
+// Íconos de uso común (trazados en una grilla de 24 × 24, estilo Material). Se rasterizan como SVG
+// negro y se recolorean con la opción "Recolorear" del logo.
+const ICONOS = [
+  { clave: 'ubicacion', etiqueta: 'Ubicación', d: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z' },
+  { clave: 'calendario', etiqueta: 'Fecha', d: 'M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5zm2 4h5v5H7z' },
+  { clave: 'reloj', etiqueta: 'Horario', d: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z' },
+  { clave: 'telefono', etiqueta: 'Teléfono', d: 'M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z' },
+  { clave: 'mail', etiqueta: 'Correo', d: 'M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z' },
+  { clave: 'web', etiqueta: 'Web', d: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.93 6h-2.95a15.65 15.65 0 0 0-1.38-3.56A8.03 8.03 0 0 1 18.93 8zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14a8.2 8.2 0 0 1 0-4h3.38a16.5 16.5 0 0 0 0 4H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56A7.99 7.99 0 0 1 5.08 16zm2.95-8H5.08a7.99 7.99 0 0 1 4.33-3.56A15.65 15.65 0 0 0 8.03 8zM12 19.96A14.7 14.7 0 0 1 10.09 16h3.82A14.7 14.7 0 0 1 12 19.96zM14.34 14H9.66a14.6 14.6 0 0 1 0-4h4.68a14.6 14.6 0 0 1 0 4zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56zM16.36 14a16.5 16.5 0 0 0 0-4h3.38a8.2 8.2 0 0 1 0 4h-3.38z' },
+  { clave: 'entradas', etiqueta: 'Entradas', d: 'M22 10V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v4a2 2 0 0 1 0 4v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 1 0-4zm-9 7.5h-2v-2h2v2zm0-4h-2v-3h2v3zm0-5h-2v-2h2v2z' },
+  { clave: 'instagram', etiqueta: 'Instagram', d: 'M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2zM7.5 4A3.5 3.5 0 0 0 4 7.5v9A3.5 3.5 0 0 0 7.5 20h9a3.5 3.5 0 0 0 3.5-3.5v-9A3.5 3.5 0 0 0 16.5 4zM12 7.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 1 1 0-9zM12 9.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 1 0 0-5.6zM17.2 5.6a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 1 1 0-2.4z' },
+  { clave: 'musica', etiqueta: 'Música', d: 'M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z' },
+]
+
+function agregarIcono(icono) {
+  errorLogos.value = ''
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="256" height="256"><path d="${icono.d}" fill="#000"/></svg>`
+  agregarLogoDesdeUrl(
+    'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
+    icono.etiqueta,
+    { tintar: true, tamano: 0.25 }
+  )
 }
 
 function eliminarLogo(id) {
@@ -1063,18 +1131,25 @@ function descargar() {
 </script>
 
 <style scoped>
+/* Panel de opciones = 1/3 del ancho, lienzo = 2/3; nunca se apilan salvo en pantallas muy angostas */
 .editor {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   gap: 1.5rem;
-  flex-wrap: wrap;
-  align-items: flex-start;
+  align-items: start;
+}
+
+@media (max-width: 640px) {
+  .editor {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .controles {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  min-width: 260px;
+  min-width: 0;
 }
 
 .seccion {
@@ -1336,8 +1411,7 @@ input[type='file']::-webkit-file-upload-button {
 }
 
 .lienzo-panel {
-  flex: 1;
-  min-width: 280px;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -1371,6 +1445,35 @@ input[type='file']::-webkit-file-upload-button {
   background: #fafafa;
   border: 1px solid #ccc;
   border-radius: 6px;
+}
+
+.grilla-iconos {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.2rem, 1fr));
+  gap: 0.4rem;
+}
+
+.btn-icono {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+  padding: 0.4rem 0.2rem;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  background: #f5f5f5;
+  color: #1b2452;
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.btn-icono:hover {
+  background: #dde1ef;
+}
+
+.btn-icono svg {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 canvas {
