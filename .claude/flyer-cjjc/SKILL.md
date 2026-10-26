@@ -13,7 +13,7 @@ Elegí el modo según el pedido:
 - Los dos modos comparten las reglas de decisión (2) y de tipografía (6).
 
 ## Modo panel: dónde se trabaja
-Se trabaja en la pestaña del usuario `https://cjjc.edu.ar/panel/admin/flyers` con las herramientas de Claude in Chrome. No hace falta abrir pestañas nuevas. Si el usuario no tiene la sesión iniciada, pedile que entre al panel; nunca pidas ni escribas su contraseña. Un flyer armado se puede guardar con título en la base (sección "Flyers guardados / JSON": "Guardar") y recuperarlo después desde el select para reutilizarlo; solo se guardan los íconos del set y las imágenes con URL (una subida desde un archivo no se conserva).
+Se trabaja en la pestaña del usuario `https://cjjc.edu.ar/panel/admin/flyers` con las herramientas de Claude in Chrome. No hace falta abrir pestañas nuevas. Si el usuario no tiene la sesión iniciada, pedile que entre al panel; nunca pidas ni escribas su contraseña. Un flyer armado se puede guardar con título en la base (sección "Flyers guardados / JSON": "Guardar") y recuperarlo después desde el select para reutilizarlo; se guardan los íconos del set y las imágenes (una foto subida desde un archivo se envía al servidor, que la comprime a un máximo de 2 MB; los logos propios no se guardan).
 
 ## 1. Datos a pedir (una sola ronda, con AskUserQuestion)
 Fecha, hora, sede/sala, instrumento o tipo de concierto, intérpretes (o "alumnos de la cátedra"), programa (opcional), entrada (libre y gratuita / con reserva / arancelada). No preguntar el formato: es 4:5 salvo que el usuario pida otro. Si quiere íconos de contacto (web, Instagram, teléfono), preguntar los datos.
@@ -232,3 +232,23 @@ y el bloque ocupa hasta `Y + 0.8·fs + lh·(n−1) + 0.2·fs`. El siguiente bloq
 - Explicá cómo cargarlo: en `cjjc.edu.ar/panel/admin/flyers`, sección **Flyers guardados / JSON**, pegar y tocar "Aplicar JSON" (o "Abrir archivo .json"); revisar el resultado y, si algo no queda bien, ajustar arrastrando sobre el lienzo o pedir un cambio puntual y volver a aplicar el JSON.
 - Si el panel muestra errores de validación, el usuario puede pegártelos: corregí el campo indicado y devolvé el JSON completo de nuevo.
 - No descargues nada ni toques el panel en este modo.
+
+---
+
+# 9. Guardar y reutilizar flyers (base de datos)
+
+El panel guarda los flyers en la base (sección **Flyers guardados / JSON**), así que se pueden retomar para otro concierto sin empezar de cero.
+
+## Guardar
+- Con el flyer terminado, el usuario escribe un **Título del flyer** (ej. "Concierto de cuerdas - Octubre") y toca **Guardar**. Si ya había uno cargado, aparece **Guardar como nuevo** (crea otro) y **Actualizar** (pisa el cargado). **Eliminar** lo oculta de la lista (borrado lógico).
+- En modo panel, antes de cerrar ofrecé guardarlo y proponé un título corto con el tipo de concierto y el mes; no lo guardes sin que el usuario lo confirme. En modo JSON, sugerí el título al entregar el archivo.
+- Solo se guarda lo que está en el JSON: **imagen principal y de fondo** (una foto subida desde un archivo se guarda en el servidor, comprimida a un máximo de 2 MB, y su URL queda en el JSON), **íconos del set** (los logos o imágenes propias no se guardan), textos, ajustes del borde y colores. El panel avisa debajo del botón si algo quedó afuera.
+
+## Reutilizar para un nuevo concierto
+1. Pedile al usuario que elija el flyer en el select **Flyers guardados** (se carga en pantalla). En modo panel podés hacerlo vos: elegir la opción del `<select>` y esperar a que cargue.
+2. Mantené el diseño (plantilla, borde, paleta, tipografía, íconos y posiciones) y cambiá **solo el contenido**: título, intérpretes, fecha, hora, sala y entrada. Si cambia el largo de un texto, revisá que no roce los bordes y reacomodá la altura de los bloques siguientes.
+3. Cambiá la foto solo si el instrumento o la formación es otro; si lo es, repetí la decisión de imagen, plantilla y paleta de la sección 2.
+4. Guardá con **Guardar como nuevo** (para conservar el original) y un título propio; usá **Actualizar** únicamente si el usuario quiere reemplazar el anterior.
+
+## Modo JSON con un flyer guardado
+Si el usuario pega el JSON de un flyer guardado (o lo abre desde el panel), tomalo como base: devolvé el JSON completo con el contenido actualizado, sin cambiar lo que no hace falta tocar.

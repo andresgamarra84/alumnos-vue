@@ -392,6 +392,7 @@
 <script setup>
 import { reactive, ref, shallowRef, computed, watch, onMounted, nextTick } from 'vue'
 import { api } from '@/api/api'
+import { BASE_URL, SESSION_NAME } from '@/config/app.config'
 import { showModal, showToast } from '@/services/uiBus'
 import { ICONOS, VERSION_SPEC, urlSvgIcono, validarEspecificacion } from '@/domain/flyerSpec'
 
@@ -717,6 +718,7 @@ function cargarImagen(event) {
     // El canvas mantiene siempre la resolución 4:3, la imagen se recorta para llenarlo sin deformarse
     imagenFondo.value = img
     urlImagenFondo = null
+    archivoImagenFondo = archivo
     dibujar()
 
     URL.revokeObjectURL(url) // liberamos memoria
@@ -734,6 +736,7 @@ function cargarImagenPrincipal(event) {
   img.onload = () => {
     imagenPrincipal.value = img
     urlImagenPrincipal = null
+    archivoImagenPrincipal = archivo
     creditoImagen.value = null
     encuadre.offsetX = 0
     encuadre.offsetY = 0
@@ -1168,6 +1171,9 @@ watch(formato, () => nextTick(dibujar))
 // De dónde salió cada imagen, para poder exportarla. Una imagen subida desde un archivo no tiene URL.
 let urlImagenPrincipal = null
 let urlImagenFondo = null
+// Archivo subido a mano (sin URL todavía): al guardar el flyer se envía al servidor, que lo comprime y devuelve su URL
+let archivoImagenPrincipal = null
+let archivoImagenFondo = null
 const creditoImagen = ref(null) // { autor, licencia, fuente } de la imagen cargada desde una especificación
 const textoSpec = ref('')
 const errorSpec = ref('')
@@ -1219,9 +1225,11 @@ async function aplicarEspecificacion(raw) {
   bgColor.value = spec.fondo.color
   imagenFondo.value = imgFondo
   urlImagenFondo = spec.fondo.url
+  archivoImagenFondo = null
 
   imagenPrincipal.value = imgPrincipal
   urlImagenPrincipal = spec.imagen.url
+  archivoImagenPrincipal = null
   encuadre.offsetX = spec.imagen.offsetX
   encuadre.offsetY = spec.imagen.offsetY
   creditoImagen.value =
@@ -1348,16 +1356,50 @@ async function cargarFlyerGuardado() {
   }
 }
 
+// Sube un archivo de imagen al servidor (que lo comprime a un máximo de 2 MB) y devuelve su URL pública, o null si falla.
+async function subirImagenFlyer(archivo) {
+  const datos = new FormData()
+  datos.append('entity', 'flyers')
+  datos.append('action', 'uploadImagenFlyer')
+  datos.append('imagen', archivo)
+  try {
+    const respuesta = await fetch(BASE_URL, {
+      method: 'POST',
+      headers: { Authorization: `Bearer ${sessionStorage.getItem(SESSION_NAME)}` }, // sin Content-Type: lo fija el navegador
+      body: datos,
+    })
+    const r = await respuesta.json()
+    if (!r.ok) {
+      showToast(r.message || 'No se pudo subir la imagen', 'error')
+      return null
+    }
+    return r.payload.url
+  } catch (error) {
+    showToast('No se pudo subir la imagen: ' + error.message, 'error')
+    return null
+  }
+}
+
 // actualizar = true pisa el flyer seleccionado; false crea uno nuevo con el título ingresado.
 async function guardarFlyer(actualizar) {
-  const avisos = []
-  if (!urlImagenPrincipal && plantilla.value !== 'libre') avisos.push('la imagen principal se subió desde un archivo y no tiene URL')
-  if (bgMode.value === 'image' && !urlImagenFondo) avisos.push('la imagen de fondo se subió desde un archivo: se guardó el color de fondo')
-  if (logos.some((l) => !l.claveIcono)) avisos.push('los logos o imágenes propias no se guardan (solo los íconos del set)')
-  avisoSpec.value = avisos.length ? 'Se guardó con limitaciones: ' + avisos.join('; ') + '.' : ''
-
   guardandoFlyer.value = true
   try {
+    // Las imágenes subidas desde un archivo no tienen URL: se envían al servidor para poder recuperarlas después
+    if (imagenPrincipal.value && !urlImagenPrincipal && archivoImagenPrincipal) {
+      const url = await subirImagenFlyer(archivoImagenPrincipal)
+      if (!url) return
+      urlImagenPrincipal = url
+    }
+    if (bgMode.value === 'image' && imagenFondo.value && !urlImagenFondo && archivoImagenFondo) {
+      const url = await subirImagenFlyer(archivoImagenFondo)
+      if (!url) return
+      urlImagenFondo = url
+    }
+
+    avisoSpec.value = logos.some((l) => !l.claveIcono)
+      ? 'Se guardó con limitaciones: los logos o imágenes propias no se guardan (solo los íconos del set).'
+      : ''
+
     const r = await api.post({
       entity: 'flyers',
       action: 'saveFlyer',
