@@ -319,6 +319,51 @@
         </div>
       </section>
 
+      <section class="seccion">
+        <button type="button" class="seccion-header" @click="alternarSeccion('especificacion')">
+          <h3>Flyers guardados / JSON</h3>
+          <span class="chevron" :class="{ colapsado: !secciones.especificacion }">▾</span>
+        </button>
+        <div v-show="secciones.especificacion" class="seccion-body">
+          <div class="campo-texto">
+            <label>Flyers guardados</label>
+            <select v-model="flyerSeleccionado" @change="cargarFlyerGuardado">
+              <option :value="null">— Elegí un flyer para cargarlo —</option>
+              <option v-for="f in flyersGuardados" :key="f.codigo" :value="f.codigo">{{ f.titulo }}</option>
+            </select>
+          </div>
+
+          <div class="campo-texto">
+            <label>Título del flyer</label>
+            <input type="text" v-model="tituloFlyer" maxlength="150" placeholder="Ej: Concierto de cuerdas - Octubre" />
+          </div>
+          <div class="opciones">
+            <button type="button" :disabled="!tituloFlyer.trim() || guardandoFlyer" @click="guardarFlyer(false)">
+              {{ flyerSeleccionado ? 'Guardar como nuevo' : 'Guardar' }}
+            </button>
+            <button v-if="flyerSeleccionado" type="button" :disabled="!tituloFlyer.trim() || guardandoFlyer" @click="guardarFlyer(true)">Actualizar</button>
+            <button v-if="flyerSeleccionado" type="button" class="btn-quitar-texto" @click="eliminarFlyerGuardado">Eliminar</button>
+          </div>
+
+          <span class="ajustes-titulo">Cargar desde JSON</span>
+          <textarea v-model="textoSpec" rows="5" class="texto-spec" placeholder="Pegá acá la especificación del flyer en JSON..."></textarea>
+          <div class="opciones">
+            <button type="button" :disabled="!textoSpec.trim()" @click="aplicarTextoSpec">Aplicar JSON</button>
+            <label class="btn-agregar-texto btn-agregar-logo">
+              Abrir archivo .json
+              <input type="file" accept="application/json,.json" hidden @change="cargarArchivoSpec" />
+            </label>
+          </div>
+          <p v-if="errorSpec" class="aviso-fuentes aviso-multilinea">{{ errorSpec }}</p>
+          <p v-if="avisoSpec" class="ajustes-hint">{{ avisoSpec }}</p>
+          <p v-if="creditoImagen" class="ajustes-hint">
+            Crédito de la foto: {{ [creditoImagen.autor, creditoImagen.licencia].filter(Boolean).join(' · ') }}
+            <template v-if="creditoImagen.fuente"> — {{ creditoImagen.fuente }}</template>
+          </p>
+          <p class="ajustes-hint">Aplicar un JSON reemplaza todo el flyer actual (textos, íconos, imagen y ajustes).</p>
+        </div>
+      </section>
+
       <button class="btn-descargar" @click="descargar" :disabled="descargaDeshabilitada">Descargar flyer</button>
     </div>
 
@@ -346,8 +391,13 @@
 
 <script setup>
 import { reactive, ref, shallowRef, computed, watch, onMounted, nextTick } from 'vue'
+import { api } from '@/api/api'
+import { showModal, showToast } from '@/services/uiBus'
+import { ICONOS, VERSION_SPEC, urlSvgIcono, validarEspecificacion } from '@/domain/flyerSpec'
 
 const PASO_TAMANO = 0.1
+const FACTOR_TAMANO_LOGO = 1.2 // cada click en +/− escala un logo o ícono un 20 %
+const TAMANO_MIN_LOGO = 0.05
 
 // Formatos de publicación: el ancho se mantiene fijo en 1200px, el alto surge de la relación de aspecto
 const ANCHO_BASE = 1200
@@ -391,6 +441,7 @@ const secciones = reactive({
   logos: true,
   iconos: true,
   contenido: true,
+  especificacion: true,
 })
 
 function alternarSeccion(clave) {
@@ -527,6 +578,7 @@ function crearLogo(nombre, ratio) {
     id: idSeqLogos,
     nombre,
     ratio,
+    claveIcono: null, // clave del set de íconos si salió de ahí (para exportar la especificación)
     visible: true,
     tintar: false,
     color: '#1b2452',
@@ -578,34 +630,15 @@ function cargarLogos(event) {
     agregarLogoDesdeUrl(
       url,
       archivo.name.replace(/\.(png|svg)$/i, ''),
-      esSvg ? { tintar: true, tamano: 0.25 } : {},
+      esSvg ? { tintar: true, tamano: 0.15 } : {},
       () => URL.revokeObjectURL(url)
     )
   }
 }
 
-// Íconos de uso común (trazados en una grilla de 24 × 24, estilo Material). Se rasterizan como SVG
-// negro y se recolorean con la opción "Recolorear" del logo.
-const ICONOS = [
-  { clave: 'ubicacion', etiqueta: 'Ubicación', d: 'M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5z' },
-  { clave: 'calendario', etiqueta: 'Fecha', d: 'M19 4h-1V2h-2v2H8V2H6v2H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 16H5V10h14v10zM5 8V6h14v2H5zm2 4h5v5H7z' },
-  { clave: 'reloj', etiqueta: 'Horario', d: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm0 18a8 8 0 1 1 0-16 8 8 0 0 1 0 16zm.5-13H11v6l5.25 3.15.75-1.23-4.5-2.67V7z' },
-  { clave: 'telefono', etiqueta: 'Teléfono', d: 'M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24c1.12.37 2.33.57 3.57.57a1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.61 21 3 13.39 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.25.2 2.45.57 3.57a1 1 0 0 1-.25 1.02l-2.2 2.2z' },
-  { clave: 'mail', etiqueta: 'Correo', d: 'M20 4H4a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V6a2 2 0 0 0-2-2zm0 4-8 5-8-5V6l8 5 8-5v2z' },
-  { clave: 'web', etiqueta: 'Web', d: 'M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.93 6h-2.95a15.65 15.65 0 0 0-1.38-3.56A8.03 8.03 0 0 1 18.93 8zM12 4.04c.83 1.2 1.48 2.53 1.91 3.96h-3.82c.43-1.43 1.08-2.76 1.91-3.96zM4.26 14a8.2 8.2 0 0 1 0-4h3.38a16.5 16.5 0 0 0 0 4H4.26zm.82 2h2.95c.32 1.25.78 2.45 1.38 3.56A7.99 7.99 0 0 1 5.08 16zm2.95-8H5.08a7.99 7.99 0 0 1 4.33-3.56A15.65 15.65 0 0 0 8.03 8zM12 19.96A14.7 14.7 0 0 1 10.09 16h3.82A14.7 14.7 0 0 1 12 19.96zM14.34 14H9.66a14.6 14.6 0 0 1 0-4h4.68a14.6 14.6 0 0 1 0 4zm.25 5.56c.6-1.11 1.06-2.31 1.38-3.56h2.95a8.03 8.03 0 0 1-4.33 3.56zM16.36 14a16.5 16.5 0 0 0 0-4h3.38a8.2 8.2 0 0 1 0 4h-3.38z' },
-  { clave: 'entradas', etiqueta: 'Entradas', d: 'M22 10V6a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2v4a2 2 0 0 1 0 4v4a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-4a2 2 0 0 1 0-4zm-9 7.5h-2v-2h2v2zm0-4h-2v-3h2v3zm0-5h-2v-2h2v2z' },
-  { clave: 'instagram', etiqueta: 'Instagram', d: 'M7.5 2h9A5.5 5.5 0 0 1 22 7.5v9a5.5 5.5 0 0 1-5.5 5.5h-9A5.5 5.5 0 0 1 2 16.5v-9A5.5 5.5 0 0 1 7.5 2zM7.5 4A3.5 3.5 0 0 0 4 7.5v9A3.5 3.5 0 0 0 7.5 20h9a3.5 3.5 0 0 0 3.5-3.5v-9A3.5 3.5 0 0 0 16.5 4zM12 7.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 1 1 0-9zM12 9.2a2.8 2.8 0 1 0 0 5.6 2.8 2.8 0 1 0 0-5.6zM17.2 5.6a1.2 1.2 0 1 1 0 2.4 1.2 1.2 0 1 1 0-2.4z' },
-  { clave: 'musica', etiqueta: 'Música', d: 'M12 3v10.55A4 4 0 1 0 14 17V7h4V3h-6z' },
-]
-
 function agregarIcono(icono) {
   errorLogos.value = ''
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="256" height="256"><path d="${icono.d}" fill="#000"/></svg>`
-  agregarLogoDesdeUrl(
-    'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg),
-    icono.etiqueta,
-    { tintar: true, tamano: 0.25 }
-  )
+  agregarLogoDesdeUrl(urlSvgIcono(icono), icono.etiqueta, { tintar: true, tamano: 0.15, claveIcono: icono.clave })
 }
 
 function eliminarLogo(id) {
@@ -652,6 +685,12 @@ onMounted(() => {
 // Misma función para textos y logos: reciben el ítem directamente (ambos son objetos
 // reactivos con .tamano/.offsetX), así que no hace falta distinguir de qué colección vienen.
 function cambiarTamano(item, delta) {
+  if (logos.includes(item)) {
+    // Imágenes e íconos: paso proporcional, para poder achicar un ícono chico sin saltar a un mínimo alto
+    const nuevo = delta > 0 ? item.tamano * FACTOR_TAMANO_LOGO : item.tamano / FACTOR_TAMANO_LOGO
+    item.tamano = Math.min(3, Math.max(TAMANO_MIN_LOGO, +nuevo.toFixed(3)))
+    return
+  }
   item.tamano = Math.min(3, Math.max(0.4, +(item.tamano + delta).toFixed(2)))
 }
 
@@ -677,6 +716,7 @@ function cargarImagen(event) {
   img.onload = () => {
     // El canvas mantiene siempre la resolución 4:3, la imagen se recorta para llenarlo sin deformarse
     imagenFondo.value = img
+    urlImagenFondo = null
     dibujar()
 
     URL.revokeObjectURL(url) // liberamos memoria
@@ -693,6 +733,8 @@ function cargarImagenPrincipal(event) {
   const img = new Image()
   img.onload = () => {
     imagenPrincipal.value = img
+    urlImagenPrincipal = null
+    creditoImagen.value = null
     encuadre.offsetX = 0
     encuadre.offsetY = 0
     URL.revokeObjectURL(url)
@@ -1122,6 +1164,234 @@ watch(
 // El cambio de ancho/alto del <canvas> se aplica al DOM en el próximo tick; recién ahí se puede redibujar
 watch(formato, () => nextTick(dibujar))
 
+// --- Especificación JSON: aplicar un flyer completo o exportar el actual (ver src/domain/flyerSpec.js) ---
+// De dónde salió cada imagen, para poder exportarla. Una imagen subida desde un archivo no tiene URL.
+let urlImagenPrincipal = null
+let urlImagenFondo = null
+const creditoImagen = ref(null) // { autor, licencia, fuente } de la imagen cargada desde una especificación
+const textoSpec = ref('')
+const errorSpec = ref('')
+const avisoSpec = ref('')
+
+function cargarImagenUrl(url) {
+  return new Promise((resolve, reject) => {
+    const img = new Image()
+    img.crossOrigin = 'anonymous' // sin esto el canvas queda "tainted" y no se puede descargar
+    img.onload = () => resolve(img)
+    img.onerror = () => reject(new Error(`No se pudo cargar la imagen: ${url.slice(0, 120)}`))
+    img.src = url
+  })
+}
+
+// Reemplaza TODO el estado del editor (formato, plantilla, imagen, bordes, fondo, textos e íconos).
+// Primero valida y descarga las imágenes; si algo falla, el flyer actual queda intacto.
+async function aplicarEspecificacion(raw) {
+  errorSpec.value = ''
+  avisoSpec.value = ''
+
+  const { ok, errores, spec } = validarEspecificacion(raw)
+  if (!ok) {
+    errorSpec.value = errores.join('\n')
+    return false
+  }
+
+  let imgPrincipal, imgFondo, imgsIconos
+  try {
+    ;[imgPrincipal, imgFondo, ...imgsIconos] = await Promise.all([
+      spec.imagen.url ? cargarImagenUrl(spec.imagen.url) : null,
+      spec.fondo.tipo === 'imagen' ? cargarImagenUrl(spec.fondo.url) : null,
+      ...spec.iconos.map((ic) => cargarImagenUrl(urlSvgIcono(ICONOS.find((i) => i.clave === ic.icono)))),
+    ])
+  } catch (error) {
+    errorSpec.value = error.message
+    return false
+  }
+
+  formato.value = spec.formato
+  plantilla.value = spec.plantilla
+  proporcionImagenPct.value = spec.borde.areaPct
+  nivelRasgadoPct.value = spec.borde.rasgadoPct
+  inclinacionPct.value = spec.borde.inclinacionPct
+  curvaturaPct.value = spec.borde.curvaturaPct
+  desvanecidoPct.value = spec.borde.difuminadoPct
+
+  bgMode.value = spec.fondo.tipo === 'imagen' ? 'image' : 'color'
+  bgColor.value = spec.fondo.color
+  imagenFondo.value = imgFondo
+  urlImagenFondo = spec.fondo.url
+
+  imagenPrincipal.value = imgPrincipal
+  urlImagenPrincipal = spec.imagen.url
+  encuadre.offsetX = spec.imagen.offsetX
+  encuadre.offsetY = spec.imagen.offsetY
+  creditoImagen.value =
+    spec.imagen.autor || spec.imagen.licencia || spec.imagen.fuente
+      ? { autor: spec.imagen.autor, licencia: spec.imagen.licencia, fuente: spec.imagen.fuente }
+      : null
+
+  fuenteAbierta.value = null
+  textos.splice(0)
+  for (const t of spec.textos) {
+    textos.push(
+      crearTexto(t.valor, { fuente: t.fuente, color: t.color, tamano: t.tamano, align: t.align, yBase: t.yBase, offsetX: t.offsetX, offsetY: t.offsetY })
+    )
+  }
+
+  for (const l of [...logos]) eliminarLogo(l.id)
+  spec.iconos.forEach((ic, i) => {
+    const icono = ICONOS.find((x) => x.clave === ic.icono)
+    const img = imgsIconos[i]
+    const opciones = { tintar: true, color: ic.color, tamano: ic.tamano, opacidadPct: ic.opacidadPct, claveIcono: icono.clave }
+    if (ic.offsetX !== null) opciones.offsetX = ic.offsetX
+    if (ic.offsetY !== null) opciones.offsetY = ic.offsetY
+    const logo = Object.assign(crearLogo(icono.etiqueta, img.naturalWidth / img.naturalHeight), opciones)
+    imagenesLogos.set(logo.id, img)
+    logos.push(logo)
+  })
+
+  if (spec.plantilla !== 'libre' && !spec.imagen.url) {
+    avisoSpec.value = 'La plantilla necesita una imagen principal: cargala desde "Imagen principal".'
+  }
+  nextTick(dibujar)
+  return true
+}
+
+async function aplicarTextoSpec() {
+  let raw
+  try {
+    raw = JSON.parse(textoSpec.value)
+  } catch (error) {
+    errorSpec.value = 'El texto no es un JSON válido: ' + error.message
+    avisoSpec.value = ''
+    return
+  }
+  await aplicarEspecificacion(raw)
+}
+
+async function cargarArchivoSpec(event) {
+  const archivo = event.target.files[0]
+  event.target.value = '' // permite volver a elegir el mismo archivo
+  if (!archivo) return
+  textoSpec.value = await archivo.text()
+  await aplicarTextoSpec()
+}
+
+function especificacionActual() {
+  const redondear = (n) => Math.round(n * 100) / 100
+  return {
+    version: VERSION_SPEC,
+    formato: formato.value,
+    plantilla: plantilla.value,
+    imagen: {
+      url: urlImagenPrincipal,
+      offsetX: redondear(encuadre.offsetX),
+      offsetY: redondear(encuadre.offsetY),
+      autor: creditoImagen.value?.autor ?? '',
+      licencia: creditoImagen.value?.licencia ?? '',
+      fuente: creditoImagen.value?.fuente ?? '',
+    },
+    borde: {
+      areaPct: proporcionImagenPct.value,
+      rasgadoPct: nivelRasgadoPct.value,
+      inclinacionPct: inclinacionPct.value,
+      curvaturaPct: curvaturaPct.value,
+      difuminadoPct: desvanecidoPct.value,
+    },
+    fondo: bgMode.value === 'image' && urlImagenFondo ? { tipo: 'imagen', url: urlImagenFondo } : { tipo: 'color', color: bgColor.value },
+    textos: textos.map((t) => ({
+      valor: t.valor,
+      fuente: t.fuente,
+      color: t.color,
+      tamano: t.tamano,
+      align: t.align,
+      yBase: redondear(t.yBase),
+      offsetX: redondear(t.offsetX),
+      offsetY: redondear(t.offsetY),
+    })),
+    iconos: logos
+      .filter((l) => l.claveIcono)
+      .map((l) => ({
+        icono: l.claveIcono,
+        color: l.color,
+        tamano: l.tamano,
+        opacidadPct: l.opacidadPct,
+        offsetX: redondear(l.offsetX),
+        offsetY: redondear(l.offsetY),
+      })),
+  }
+}
+
+// --- Flyers guardados en la base (tabla flyers): listado, carga, guardado y borrado lógico ---
+const flyersGuardados = ref([]) // [{ codigo, titulo }]
+const flyerSeleccionado = ref(null) // codigo del flyer cargado en pantalla (null = ninguno)
+const tituloFlyer = ref('')
+const guardandoFlyer = ref(false)
+
+async function cargarListadoFlyers() {
+  const r = await api.get({ entity: 'flyers', action: 'getFlyers' })
+  if (r.ok) flyersGuardados.value = r.payload
+}
+
+async function cargarFlyerGuardado() {
+  if (flyerSeleccionado.value === null) {
+    tituloFlyer.value = ''
+    return
+  }
+  const r = await api.get({ entity: 'flyers', action: 'getFlyer', payload: { codigo: flyerSeleccionado.value } })
+  if (!r.ok) return
+
+  if (await aplicarEspecificacion(r.payload.spec)) {
+    tituloFlyer.value = r.payload.titulo
+    textoSpec.value = JSON.stringify(r.payload.spec, null, 2)
+  } else {
+    showToast('No se pudo cargar el flyer: ' + errorSpec.value.split('\n')[0], 'error')
+  }
+}
+
+// actualizar = true pisa el flyer seleccionado; false crea uno nuevo con el título ingresado.
+async function guardarFlyer(actualizar) {
+  const avisos = []
+  if (!urlImagenPrincipal && plantilla.value !== 'libre') avisos.push('la imagen principal se subió desde un archivo y no tiene URL')
+  if (bgMode.value === 'image' && !urlImagenFondo) avisos.push('la imagen de fondo se subió desde un archivo: se guardó el color de fondo')
+  if (logos.some((l) => !l.claveIcono)) avisos.push('los logos o imágenes propias no se guardan (solo los íconos del set)')
+  avisoSpec.value = avisos.length ? 'Se guardó con limitaciones: ' + avisos.join('; ') + '.' : ''
+
+  guardandoFlyer.value = true
+  try {
+    const r = await api.post({
+      entity: 'flyers',
+      action: 'saveFlyer',
+      payload: {
+        codigo: actualizar ? flyerSeleccionado.value : null,
+        titulo: tituloFlyer.value.trim(),
+        spec: especificacionActual(),
+      },
+    })
+    if (!r.ok) return
+    showToast(actualizar ? 'Flyer actualizado' : 'Flyer guardado', 'success')
+    await cargarListadoFlyers()
+    flyerSeleccionado.value = r.payload
+  } finally {
+    guardandoFlyer.value = false
+  }
+}
+
+async function eliminarFlyerGuardado() {
+  const flyer = flyersGuardados.value.find((f) => f.codigo === flyerSeleccionado.value)
+  if (!flyer) return
+  const { ok } = await showModal(`¿Eliminar el flyer "${flyer.titulo}"? Esta acción no se puede deshacer desde el panel.`, 1)
+  if (!ok) return
+
+  const r = await api.post({ entity: 'flyers', action: 'delFlyer', payload: { codigo: flyer.codigo } })
+  if (!r.ok) return
+  showToast('Flyer eliminado', 'success')
+  flyerSeleccionado.value = null
+  tituloFlyer.value = ''
+  await cargarListadoFlyers()
+}
+
+onMounted(cargarListadoFlyers)
+
 function descargar() {
   const link = document.createElement('a')
   link.download = 'flyer.png'
@@ -1374,6 +1644,7 @@ input[type='file']::-webkit-file-upload-button {
   opacity: 0.5;
 }
 
+.campo-texto input[type='text'],
 .campo-texto select {
   cursor: pointer;
   width: 100%;
@@ -1445,6 +1716,17 @@ input[type='file']::-webkit-file-upload-button {
   background: #fafafa;
   border: 1px solid #ccc;
   border-radius: 6px;
+}
+
+.texto-spec {
+  width: 100%;
+  font-family: monospace;
+  font-size: 0.75rem;
+  resize: vertical;
+}
+
+.aviso-multilinea {
+  white-space: pre-line;
 }
 
 .grilla-iconos {
