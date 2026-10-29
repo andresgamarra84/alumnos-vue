@@ -366,19 +366,19 @@ watch(
     updGrilla()
   }
 )
-watch(
-  profesorSeleccionado,
-  (nuevoProfesor) => {
-    grillaHorarios.value.forEach(v=>{
-      v.show = (nuevoProfesor === v.codProfesor || nuevoProfesor === null)
-    })
-  }
-)
+const aplicarFiltroProfesor = () => {
+  const profesor = profesorSeleccionado.value
+  grillaHorarios.value.forEach(v => {
+    v.show = (profesor === null || profesor === v.codProfesor)
+  })
+}
+watch(profesorSeleccionado, aplicarFiltroProfesor)
 
 const updGrilla = async () => {
   const dia = diaSeleccionado.value
   const sede = sedeSeleccionada.value
   grillaHorarios.value = await getGrilla(dia, sede)
+  aplicarFiltroProfesor() // Mantener el filtro de docente al cambiar de día o sede
 }
 const getGrilla = async () => {
   const r = await api.get({
