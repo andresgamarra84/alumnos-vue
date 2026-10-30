@@ -169,7 +169,7 @@
   </div>
 
   <!-- Reservas de vacante -->
-  <div v-if="arrReservas.length > 0" class="margen-bottom">
+  <div v-if="reservasVigentes.length > 0 || (puedeBorrarReservas && reservasBorradas.length > 0)" class="margen-bottom">
     <SectionHeader
       title="Reservas de vacante"
       :count="reservasVigentes.length"
@@ -192,7 +192,7 @@
           </template>
         </InfoCard>
       </InfoCardGrid>
-      <div v-if="reservasBorradas.length > 0">
+      <div v-if="puedeBorrarReservas && reservasBorradas.length > 0">
         <div class="text-end">
           <a @click="toggleDeleted(2)">{{ showDeleted[2] ? 'Ocultar eliminadas' : 'Mostrar eliminadas' }}</a>
         </div>
