@@ -181,8 +181,8 @@
         <InfoCard
           v-for="item in reservasVigentes"
           :key="item.codigo"
-          :title="item.materia"
-          :subtitle="`${item.carrera} (${item.instrumento})`"
+          :title="item.instrumento"
+          :subtitle="item.carrera"
           :badge="item.leyenda"
           variant="info"
         >
@@ -200,9 +200,9 @@
           <InfoCard
             v-for="item in reservasBorradas"
             :key="item.codigo"
-            :title="item.materia"
-            :subtitle="`${item.carrera} (${item.instrumento})`"
-            :badge="item.cambio"
+            :title="item.instrumento"
+            :subtitle="item.carrera"
+            :badge="item.leyenda"
             variant="neutral"
             muted
           >

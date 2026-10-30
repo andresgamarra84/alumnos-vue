@@ -16,7 +16,7 @@
           <input
             type="checkbox"
             v-model="setCambioProf"
-            @click="onChangeCambioProf()"
+            @change="onChangeCambioProf()"
           />
           <label>Solicito cambio de Profesor</label>
         </div>
@@ -27,7 +27,7 @@
                     type="checkbox"
                     id="cambioInstr"
                     v-model="setCambioInstr"
-                    @click="onChangeCambioInstr()"
+                    @change="onChangeCambioInstr()"
                 />
                 <label>Solicito cambio de Instrumento</label>
             </div>
@@ -49,7 +49,6 @@
 <script setup>
 import { ref, onMounted } from 'vue';
 import { api } from '@/api/api.js';
-import { useModal } from '@/composables/useModal'
 import CarrerasSelect from '@/components/CarrerasSelect.vue';
 import InstrumentosSelect from '@/components/InstrumentosSelect.vue';
 import { showModal, showToast } from '@/services/uiBus';
@@ -60,6 +59,7 @@ const setCambioProf = ref(false);
 const setCambioInstr = ref(false);
 const arrInstrumentos = ref([]);
 const nuevoInstr = ref(null);
+const selectedInstrumento = ref('');
 onMounted(() => {
   getCarrerasAlumno();
 })
@@ -87,8 +87,10 @@ const onSelectCarrera = async () => {
         codInstrumento: carrera.codInstrumento
       },
     });
+    // datosPrevios llega como [] cuando el alumno no tiene cursada de instrumento
     opciones.value =  {
       datosPrevios : r.payload.datosPrevios,
+      nombreProf : r.payload.datosPrevios?.nombreProf,
       cambioProfDisponible : r.payload.profDisponibles,
     };
   } catch (e) {
@@ -97,14 +99,21 @@ const onSelectCarrera = async () => {
 }
 const onChangeCambioProf = async () => {
   if (setCambioProf.value) {
-    const modal = useModal()
-    const ok = await modal.show('¿Confirma reserva?', 1);
+    const { ok } = await showModal('¿Confirma que solicita cambio de profesor?', 1);
+    if (!ok) setCambioProf.value = false;
   }
+}
+const onSelectInstrumento = (codigo) => {
+  nuevoInstr.value = codigo;
 }
 const onChangeCambioInstr = async () => {
     if (setCambioInstr.value) {
-      const carrera = carreras.value[selectedIndexCarrera.value].n
-      const ok = modal.show("Al solicitar cambio de instrumento pierde la inscripción a , reemplazándola por el instrumento que seleccione a continuación. ¿Desea continuar?", 1)
+      const carrera = carreras.value[selectedIndexCarrera.value];
+      const { ok } = await showModal(`Al solicitar cambio de instrumento pierde la inscripción a ${carrera.nombreInstrumento}, reemplazándola por el instrumento que seleccione a continuación. ¿Desea continuar?`, 1);
+      if (!ok) {
+        setCambioInstr.value = false;
+        return;
+      }
       const r = await api.get({
         entity: "instrumentos",
         action: "listInstrumentos",
@@ -113,10 +122,24 @@ const onChangeCambioInstr = async () => {
     }
     else {
       nuevoInstr.value = '';
+      selectedInstrumento.value = '';
       arrInstrumentos.value = [];
     }
 }
+const resetForm = () => {
+  nuevoInstr.value = '';
+  selectedInstrumento.value = '';
+  selectedIndexCarrera.value = null;
+  opciones.value = {};
+  setCambioProf.value = false;
+  setCambioInstr.value = false;
+  arrInstrumentos.value = [];
+}
 const confirmReserva = async () => {
+  if (setCambioInstr.value && !nuevoInstr.value) {
+    showToast('Seleccione el instrumento al que desea cambiar.', 'error');
+    return;
+  }
   const c = await showModal('¿Confirma reserva?', 1);
   if (c.ok) {
     const carrera = carreras.value[selectedIndexCarrera.value];
@@ -127,20 +150,20 @@ const confirmReserva = async () => {
         payload: {
           codAlC : carrera.codigo,
           nuevoInstr: nuevoInstr.value,
-          codProfesor: opciones.value.datosPrevios.codProfesor ?? null,
+          codProfesor: opciones.value.datosPrevios?.codProfesor ?? null,
           cambioProf: setCambioProf.value,
           cambioInstr: setCambioInstr.value,
         },
       });
-      if (r.ok) showToast("La reserva ha sido ingresada y puede visualizarse en la página de inicio.", 'success')
+      if (r.ok) {
+        showToast("La reserva ha sido ingresada y puede visualizarse en la página de inicio.", 'success');
+        resetForm();
+        await getCarrerasAlumno(); // Refresca las carreras para deshabilitar la que ya tiene reserva
+      }
     } catch (e) {
       console.log(e);
     }
   }
-  nuevoInstr.value = '';
-  selectedIndexCarrera.value = null;
-  opciones.value = [];
-  setCambioProf.value = false;
 }
 
 
