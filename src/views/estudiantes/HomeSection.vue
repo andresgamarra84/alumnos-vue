@@ -188,7 +188,7 @@
         >
           <InfoMeta v-if="item.nombreProf"><template #icon><User /></template>{{ item.nombreProf }}</InfoMeta>
           <template #actions>
-            <button type="button" class="card-link card-link--danger" @click="updReserva(item)">Borrar reserva</button>
+            <button v-if="puedeBorrarReservas" type="button" class="card-link card-link--danger" @click="updReserva(item)">Borrar reserva</button>
           </template>
         </InfoCard>
       </InfoCardGrid>
@@ -208,7 +208,7 @@
           >
             <InfoMeta v-if="item.nombreProf"><template #icon><User /></template>{{ item.nombreProf }}</InfoMeta>
             <template #actions>
-              <button type="button" class="card-link" @click="updReserva(item)">Recuperar reserva</button>
+              <button v-if="puedeBorrarReservas" type="button" class="card-link" @click="updReserva(item)">Recuperar reserva</button>
             </template>
           </InfoCard>
         </InfoCardGrid>
@@ -291,7 +291,9 @@ import { User, CalendarDays, Library, ClipboardList, Target, FileText, Graduatio
 import { usePermisos } from '@/composables/usePermisos';
 import { useCicloLectivo } from '@/composables/useCicloLectivo';
 
-const { master } = usePermisos();
+const { master, tienePermiso } = usePermisos();
+// Solo el admin con permiso (o master) puede borrar y recuperar reservas
+const puedeBorrarReservas = computed(() => tienePermiso('reservas_modificar', 'reservas_all'));
 const { ciclos, codCicloLectivo, seleccionar, cargarCiclos, payloadCiclo } = useCicloLectivo();
 
 const arrNotif = ref([]);

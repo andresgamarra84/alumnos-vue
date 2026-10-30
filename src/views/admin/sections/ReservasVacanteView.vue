@@ -44,6 +44,7 @@
         :key="item.codigo ?? k"
         v-show="item.show && reservaVisible(item)"
         :item="item"
+        :puede-modificar="puedeModificar"
         @edit="editReserva(item)"
         @open="({ area, codigo }) => openPanel(area, codigo)"
         @show-prof="showProfList"
@@ -152,8 +153,11 @@ import { api } from "@/api/api"
 import { showModal, showToast } from "@/services/uiBus"
 import { useImpersonation } from "@/views/admin/composables/useImpersonation"
 import ReservaItem from "@/views/admin/components/ReservaItem.vue"
+import { usePermisos } from "@/composables/usePermisos"
 
 const { openUserPanel } = useImpersonation()
+const { tienePermiso, cargarPermisos } = usePermisos()
+const puedeModificar = computed(() => tienePermiso('reservas_modificar', 'reservas_all'))
 
 const selectedCiclo = ref("0")
 
@@ -366,6 +370,7 @@ const listProfesores = async () => {
 }
 
 onMounted(async () => {
+  await cargarPermisos()
   await listCiclos()
   await listProfesores()
   await listInstrumentos()

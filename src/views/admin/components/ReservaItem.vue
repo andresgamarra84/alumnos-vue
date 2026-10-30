@@ -15,7 +15,9 @@
     </div>
     <div class="col-1">
       {{ item.fecha }}
-      <a class='link-primary' @click="$emit('edit')">Editar</a> - <a class='link-danger' @click="$emit('delete')">Borrar</a>
+      <template v-if="puedeModificar">
+        <a class='link-primary' @click="$emit('edit')">Editar</a> - <a class='link-danger' @click="$emit('delete')">Borrar</a>
+      </template>
     </div>
   </div>
 </template>
@@ -23,6 +25,7 @@
 <script setup>
 defineProps({
   item: { type: Object, required: true },
+  puedeModificar: { type: Boolean, default: false },
 })
 defineEmits(["edit", "open", "delete"])
 </script>
