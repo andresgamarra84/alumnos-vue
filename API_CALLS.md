@@ -245,6 +245,8 @@ Auditoría base: 2026-11-03, 247 puntos de llamada en `src` (excluye `composable
 | estudiantes | mesas | updSolicitud | POST | **FALTA (sin handler)** | HomeSection |
 | estudiantes | docs | uploadFile (Resumable) | POST | **FALTA** | DocumentacionView |
 | admin | novedades | uploadFile (Resumable) | POST | OK | NovedadesView |
+| admin | docingresantes | uploadFile (Resumable) | POST | OK | PreinscripcionesDocumentacionView |
+| admin | docingresantes | delFile | POST | OK | PreinscripcionesDocumentacionView |
 | admin | flyers | uploadImagenFlyer (`fetch`) | POST | OK | FlyersView |
 | todos | login | login, getUsers, updatePwd, recoverUsr | GET/POST | no aplica (whitelist, fuera de routes por diseño) | views/auth |
 

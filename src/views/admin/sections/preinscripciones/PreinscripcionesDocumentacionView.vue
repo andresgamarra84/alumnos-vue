@@ -43,9 +43,23 @@
               <div class="doc__archivos">
                 <template v-for="(url, i2) in doc[1]" :key="i2">
                   <span v-if="!url" class="sin-archivo">Sin archivo cargado</span>
-                  <a v-else :href="url" target="_blank" class="archivo-link">Ver archivo{{ doc[1].length > 1 ? ` ${i2 + 1}` : '' }}</a>
+                  <span v-else class="archivo-item">
+                    <a :href="url" target="_blank" class="archivo-link">{{ nombreArchivo(url) }}</a>
+                    <a href="#" class="archivo-borrar" @click.prevent="borrarArchivo(item, j, url)">Borrar</a>
+                  </span>
                 </template>
                 <span v-if="doc[1].length === 0" class="sin-archivo">Sin archivo cargado</span>
+              </div>
+              <div class="doc__subir">
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary btn-sm"
+                  :disabled="subiendo[claveSubida(item, j)] !== undefined"
+                  @click="subirArchivo(item, j)"
+                >
+                  Subir archivo
+                </button>
+                <span v-if="subiendo[claveSubida(item, j)] !== undefined" class="doc__progreso">{{ subiendo[claveSubida(item, j)] }}%</span>
               </div>
             </div>
             <div class="segmentado" role="radiogroup" :aria-label="doc[0]">
@@ -80,9 +94,9 @@
 
         <div class="acciones">
           <button v-if="!item.tieneClave" class="btn btn-outline-secondary btn-sm me-auto" @click="enviarClave(k)">Enviar clave</button>
-          <button class="btn btn-outline-secondary" @click="closeShow(k)">Cerrar</button>
-          <button class="btn btn-outline-primary" @click="getPDF(k)">Descargar planilla</button>
-          <button class="btn btn-primary" @click="sendMailInfo(k)">Guardar cambios</button>
+          <button class="btn btn-accion btn-accion--cerrar" @click="closeShow(k)">Cerrar</button>
+          <button class="btn btn-accion btn-accion--planilla" @click="getPDF(k)">Descargar planilla</button>
+          <button class="btn btn-accion btn-accion--guardar" @click="sendMailInfo(k)">Guardar cambios</button>
         </div>
       </div>
     </div>
@@ -90,8 +104,10 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from "vue"
+import { ref, reactive, onMounted } from "vue"
+import Resumable from "resumablejs"
 import { api } from "@/api/api"
+import { BASE_URL, SESSION_NAME } from "@/config/app.config"
 import { showModal, showToast } from "@/services/uiBus"
 import { useFileDownload } from "@/composables/useFileDownload"
 
@@ -165,6 +181,83 @@ const getPDF = async (k) => {
     return
   }
   downloadBlob(blob, `Ficha_Preinscripcion_${item.codAlumno}.pdf`, 'application/pdf')
+}
+
+// Subida de documentación en nombre del ingresante. El índice j del documento es la subcarpeta de uploads/ingresantes/{codAlumno}/
+const MAX_BYTES = 15 * 1024 * 1024
+const CARACTERES_INVALIDOS = /[,=?¿!'¡]/g
+const subiendo = reactive({}) // clave "codAlumno_j" -> porcentaje, solo mientras se sube
+const claveSubida = (item, j) => `${item.codAlumno}_${j}`
+
+const subirArchivo = (item, j) => {
+  const clave = claveSubida(item, j)
+  const upl = new Resumable({
+    headers: { Authorization: `Bearer ${sessionStorage.getItem(SESSION_NAME)}` },
+    target: BASE_URL,
+    testChunks: false,
+    query: () => ({
+      entity: 'docingresantes',
+      action: 'uploadFile',
+      payload: JSON.stringify({ codAlumno: item.codAlumno, tipo: j }),
+    }),
+  })
+  if (!upl.support) {
+    showToast('Tu navegador no soporta la carga de archivos.', 'error')
+    return
+  }
+  const error = (texto) => {
+    delete subiendo[clave]
+    showToast(texto || 'No fue posible subir el archivo.', 'error')
+  }
+  upl.on('fileAdded', (file) => {
+    if (file.file.type.startsWith('video/')) return error('No pueden subirse videos.')
+    if (file.size > MAX_BYTES) return error('El archivo supera el tamaño máximo permitido (15 MB).')
+    file.fileName = file.fileName.replace(CARACTERES_INVALIDOS, '')
+    subiendo[clave] = 0
+    upl.upload()
+  })
+  upl.on('fileProgress', () => { subiendo[clave] = Math.floor(upl.progress() * 100) })
+  upl.on('fileSuccess', (file, message) => {
+    try {
+      const r = JSON.parse(message)
+      if (r.ok === false) return error(r.message)
+    } catch { /* respuesta no JSON: se considera subida correcta */ }
+    delete subiendo[clave]
+    const url = `/uploads/ingresantes/${item.codAlumno}/${j}/${file.fileName}`
+    const archivos = item.docs.docs[j][1]
+    if (!archivos.includes(url)) {
+      if (archivos.length === 0) item.docs.numDocs++
+      archivos.push(url)
+    }
+    showToast('El archivo fue cargado.', 'success')
+  })
+  upl.on('fileError', (file, message) => {
+    let texto
+    try { texto = JSON.parse(message).message } catch { /* mensaje por defecto */ }
+    error(texto)
+  })
+  const input = document.createElement('input')
+  input.type = 'file'
+  upl.assignBrowse(input)
+  input.click()
+}
+
+const nombreArchivo = (url) => url.split('/').pop()
+
+const borrarArchivo = async (item, j, url) => {
+  const fileName = nombreArchivo(url)
+  const { ok } = await showModal(`¿Confirma que desea borrar el archivo ${fileName}?`, 1, 'Confirmación')
+  if (!ok) return
+  const r = await api.post({
+    entity: 'docingresantes',
+    action: 'delFile',
+    payload: { codAlumno: item.codAlumno, tipo: j, fileName }
+  })
+  if (!r.ok) return showToast('No se pudo borrar el archivo', 'error')
+  const archivos = item.docs.docs[j][1]
+  archivos.splice(archivos.indexOf(url), 1)
+  if (archivos.length === 0) item.docs.numDocs--
+  showToast('El archivo fue borrado.', 'success')
 }
 
 const enviarClave = async (k) => {
@@ -383,6 +476,28 @@ onMounted(() => {
   color: var(--color-texto-secundario);
   font-style: italic;
 }
+.archivo-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 100%;
+}
+.archivo-link {
+  overflow-wrap: anywhere;
+}
+.archivo-borrar {
+  color: #d9534f;
+}
+.doc__subir {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+.doc__progreso {
+  font-size: 0.85rem;
+  color: var(--color-texto-secundario);
+}
 
 /* Radios como control segmentado */
 .segmentado {
@@ -458,6 +573,27 @@ onMounted(() => {
   gap: 8px;
   padding-top: 12px;
   border-top: 1px solid var(--color-borde);
+}
+
+/* Botones de acción con colores distintos (mismos tonos que los estados de documentación) */
+.btn-accion {
+  color: #fff;
+  border: 1px solid transparent;
+  transition: filter 0.15s ease-in-out;
+}
+.btn-accion:hover,
+.btn-accion:focus-visible {
+  color: #fff;
+  filter: brightness(0.9);
+}
+.btn-accion--cerrar {
+  background: #7b8794;
+}
+.btn-accion--planilla {
+  background: #2f80c0;
+}
+.btn-accion--guardar {
+  background: #2e9e6b;
 }
 
 @media (max-width: 576px) {
