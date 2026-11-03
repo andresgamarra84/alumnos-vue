@@ -238,51 +238,32 @@
     </div>
 
     <!-- Tipos materia (bitmask) -->
-    <div class="col-12 mt-3 text-start tipo-materia-linea">
-      <label class="me-3">
-        <input
-          type="checkbox"
-          :checked="mesa.tipoMateria & 1"
-          @change="toggleTipoMateria(key, 1)"
-        />
-        Normal
-      </label>
-
-      <label class="me-3">
-        <input
-          type="checkbox"
-          :checked="mesa.tipoMateria & 2"
-          @change="toggleTipoMateria(key, 2)"
-        />
-        Instrumento
-      </label>
-
-      <label class="me-3">
-        <input
-          type="checkbox"
-          :checked="mesa.tipoMateria & 4"
-          @change="toggleTipoMateria(key, 4)"
-        />
-        Armónico
-      </label>
-
-      <label class="me-3">
-        <input
-          type="checkbox"
-          :checked="mesa.tipoMateria & 8"
-          @change="toggleTipoMateria(key, 8)"
-        />
-        Espacio Institucional
-      </label>
-
-      <label class="me-3">
-        <input
-          type="checkbox"
-          :checked="mesa.tipoMateria & 16"
-          @change="toggleTipoMateria(key, 16)"
-        />
-        Espacio Inst. Alternativo
-      </label>
+    <div class="col-12 mt-3 text-start">
+      <div class="dropdown">
+        <button
+          type="button"
+          class="btn btn-outline-secondary dropdown-toggle tipo-materia-toggle"
+          data-bs-toggle="dropdown"
+          data-bs-auto-close="outside"
+          aria-expanded="false"
+        >
+          {{ tipoMateriaLabel(mesa.tipoMateria) }}
+        </button>
+        <ul class="dropdown-menu">
+          <li><h6 class="dropdown-header">Tipo de mesa</h6></li>
+          <li v-for="t in tiposMateria" :key="t.bit">
+            <label class="dropdown-item">
+              <input
+                type="checkbox"
+                class="form-check-input me-2"
+                :checked="(mesa.tipoMateria & t.bit) !== 0"
+                @change="updTipoMateria(key, t.bit, $event)"
+              />
+              {{ t.nombre }}
+            </label>
+          </li>
+        </ul>
+      </div>
     </div>
   </div>
   </template>
@@ -542,6 +523,34 @@ const saveEditDate = async (key) => {
     cancelEditDate()
   }
 }
+// Tipos de mesa (bitmask, igual que constants.php del backend)
+const tiposMateria = [
+  { bit: 1, nombre: "Normal" },
+  { bit: 2, nombre: "Instrumento" },
+  { bit: 4, nombre: "Armónico" },
+  { bit: 8, nombre: "Espacio Institucional" },
+  { bit: 16, nombre: "Espacio Inst. Alternativo" },
+]
+const tipoMateriaLabel = (mask) => {
+  const nombres = tiposMateria.filter(t => mask & t.bit).map(t => t.nombre)
+  return nombres.length ? nombres.join(", ") : "Tipo de mesa"
+}
+const updTipoMateria = async (key, bit, event) => {
+  const mesa = arrMesas.value[key]
+  const checkbox = event.target
+  const anterior = mesa.tipoMateria
+  const tipoMateria = checkbox.checked ? anterior | bit : anterior & ~bit
+  mesa.tipoMateria = tipoMateria
+  const r = await api.post({
+    entity: "mesasexamen",
+    action: "updTipoMateria",
+    payload: { codMesa: mesa.codigo, tipoMateria },
+  })
+  if (!r.ok) {
+    mesa.tipoMateria = anterior
+    checkbox.checked = !checkbox.checked
+  }
+}
 const borrarProfesor= async (key, autoridad) => {
   console.log("Borrar profesor:", key, autoridad)
   const mesa = arrMesas.value[key]
@@ -605,13 +614,9 @@ const  toggleTipoMateria = async (key, bit) => {
 </script>
 
 <style scoped>
-.tipo-materia-linea {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px;
-  align-items: center;
-}
-.tipo-materia-linea label {
-  margin-right: 0;
+.tipo-materia-toggle {
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
 }
 </style>
