@@ -188,7 +188,8 @@
         >
           <InfoMeta v-if="item.nombreProf"><template #icon><User /></template>{{ item.nombreProf }}</InfoMeta>
           <template #actions>
-            <button v-if="puedeBorrarReservas" type="button" class="card-link card-link--danger" @click="updReserva(item)">Borrar reserva</button>
+            <button v-if="puedeBorrarReservas" type="button" class="card-link" title="Editar reserva" aria-label="Editar reserva" @click="editReserva(item)"><Pencil :size="16" /></button>
+            <button v-if="puedeBorrarReservas" type="button" class="card-link card-link--danger" title="Borrar reserva" aria-label="Borrar reserva" @click="updReserva(item)"><Trash2 :size="16" /></button>
           </template>
         </InfoCard>
       </InfoCardGrid>
@@ -274,6 +275,49 @@
       </InfoCard>
     </InfoCardGrid>
   </div>
+
+  <!-- Modal editar reserva (solo admin) -->
+  <div v-if="showEditModal" class="modal-backdrop-custom" @click.self="closeEditModal">
+    <div class="modal-card">
+      <h4>Editar reserva</h4>
+
+      <div class="mb-3">
+        <label class="form-label">Tipo de reserva</label>
+        <select v-model="editReservaInfo.cambio" class="form-select">
+          <option v-for="t in arrTipoReserva" :key="t.codigo" :value="t.codigo">{{ t.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Carrera</label>
+        <select v-model="editReservaInfo.codAlumnosCarreras" class="form-select">
+          <option disabled value="">Seleccione...</option>
+          <option v-for="c in arrCarrerasAlumno" :key="c.codigo" :value="c.codigo">{{ c.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="mb-3" v-if="editReservaInfo.cambio === 'cambioInstr'">
+        <label class="form-label">Nuevo instrumento</label>
+        <select v-model="editReservaInfo.codNuevoInstrumento" class="form-select">
+          <option disabled :value="null">Seleccione...</option>
+          <option v-for="i in arrInstrumentos" :key="i.codigo" :value="i.codigo">{{ i.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">Profesor</label>
+        <select v-model="editReservaInfo.codProfesor" class="form-select">
+          <option disabled value="">Seleccione...</option>
+          <option v-for="p in arrProfList" :key="p.codigo" :value="p.codigo">{{ p.nombre }}</option>
+        </select>
+      </div>
+
+      <div class="d-flex justify-content-end gap-2">
+        <button class="btn btn-secondary" @click="closeEditModal">Cancelar</button>
+        <button class="btn btn-primary" @click="saveEditReserva">Guardar cambios</button>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script setup>
@@ -287,11 +331,11 @@ import InfoChip from '@/components/card/InfoChip.vue';
 import InfoStat from '@/components/card/InfoStat.vue';
 import InfoDate from '@/components/card/InfoDate.vue';
 import SectionHeader from '@/components/card/SectionHeader.vue';
-import { User, CalendarDays, Library, ClipboardList, Target, FileText, GraduationCap } from '@lucide/vue';
+import { User, CalendarDays, Library, ClipboardList, Target, FileText, GraduationCap, Pencil, Trash2 } from '@lucide/vue';
 import { usePermisos } from '@/composables/usePermisos';
 import { useCicloLectivo } from '@/composables/useCicloLectivo';
 
-const { master, tienePermiso } = usePermisos();
+const { master, tienePermiso, cargarPermisos } = usePermisos();
 // Solo el admin con permiso (o master) puede borrar y recuperar reservas
 const puedeBorrarReservas = computed(() => tienePermiso('reservas_modificar', 'reservas_all'));
 const { ciclos, codCicloLectivo, seleccionar, cargarCiclos, payloadCiclo } = useCicloLectivo();
@@ -497,6 +541,60 @@ const updReserva = async (item) => {
   }
 };
 
+/* Edición de reserva (admin) */
+const showEditModal = ref(false);
+const editReservaInfo = ref({});
+const editReservaOriginal = ref(null);
+const arrCarrerasAlumno = ref([]);
+const arrInstrumentos = ref([]);
+const arrProfList = ref([]);
+const arrTipoReserva = [
+  { codigo: 'comun', nombre: 'Común' },
+  { codigo: 'cambioInstr', nombre: 'Cambio de Instr.' },
+  { codigo: 'cambioProf', nombre: 'Cambio de Prof.' },
+];
+
+const editReserva = async (item) => {
+  editReservaOriginal.value = { ...item };
+  editReservaInfo.value = { ...item };
+  showEditModal.value = true;
+  const [rCarreras, rInstr, rProf] = await Promise.all([
+    api.get({ entity: 'carreras', action: 'getCarrerasAlumno' }),
+    api.get({ entity: 'instrumentos', action: 'getInstrumentos' }),
+    api.get({ entity: 'reservas', action: 'getProfesoresReserva' }),
+  ]);
+  arrCarrerasAlumno.value = (rCarreras.payload ?? []).map(c => ({ codigo: c.codigo, nombre: c.nombreCorto }));
+  arrInstrumentos.value = rInstr.payload ?? [];
+  arrProfList.value = rProf.payload ?? [];
+};
+
+const closeEditModal = () => {
+  editReservaInfo.value = {};
+  editReservaOriginal.value = null;
+  showEditModal.value = false;
+};
+
+const saveEditReserva = async () => {
+  const { ok } = await showModal('¿Confirma cambios en la reserva?', 1);
+  if (!ok) return;
+  const r = await api.post({
+    entity: 'reservas',
+    action: 'editReserva',
+    payload: {
+      codigo: editReservaInfo.value.codigo,
+      codProfesor: editReservaInfo.value.codProfesor,
+      codAlumnosCarreras: editReservaInfo.value.codAlumnosCarreras,
+      codNuevoInstrumento: editReservaInfo.value.cambio === 'cambioInstr' ? editReservaInfo.value.codNuevoInstrumento : null,
+      cambio: editReservaInfo.value.cambio,
+    },
+  });
+  if (r.ok) {
+    showToast('Datos actualizados', 'success');
+    closeEditModal();
+    await listReservas();
+  }
+};
+
 const listSolicitudes = async () => {
   //arrSolicitudes.value = [];
   arrSolicConstancias.value = [];
@@ -544,6 +642,7 @@ onMounted(async () => {
   arrConfig.value = configRes.payload || {};
   /*const authRes = await api.get({ entity: 'config', action: 'authCheck' });
   esAutoridad.value = authRes.payload || false;*/
+  await cargarPermisos();
   await cargarCiclos(); // define el ciclo antes de pedir las inscripciones
   await Promise.all([
     getInscripcionesMaterias(),
@@ -558,6 +657,22 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.modal-backdrop-custom {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+}
+.modal-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 520px;
+  max-width: 95%;
+}
 .ciclo-select { max-width: 240px; }
 .ciclo-select label { font-weight: 600; margin-bottom: 4px; }
 .chips { display: flex; flex-wrap: wrap; gap: 6px; }

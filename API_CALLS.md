@@ -171,7 +171,7 @@ Auditoría base: 2026-11-03, 247 puntos de llamada en `src` (excluye `composable
 | planesprogramas | getMaterias | GET | FALTA | PlanesProgramasView |
 | reservas | getReservas | GET | OK | HomeSection |
 
-## Rol: estudiantes (59 llamados)
+## Rol: estudiantes (62 llamados)
 
 | entity | action | método | routes.php | vistas |
 |---|---|---|---|---|
@@ -187,7 +187,7 @@ Auditoría base: 2026-11-03, 247 puntos de llamada en `src` (excluye `composable
 | cambiocatedra | 1 | POST | OK | HomeSection |
 | carreras | addCarrera | POST | OK | CarrerasView |
 | carreras | getCarreras | GET | OK | CarrerasView, PlanesProgramasView |
-| carreras | getCarrerasAlumno | GET | OK | CursadasAprobadasView, MateriasAprobadasView, CarrerasView, MateriasView, MesasView, SolicitudMesaView |
+| carreras | getCarrerasAlumno | GET | OK | CursadasAprobadasView, MateriasAprobadasView, CarrerasView, MateriasView, MesasView, SolicitudMesaView, HomeSection |
 | carreras | updateCarreraAlumno | POST | OK | CarrerasView |
 | cicloslectivos | getCiclosLectivos | GET | OK | useCicloLectivo |
 | config | getConfig | GET | OK | HomeSection |
@@ -205,7 +205,7 @@ Auditoría base: 2026-11-03, 247 puntos de llamada en `src` (excluye `composable
 | examenes | updEspacioExamen | POST | OK | MateriasAprobadasView |
 | inicio | 1 | GET | OK | HomeSection |
 | instituciones | getInstituciones | GET | OK | ExamenForm |
-| instrumentos | getInstrumentos | GET | OK | CarrerasView |
+| instrumentos | getInstrumentos | GET | OK | CarrerasView, HomeSection |
 | instrumentos | listInstrumentos | GET | OK | ReservasView |
 | localidades | getLocalidades | GET | OK | DatosPersonalesView |
 | localidades | getProvincias | GET | OK | DatosPersonalesView |
@@ -227,8 +227,10 @@ Auditoría base: 2026-11-03, 247 puntos de llamada en `src` (excluye `composable
 | novedades | getNovedades | GET | OK | NovedadesDiariasView |
 | planesprogramas | getMaterias | GET | FALTA | PlanesProgramasView |
 | reservas | confirmReserva | POST | OK | ReservasView |
+| reservas | editReserva | POST | OK | HomeSection |
 | reservas | getCarrerasParaReserva | GET | OK | ReservasView |
 | reservas | getOpcionesDeReserva | GET | OK | ReservasView |
+| reservas | getProfesoresReserva | GET | OK | HomeSection |
 | reservas | listReservas | GET | OK | HomeSection |
 | reservas | updReserva | POST | OK | HomeSection |
 | telegram | generateCode | POST | OK | TelegramView |
