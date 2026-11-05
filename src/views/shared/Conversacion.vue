@@ -5,7 +5,7 @@
             :key="i"
             :class="['mensaje', getMessageClass(m.clase)]"
         >
-            <div v-html="m.mensaje" />
+            <div v-html="linkify(m.mensaje)" />
             <div
                 v-if="showVistoIndicator && m.clase === 'admin'"
                 class="visto-indicator"
@@ -41,6 +41,7 @@
 
 <script setup>
 import { defineEmits, defineProps } from 'vue'
+import DOMPurify from 'dompurify'
 
 const emit = defineEmits(['send-msg', 'update:respuesta', 'close-chat', 'close-thread'])
 
@@ -62,6 +63,40 @@ defineProps({
         default: false
     }
 })
+
+const URL_REGEX = /\b(?:https?:\/\/|www\.)[^\s<>"']+/gi
+
+// Los links existentes también se abren en una pestaña nueva
+DOMPurify.addHook('afterSanitizeAttributes', (node) => {
+    if (node.tagName === 'A') {
+        node.setAttribute('target', '_blank')
+        node.setAttribute('rel', 'noopener noreferrer')
+    }
+})
+
+const sanitize = (html) => DOMPurify.sanitize(String(html ?? ''), {
+    ALLOWED_TAGS: ['br', 'a', 'b', 'strong', 'i', 'em', 'u', 'p', 'ul', 'ol', 'li'],
+    ALLOWED_ATTR: ['href'],
+})
+
+// Sanitiza el mensaje y convierte las URL del texto en links, sin tocar las etiquetas HTML ni lo que ya está dentro de un <a>
+const linkify = (html) => {
+    let dentroDeLink = false
+    return sanitize(html).split(/(<[^>]*>)/).map((parte) => {
+        if (parte.startsWith('<')) {
+            if (/^<a[\s>]/i.test(parte)) dentroDeLink = true
+            else if (/^<\/a\s*>/i.test(parte)) dentroDeLink = false
+            return parte
+        }
+        if (dentroDeLink) return parte
+        return parte.replace(URL_REGEX, (url) => {
+            // la puntuación final no forma parte de la URL
+            const [, limpia, resto] = url.match(/^(.*?)([.,;:!?)\]]*)$/)
+            const href = /^www\./i.test(limpia) ? `https://${limpia}` : limpia
+            return `<a href="${href}" target="_blank" rel="noopener noreferrer">${limpia}</a>${resto}`
+        })
+    }).join('')
+}
 
 const getMessageClass = (clase) => {
     if (clase === 'alumno' || clase === 'fondoAlumno' || clase === 0 || clase === 1 || clase === '0' || clase === '1') {
@@ -112,8 +147,14 @@ const getMessageClass = (clase) => {
 }
 
 .fondoAdmin {
-    background-color: var(--color-acento);
-    color: var(--color-fondo-secundario);
+    background-color: var(--color-acento-hover);
+    color: #fff;
+}
+
+.mensaje :deep(a) {
+    color: inherit;
+    text-decoration: underline;
+    word-break: break-all;
 }
 
 .visto-indicator {
@@ -124,7 +165,7 @@ const getMessageClass = (clase) => {
 }
 
 .visto-pendiente {
-    color: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.75);
 }
 
 .visto-leido {

@@ -11,6 +11,7 @@
   "dependencies": {
     "@lucide/vue": "^1.56.0",
     "bootstrap": "^5.3.8",
+    "dompurify": "^3.4.17",
     "interactjs": "^1.10.27",
     "qrcode": "^1.5.4",
     "resumablejs": "^1.1.0",
