@@ -28,13 +28,23 @@
       <div class="cabecera col-3" @click="listReservas('resumen')">Resumen</div>
     </div>
 
+    <!-- Filtro por docente -->
+    <div v-if="arrReservas.length > 0" class="mb-3">
+      <label class="form-label">Docente:</label>
+      <select class="form-select" v-model="filtroDocente">
+        <option value="">-- Todos --</option>
+        <option v-for="d in arrDocentesReservas" :key="d.codigo" :value="d.codigo">{{ d.nombre }}</option>
+      </select>
+    </div>
+
     <!-- Reservas (lista unica filtrada por tipo) -->
     <div v-show="filteredReservas.length > 0">
       <ReservaItem
         v-for="(item, k) in filteredReservas"
         :key="item.codigo ?? k"
-        v-show="item.show"
+        v-show="item.show && reservaVisible(item)"
         :item="item"
+        :puede-modificar="puedeModificar"
         @edit="editReserva(item)"
         @open="({ area, codigo }) => openPanel(area, codigo)"
         @show-prof="showProfList"
@@ -143,8 +153,11 @@ import { api } from "@/api/api"
 import { showModal, showToast } from "@/services/uiBus"
 import { useImpersonation } from "@/views/admin/composables/useImpersonation"
 import ReservaItem from "@/views/admin/components/ReservaItem.vue"
+import { usePermisos } from "@/composables/usePermisos"
 
 const { openUserPanel } = useImpersonation()
+const { tienePermiso, cargarPermisos } = usePermisos()
+const puedeModificar = computed(() => tienePermiso('reservas_modificar', 'reservas_all'))
 
 const selectedCiclo = ref("0")
 
@@ -174,6 +187,26 @@ const countByType = computed(() => ({
   cambioInstr: arrReservas.value.filter((i) => i.cambio === "cambioInstr").length,
   cambioProf: arrReservas.value.filter((i) => i.cambio === "cambioProf").length,
 }))
+
+/* FILTRO POR DOCENTE */
+const filtroDocente = ref("")
+
+// Docentes que figuran en las reservas listadas (sin repetir, ordenados)
+const arrDocentesReservas = computed(() => {
+  const docentes = new Map()
+  arrReservas.value.forEach((r) => {
+    if (r.codProfesor && r.nombreProf) docentes.set(r.codProfesor, r.nombreProf)
+  })
+  return [...docentes]
+    .map(([codigo, nombre]) => ({ codigo, nombre }))
+    .sort((a, b) => a.nombre.localeCompare(b.nombre))
+})
+
+const reservaVisible = (reserva) => {
+  if (!filtroDocente.value) return true
+  return reserva.codProfesor === filtroDocente.value
+}
+
 const listInstrumentos = async () => {
     const rInstrumentos = await api.get({
     entity: "instrumentos",
@@ -212,6 +245,7 @@ const listReservas = async (t = "comun") => {
     case "cambioInstr":
     case "cambioProf":
       arrReservas.value = arr.map((it) => ({ ...it, show: it.show ?? true }))
+      if (!arrDocentesReservas.value.some((d) => d.codigo === filtroDocente.value)) filtroDocente.value = ""
       break
     case "resumen":
       arr.forEach((value) => {
@@ -336,6 +370,7 @@ const listProfesores = async () => {
 }
 
 onMounted(async () => {
+  await cargarPermisos()
   await listCiclos()
   await listProfesores()
   await listInstrumentos()

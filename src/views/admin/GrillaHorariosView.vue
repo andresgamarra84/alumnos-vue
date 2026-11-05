@@ -257,6 +257,15 @@
         </option>
       </select>
     </div>
+    <div class="col-4">
+      <label>Curso:</label>
+      <select v-model="cursoSeleccionado">
+        <option :value="null">(Todos)</option>
+        <option v-for="c in cursos" :key="c.codigo" :value="c.codigo">
+          {{ c.nombre }}
+        </option>
+      </select>
+    </div>
   </div>
   <div class="small mt-2 ms-2 d-flex align-items-center gap-2">
     <span class="leyenda-ausente"></span> Docente ausente en la semana en curso
@@ -339,6 +348,7 @@ const diaHoy = new Date().getDay() + 1
 const diaSeleccionado = ref(diaHoy >= 2 && diaHoy <= 7 ? diaHoy : 2)
 const sedeSeleccionada = ref('S') // Santa Fe
 const profesorSeleccionado = ref(null)
+const cursoSeleccionado = ref(null)
 onMounted(async () => {
   cursos.value = await getCursos()
   aulas.value = await getAulas()
@@ -366,19 +376,22 @@ watch(
     updGrilla()
   }
 )
-watch(
-  profesorSeleccionado,
-  (nuevoProfesor) => {
-    grillaHorarios.value.forEach(v=>{
-      v.show = (nuevoProfesor === v.codProfesor || nuevoProfesor === null)
-    })
-  }
-)
+// Los filtros de profesor y curso se combinan (AND); null = sin filtrar
+const aplicarFiltros = () => {
+  const profesor = profesorSeleccionado.value
+  const curso = cursoSeleccionado.value
+  grillaHorarios.value.forEach(v => {
+    v.show = (profesor === null || profesor === v.codProfesor) &&
+             (curso === null || curso === v.codCurso)
+  })
+}
+watch([profesorSeleccionado, cursoSeleccionado], aplicarFiltros)
 
 const updGrilla = async () => {
   const dia = diaSeleccionado.value
   const sede = sedeSeleccionada.value
   grillaHorarios.value = await getGrilla(dia, sede)
+  aplicarFiltros() // Mantener los filtros al cambiar de día o sede
 }
 const getGrilla = async () => {
   const r = await api.get({

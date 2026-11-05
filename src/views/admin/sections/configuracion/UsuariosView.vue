@@ -146,7 +146,12 @@ const permissionSections = [
   },
   {
     title: "Menu Reserva:",
-    items: [{ id: "reservas_all", label: "Todos los permisos" }],
+    items: [
+      { id: "reservas_all", label: "Todos los permisos" },
+      { id: "reservas_realizar", label: "Realizar reservas (panel de estudiante)" },
+      { id: "reservas_ver", label: "Ver reservas" },
+      { id: "reservas_modificar", label: "Modificar reservas (editar y borrar)" },
+    ],
   },
   {
     title: "Menu Mensajes:",
