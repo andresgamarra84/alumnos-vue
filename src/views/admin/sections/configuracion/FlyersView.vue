@@ -37,10 +37,45 @@
           </div>
 
           <template v-if="plantilla !== 'libre'">
-            <label class="campo-imagen">
-              Imagen principal (PNG o JPG)
-              <input type="file" accept="image/png, image/jpeg" @change="cargarImagenPrincipal" />
+            <span class="ajustes-titulo">Imágenes del área</span>
+            <div class="opciones">
+              <button
+                type="button"
+                v-for="n in MAX_IMAGENES"
+                :key="n"
+                :class="{ activo: cantidadImagenes === n }"
+                @click="elegirCantidad(n)"
+              >{{ n === 1 ? '1 imagen' : n + ' imágenes' }}</button>
+            </div>
+            <label v-for="(r, i) in ranuras.slice(0, cantidadImagenes)" :key="i" class="campo-imagen">
+              {{ cantidadImagenes === 1 ? 'Imagen principal' : 'Imagen ' + (i + 1) }} (PNG o JPG)
+              <input type="file" accept="image/png, image/jpeg" @change="cargarImagenPrincipal($event, i)" />
             </label>
+
+            <template v-if="cantidadImagenes > 1">
+              <span class="ajustes-titulo">Tamaño de cada imagen</span>
+              <div v-for="(_, k) in cortesPct" :key="k" class="campo-slider">
+                <label>Corte {{ k + 1 }}</label>
+                <input type="range" step="1" :min="minCorte(k)" :max="maxCorte(k)" v-model.number="cortesPct[k]" />
+                <span>{{ cortesPct[k] }}%</span>
+              </div>
+              <p class="ajustes-hint">
+                Reparto ({{ plantilla === 'horizontal' ? 'de izquierda a derecha' : 'de arriba hacia abajo' }}): {{ repartoTexto }}.
+                Arrastrá cada imagen sobre el lienzo para elegir qué parte se ve.
+              </p>
+
+              <span class="ajustes-titulo">Línea divisoria</span>
+              <div class="campo-slider">
+                <label>Grosor</label>
+                <input type="range" :min="RANGO_DIVISOR_PX.min" :max="RANGO_DIVISOR_PX.max" v-model.number="divisorPx" />
+                <span>{{ divisorPx }} px</span>
+              </div>
+              <div class="opciones">
+                <button type="button" :class="{ activo: divisorColorModo === 'fondo' }" @click="divisorColorModo = 'fondo'">Color del fondo</button>
+                <button type="button" :class="{ activo: divisorColorModo === 'propio' }" @click="divisorColorModo = 'propio'">Otro color</button>
+              </div>
+              <input v-if="divisorColorModo === 'propio'" type="color" v-model="divisorColor" title="Color de la línea divisoria" />
+            </template>
 
             <div class="campo-slider">
               <label>Área de imagen</label>
@@ -356,10 +391,12 @@
           </div>
           <p v-if="errorSpec" class="aviso-fuentes aviso-multilinea">{{ errorSpec }}</p>
           <p v-if="avisoSpec" class="ajustes-hint">{{ avisoSpec }}</p>
-          <p v-if="creditoImagen" class="ajustes-hint">
-            Crédito de la foto: {{ [creditoImagen.autor, creditoImagen.licencia].filter(Boolean).join(' · ') }}
-            <template v-if="creditoImagen.fuente"> — {{ creditoImagen.fuente }}</template>
-          </p>
+          <template v-for="(r, i) in ranuras.slice(0, cantidadImagenes)" :key="i">
+            <p v-if="r.credito" class="ajustes-hint">
+              Crédito de la foto{{ cantidadImagenes > 1 ? ' ' + (i + 1) : '' }}: {{ [r.credito.autor, r.credito.licencia].filter(Boolean).join(' · ') }}
+              <template v-if="r.credito.fuente"> — {{ r.credito.fuente }}</template>
+            </p>
+          </template>
           <p class="ajustes-hint">Aplicar un JSON reemplaza todo el flyer actual (textos, íconos, imagen y ajustes).</p>
         </div>
       </section>
@@ -390,11 +427,20 @@
 </template>
 
 <script setup>
-import { reactive, ref, shallowRef, computed, watch, onMounted, nextTick } from 'vue'
+import { reactive, ref, markRaw, computed, watch, onMounted, nextTick } from 'vue'
 import { api } from '@/api/api'
 import { BASE_URL, SESSION_NAME } from '@/config/app.config'
 import { showModal, showToast } from '@/services/uiBus'
-import { ICONOS, VERSION_SPEC, urlSvgIcono, validarEspecificacion } from '@/domain/flyerSpec'
+import {
+  ICONOS,
+  VERSION_SPEC,
+  MAX_IMAGENES,
+  PORCION_MIN_IMAGEN_PCT,
+  RANGO_DIVISOR_PX,
+  cortesPorDefecto,
+  urlSvgIcono,
+  validarEspecificacion,
+} from '@/domain/flyerSpec'
 
 const PASO_TAMANO = 0.1
 const FACTOR_TAMANO_LOGO = 1.2 // cada click en +/− escala un logo o ícono un 20 %
@@ -429,10 +475,37 @@ const inclinacionPct = ref(0) // -100 a 100
 const curvaturaPct = ref(0) // -100 a 100: 0 = recto, el signo indica hacia qué lado se arquea
 const nivelRasgadoPct = ref(40) // 0 (recto) a 100 (muy ondulado)
 const desvanecidoPct = ref(0) // 0 (borde nítido) a 100 (imagen que se funde con el fondo)
-const imagenPrincipal = shallowRef(null)
-// Desplazamiento de la imagen principal dentro de su área (drag/drop). Se limita para que la
-// imagen siempre cubra el área completa: solo se puede mover lo que sobresale del recorte.
-const encuadre = reactive({ offsetX: 0, offsetY: 0 })
+
+// Imágenes del área de imagen: una sola, o un collage de hasta MAX_IMAGENES. Cada ranura guarda su imagen
+// (markRaw: el Image no debe volverse reactivo), de dónde salió, su crédito y su encuadre (desplazamiento dentro
+// de su celda, por drag/drop; se limita para que la imagen siempre cubra la celda completa).
+const crearRanura = () => ({ img: null, url: null, archivo: null, credito: null, offsetX: 0, offsetY: 0 })
+const ranuras = reactive(Array.from({ length: MAX_IMAGENES }, crearRanura))
+const cantidadImagenes = ref(1)
+// Posición de cada corte entre imágenes, en % del área (cantidadImagenes - 1 valores)
+const cortesPct = ref([])
+// Línea divisoria entre imágenes: grosor en px del lienzo y color (por defecto, el del fondo)
+const divisorPx = ref(RANGO_DIVISOR_PX.defecto)
+const divisorColorModo = ref('fondo') // 'fondo' | 'propio'
+const divisorColor = ref('#ffffff')
+
+function elegirCantidad(n) {
+  if (n === cantidadImagenes.value) return
+  cantidadImagenes.value = n
+  cortesPct.value = cortesPorDefecto(n) // al cambiar la cantidad, el reparto vuelve a porciones iguales
+}
+
+// Límites de cada corte: cada imagen conserva al menos PORCION_MIN_IMAGEN_PCT del área
+const minCorte = (k) => (k === 0 ? 0 : cortesPct.value[k - 1]) + PORCION_MIN_IMAGEN_PCT
+const maxCorte = (k) => (k === cortesPct.value.length - 1 ? 100 : cortesPct.value[k + 1]) - PORCION_MIN_IMAGEN_PCT
+
+const repartoTexto = computed(() => {
+  const bordes = [0, ...cortesPct.value, 100]
+  return bordes
+    .slice(1)
+    .map((b, i) => `${Math.round(b - bordes[i])}%`)
+    .join(' / ')
+})
 
 // Colapsado/expandido de cada sección del panel izquierdo
 const secciones = reactive({
@@ -675,7 +748,7 @@ let ctx = null
 const imagenFondo = ref(null)
 
 const descargaDeshabilitada = computed(
-  () => (bgMode.value === 'image' && !imagenFondo.value) || (plantilla.value !== 'libre' && !imagenPrincipal.value)
+  () => (bgMode.value === 'image' && !imagenFondo.value) || (plantilla.value !== 'libre' && ranuras.slice(0, cantidadImagenes.value).some((r) => !r.img))
 )
 
 onMounted(() => {
@@ -727,19 +800,14 @@ function cargarImagen(event) {
   img.src = url
 }
 
-function cargarImagenPrincipal(event) {
+function cargarImagenPrincipal(event, indice) {
   const archivo = event.target.files[0]
   if (!archivo) return
 
   const url = URL.createObjectURL(archivo)
   const img = new Image()
   img.onload = () => {
-    imagenPrincipal.value = img
-    urlImagenPrincipal = null
-    archivoImagenPrincipal = archivo
-    creditoImagen.value = null
-    encuadre.offsetX = 0
-    encuadre.offsetY = 0
+    Object.assign(ranuras[indice], { img: markRaw(img), url: null, archivo, credito: null, offsetX: 0, offsetY: 0 })
     URL.revokeObjectURL(url)
   }
   img.src = url
@@ -843,15 +911,31 @@ function medidasCubriendo(img, w, h) {
   return { dw: img.naturalWidth * escala, dh: img.naturalHeight * escala }
 }
 
-// Mantiene el encuadre dentro del margen que sobresale de la caja (sin dejar huecos).
+// Celdas (x, y, w, h, relativas a la caja de la imagen) de cada imagen del collage. Se reparten a lo largo del
+// lado paralelo al borde con el área de información: columnas con "Imagen arriba", filas con "Imagen al costado".
+// El borde (inclinación, curvatura, rasgado, difuminado) se aplica después sobre el conjunto, no sobre cada celda.
+function celdasImagen(w, h) {
+  const horizontal = plantilla.value === 'horizontal'
+  const largo = horizontal ? w : h
+  const bordes = [0, ...cortesPct.value.slice(0, cantidadImagenes.value - 1).map((p) => Math.round((largo * p) / 100)), largo]
+  return bordes.slice(0, -1).map((ini, i) => {
+    const tramo = bordes[i + 1] - ini
+    return horizontal ? { x: ini, y: 0, w: tramo, h } : { x: 0, y: ini, w, h: tramo }
+  })
+}
+
+// Mantiene el encuadre de cada imagen dentro del margen que sobresale de su celda (sin dejar huecos).
 function limitarEncuadre(width, height) {
-  if (!imagenPrincipal.value) return
   const { w, h } = cajaImagenPrincipal(width, height)
-  const { dw, dh } = medidasCubriendo(imagenPrincipal.value, w, h)
-  const maxX = (dw - w) / 2
-  const maxY = (dh - h) / 2
-  encuadre.offsetX = Math.min(maxX, Math.max(-maxX, encuadre.offsetX))
-  encuadre.offsetY = Math.min(maxY, Math.max(-maxY, encuadre.offsetY))
+  celdasImagen(w, h).forEach((celda, i) => {
+    const r = ranuras[i]
+    if (!r.img) return
+    const { dw, dh } = medidasCubriendo(r.img, celda.w, celda.h)
+    const maxX = (dw - celda.w) / 2
+    const maxY = (dh - celda.h) / 2
+    r.offsetX = Math.min(maxX, Math.max(-maxX, r.offsetX))
+    r.offsetY = Math.min(maxY, Math.max(-maxY, r.offsetY))
+  })
 }
 
 // Zona, borde y caja (w, h) que debe cubrir la imagen principal. La caja se agranda hacia el área
@@ -886,25 +970,52 @@ function lienzoAuxiliar(actual, width, height) {
   return l
 }
 
-// Dibuja la imagen principal (o su marcador) en el contexto c, dentro de la caja que debe cubrir.
+// Color de la línea divisoria entre imágenes: el del fondo (si es una imagen, blanco) o uno elegido a mano.
+function colorDivisor() {
+  if (divisorColorModo.value === 'propio') return divisorColor.value
+  return bgMode.value === 'color' ? bgColor.value : '#ffffff'
+}
+
+// Dibuja las imágenes (o sus marcadores) en el contexto c, cada una en su celda de la caja que debe cubrir,
+// y la línea divisoria entre ellas.
 function pintarContenidoImagen(c, z, w, h, width) {
-  if (imagenPrincipal.value) {
-    const { dw, dh } = medidasCubriendo(imagenPrincipal.value, w, h)
-    c.drawImage(
-      imagenPrincipal.value,
-      z.x + (w - dw) / 2 + encuadre.offsetX,
-      z.y + (h - dh) / 2 + encuadre.offsetY,
-      dw,
-      dh
-    )
-  } else {
-    // Marcador mientras no hay imagen cargada (la descarga queda deshabilitada)
-    c.fillStyle = '#d9d9d9'
-    c.fillRect(z.x, z.y, w, h)
-    c.fillStyle = '#888'
-    c.font = `${width * 0.03}px Arial`
-    c.textAlign = 'center'
-    c.fillText('Imagen principal', z.x + z.w / 2, z.y + z.h / 2)
+  const celdas = celdasImagen(w, h)
+  const horizontal = plantilla.value === 'horizontal'
+  celdas.forEach((celda, i) => {
+    const r = ranuras[i]
+    const x = z.x + celda.x
+    const y = z.y + celda.y
+    c.save()
+    c.beginPath()
+    c.rect(x, y, celda.w, celda.h)
+    c.clip()
+    if (r.img) {
+      const { dw, dh } = medidasCubriendo(r.img, celda.w, celda.h)
+      c.drawImage(r.img, x + (celda.w - dw) / 2 + r.offsetX, y + (celda.h - dh) / 2 + r.offsetY, dw, dh)
+    } else {
+      // Marcador mientras no hay imagen cargada (la descarga queda deshabilitada)
+      c.fillStyle = '#d9d9d9'
+      c.fillRect(x, y, celda.w, celda.h)
+      c.fillStyle = '#888'
+      c.font = `${width * 0.03}px Arial`
+      c.textAlign = 'center'
+      // El centro se mide sobre la parte visible (z): la caja se extiende hacia el área de información
+      c.fillText(
+        celdas.length === 1 ? 'Imagen principal' : `Imagen ${i + 1}`,
+        horizontal ? x + celda.w / 2 : z.x + z.w / 2,
+        horizontal ? z.y + z.h / 2 : y + celda.h / 2
+      )
+    }
+    c.restore()
+  })
+
+  const grosor = divisorPx.value
+  if (celdas.length > 1 && grosor > 0) {
+    c.fillStyle = colorDivisor()
+    for (const celda of celdas.slice(1)) {
+      if (horizontal) c.fillRect(z.x + celda.x - grosor / 2, z.y, grosor, h)
+      else c.fillRect(z.x, z.y + celda.y - grosor / 2, w, grosor)
+    }
   }
 }
 
@@ -1036,7 +1147,7 @@ function obtenerCajaTexto(t, width, height) {
 }
 
 // --- Drag & drop de logos, textos e imagen principal sobre el lienzo ---
-// arrastre guarda una referencia directa al ítem (logo, texto o encuadre): todos son objetos
+// arrastre guarda una referencia directa al ítem (logo, texto o ranura de imagen): todos son objetos
 // reactivos con .offsetX/.offsetY, así que no hace falta distinguir su tipo.
 let arrastre = null // { item, startX, startY, startOffsetX, startOffsetY }
 
@@ -1071,10 +1182,16 @@ function elementoEnPunto(x, y) {
   }
   // Por debajo de todo, la imagen principal de la plantilla: se testea con el mismo contorno
   // (recto, inclinado o rasgado) con el que se recorta al dibujarla.
-  if (plantilla.value !== 'libre' && imagenPrincipal.value) {
-    const { z, borde } = cajaImagenPrincipal(width, height)
+  if (plantilla.value !== 'libre') {
+    const { z, borde, w, h } = cajaImagenPrincipal(width, height)
     trazarZonaImagen(z, width, height, borde)
-    if (ctx.isPointInPath(x, y)) return encuadre
+    if (ctx.isPointInPath(x, y)) {
+      // Con collage, el drag mueve la imagen de la celda sobre la que se hizo click
+      const celdas = celdasImagen(w, h)
+      const i = celdas.findIndex((c) => x >= z.x + c.x && x < z.x + c.x + c.w && y >= z.y + c.y && y < z.y + c.y + c.h)
+      const ranura = ranuras[Math.max(i, 0)]
+      if (ranura.img) return ranura
+    }
   }
   return null
 }
@@ -1106,7 +1223,7 @@ function onWindowMouseMoveDrag(event) {
   const { x, y } = coordenadasCanvas(event)
   arrastre.item.offsetX = arrastre.startOffsetX + (x - arrastre.startX)
   arrastre.item.offsetY = arrastre.startOffsetY + (y - arrastre.startY)
-  if (arrastre.item === encuadre) limitarEncuadre(canvasRef.value.width, canvasRef.value.height)
+  if (ranuras.includes(arrastre.item)) limitarEncuadre(canvasRef.value.width, canvasRef.value.height)
 }
 
 function onWindowMouseUpDrag() {
@@ -1159,7 +1276,7 @@ function dibujar() {
 }
 
 watch(
-  [bgMode, bgColor, plantilla, proporcionImagenPct, inclinacionPct, curvaturaPct, nivelRasgadoPct, desvanecidoPct, imagenPrincipal, encuadre, logos, textos],
+  [bgMode, bgColor, plantilla, proporcionImagenPct, inclinacionPct, curvaturaPct, nivelRasgadoPct, desvanecidoPct, ranuras, cantidadImagenes, cortesPct, divisorPx, divisorColorModo, divisorColor, logos, textos],
   dibujar,
   { deep: true }
 )
@@ -1169,12 +1286,10 @@ watch(formato, () => nextTick(dibujar))
 
 // --- Especificación JSON: aplicar un flyer completo o exportar el actual (ver src/domain/flyerSpec.js) ---
 // De dónde salió cada imagen, para poder exportarla. Una imagen subida desde un archivo no tiene URL.
-let urlImagenPrincipal = null
+// (Las del área de imagen viven en cada ranura: url, archivo y credito { autor, licencia, fuente }.)
 let urlImagenFondo = null
 // Archivo subido a mano (sin URL todavía): al guardar el flyer se envía al servidor, que lo comprime y devuelve su URL
-let archivoImagenPrincipal = null
 let archivoImagenFondo = null
-const creditoImagen = ref(null) // { autor, licencia, fuente } de la imagen cargada desde una especificación
 const textoSpec = ref('')
 const errorSpec = ref('')
 const avisoSpec = ref('')
@@ -1201,10 +1316,10 @@ async function aplicarEspecificacion(raw) {
     return false
   }
 
-  let imgPrincipal, imgFondo, imgsIconos
+  let imgsPrincipales, imgFondo, imgsIconos
   try {
-    ;[imgPrincipal, imgFondo, ...imgsIconos] = await Promise.all([
-      spec.imagen.url ? cargarImagenUrl(spec.imagen.url) : null,
+    ;[imgsPrincipales, imgFondo, ...imgsIconos] = await Promise.all([
+      Promise.all(spec.imagenes.map((im) => (im.url ? cargarImagenUrl(im.url) : null))),
       spec.fondo.tipo === 'imagen' ? cargarImagenUrl(spec.fondo.url) : null,
       ...spec.iconos.map((ic) => cargarImagenUrl(urlSvgIcono(ICONOS.find((i) => i.clave === ic.icono)))),
     ])
@@ -1227,15 +1342,23 @@ async function aplicarEspecificacion(raw) {
   urlImagenFondo = spec.fondo.url
   archivoImagenFondo = null
 
-  imagenPrincipal.value = imgPrincipal
-  urlImagenPrincipal = spec.imagen.url
-  archivoImagenPrincipal = null
-  encuadre.offsetX = spec.imagen.offsetX
-  encuadre.offsetY = spec.imagen.offsetY
-  creditoImagen.value =
-    spec.imagen.autor || spec.imagen.licencia || spec.imagen.fuente
-      ? { autor: spec.imagen.autor, licencia: spec.imagen.licencia, fuente: spec.imagen.fuente }
-      : null
+  cantidadImagenes.value = spec.imagenes.length
+  cortesPct.value = [...spec.collage.cortesPct]
+  divisorPx.value = spec.collage.divisor.grosorPx
+  divisorColorModo.value = spec.collage.divisor.color ? 'propio' : 'fondo'
+  if (spec.collage.divisor.color) divisorColor.value = spec.collage.divisor.color
+  ranuras.forEach((r, i) => {
+    const im = spec.imagenes[i]
+    if (!im) return Object.assign(r, crearRanura())
+    Object.assign(r, {
+      img: imgsPrincipales[i] ? markRaw(imgsPrincipales[i]) : null,
+      url: im.url,
+      archivo: null,
+      credito: im.autor || im.licencia || im.fuente ? { autor: im.autor, licencia: im.licencia, fuente: im.fuente } : null,
+      offsetX: im.offsetX,
+      offsetY: im.offsetY,
+    })
+  })
 
   fuenteAbierta.value = null
   textos.splice(0)
@@ -1257,8 +1380,8 @@ async function aplicarEspecificacion(raw) {
     logos.push(logo)
   })
 
-  if (spec.plantilla !== 'libre' && !spec.imagen.url) {
-    avisoSpec.value = 'La plantilla necesita una imagen principal: cargala desde "Imagen principal".'
+  if (spec.plantilla !== 'libre' && spec.imagenes.some((im) => !im.url)) {
+    avisoSpec.value = 'La plantilla necesita todas sus imágenes: cargá las que falten desde "Plantilla".'
   }
   nextTick(dibujar)
   return true
@@ -1290,13 +1413,17 @@ function especificacionActual() {
     version: VERSION_SPEC,
     formato: formato.value,
     plantilla: plantilla.value,
-    imagen: {
-      url: urlImagenPrincipal,
-      offsetX: redondear(encuadre.offsetX),
-      offsetY: redondear(encuadre.offsetY),
-      autor: creditoImagen.value?.autor ?? '',
-      licencia: creditoImagen.value?.licencia ?? '',
-      fuente: creditoImagen.value?.fuente ?? '',
+    imagenes: ranuras.slice(0, cantidadImagenes.value).map((r) => ({
+      url: r.url,
+      offsetX: redondear(r.offsetX),
+      offsetY: redondear(r.offsetY),
+      autor: r.credito?.autor ?? '',
+      licencia: r.credito?.licencia ?? '',
+      fuente: r.credito?.fuente ?? '',
+    })),
+    collage: {
+      cortesPct: cortesPct.value.map(redondear),
+      divisor: { grosorPx: divisorPx.value, color: divisorColorModo.value === 'propio' ? divisorColor.value : null },
     },
     borde: {
       areaPct: proporcionImagenPct.value,
@@ -1385,10 +1512,12 @@ async function guardarFlyer(actualizar) {
   guardandoFlyer.value = true
   try {
     // Las imágenes subidas desde un archivo no tienen URL: se envían al servidor para poder recuperarlas después
-    if (imagenPrincipal.value && !urlImagenPrincipal && archivoImagenPrincipal) {
-      const url = await subirImagenFlyer(archivoImagenPrincipal)
-      if (!url) return
-      urlImagenPrincipal = url
+    for (const r of ranuras.slice(0, cantidadImagenes.value)) {
+      if (r.img && !r.url && r.archivo) {
+        const url = await subirImagenFlyer(r.archivo)
+        if (!url) return
+        r.url = url
+      }
     }
     if (bgMode.value === 'image' && imagenFondo.value && !urlImagenFondo && archivoImagenFondo) {
       const url = await subirImagenFlyer(archivoImagenFondo)
