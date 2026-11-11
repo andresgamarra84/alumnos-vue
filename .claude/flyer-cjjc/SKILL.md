@@ -22,7 +22,7 @@ Fecha, hora, sede/sala, instrumento o tipo de concierto, intérpretes (o "alumno
 
 ### Formato e imagen
 - **Formato:** 4:5 por defecto (1200×1500). También hay 16:9 (1200×675) y 1:1 (1200×1200).
-- **Imagen:** siempre lleva imagen principal. Preferir una foto realista del instrumento o de la formación (sección 5). Usar una ilustración propia (sección 4) solo si no aparece una foto adecuada o si el usuario la pide.
+- **Imagen:** siempre lleva imagen principal. Preferir una foto realista del instrumento o de la formación (sección 5). Usar una ilustración propia (sección 4) solo si no aparece una foto adecuada o si el usuario la pide. Por defecto es **una sola imagen**; el área de imagen también admite un collage de 2 o 3 (ver "Collage de 2 o 3 imágenes").
 
 ### Plantilla según la imagen conseguida
 Primero se elige la imagen y después la plantilla:
@@ -32,8 +32,19 @@ Primero se elige la imagen y después la plantilla:
 - La imagen manda: no fuerces una plantilla.
 - **Libre** no reserva áreas ni muestra los sliders de borde; usarla solo si el usuario lo pide.
 
+### Collage de 2 o 3 imágenes
+El área de imagen puede ser un único archivo o un collage de hasta 3. La plantilla sigue siendo "Imagen arriba" o "Imagen al costado"; solo cambia cómo se reparte el área de imagen:
+- **Imagen arriba:** las imágenes van en **columnas** (2 → mitad izquierda y mitad derecha; 3 → tres columnas). Cada celda queda más alta que ancha: sirven fotos verticales o con el sujeto centrado.
+- **Imagen al costado:** las imágenes van en **filas** (2 → mitad superior e inferior; 3 → tres filas). Cada celda queda más ancha que alta: sirven fotos apaisadas.
+- **Cuándo usarlo:** solo si el usuario lo pide, o si el programa reúne instrumentos o formaciones distintos que una sola foto no cuenta bien (dúo, ensambles de varias cátedras). Ante la duda, una sola imagen.
+- **Tamaño de cada una:** por defecto porciones iguales (50/50 o 33/34/33). Si una foto es la protagonista, dale más lugar con los cortes (`cortesPct`); cada imagen conserva al menos 15 % del área.
+- **Línea divisoria:** una línea fina entre imágenes, de 8 px por defecto (0 la quita; 4–8 px queda sobrio). Su color por defecto es el del fondo del flyer, así que parece un hueco limpio; fijá un color propio (`divisor.color`) solo si el fondo es una imagen o querés un acento.
+- **Borde y difuminado:** inclinación, curvatura, rasgado y difuminado se aplican sobre el conjunto, solo en el borde que da al área de información; no afectan las divisiones entre imágenes.
+- **Elegir las fotos:** buscá una por celda con tono, luz y calidad parecidos; una foto muy distinta rompe el collage. La paleta (fondo, texto, acento) se deriva de la imagen que domine.
+- **Créditos:** cada foto lleva su propio `autor`, `licencia` y `fuente`.
+
 ### Encuadre de la imagen
-La imagen se recorta para llenar su área sin deformarse. Arrastrala sobre su área del lienzo para elegir qué parte se ve.
+La imagen se recorta para llenar su área sin deformarse. Arrastrala sobre su área del lienzo para elegir qué parte se ve. Con collage, cada imagen tiene su propio encuadre: se arrastra por separado sobre su celda.
 - Objetivo: el sujeto completo o su parte más reconocible (voluta, cuerpo, manos sobre el instrumento), sin cortes torpes.
 - Agarrala lejos de los textos y de los íconos, para no mover uno por error.
 - Combiná el encuadre con los sliders (sección 3) para que el corte acompañe la forma del sujeto y deje una columna o franja cómoda para el texto.
@@ -61,9 +72,10 @@ Dos columnas fijas: panel de opciones a la izquierda (1/3 del ancho) y lienzo a 
 
 ### Controles
 - **FORMATO:** botones 4:5, 16:9, 1:1.
-- **PLANTILLA:** botones Libre, Imagen arriba, Imagen al costado. Al elegir una distinta de Libre aparecen "Imagen principal (PNG o JPG)" y los sliders de borde.
-- **Imagen principal:** es el primer `input[type=file]` de la página. Acepta PNG o JPG.
+- **PLANTILLA:** botones Libre, Imagen arriba, Imagen al costado. Al elegir una distinta de Libre aparecen los botones "1 imagen" / "2 imágenes" / "3 imágenes", un campo de imagen por cada una ("Imagen principal (PNG o JPG)" con una sola; "Imagen 1", "Imagen 2"... con collage) y los sliders de borde. Con 2 o 3 imágenes aparecen además "Tamaño de cada imagen" (sliders "Corte") y "Línea divisoria" (slider "Grosor", botones "Color del fondo" / "Otro color" y un `input[type=color]` con title "Color de la línea divisoria").
+- **Imágenes del área:** son los primeros `input[type=file]` de la página, uno por imagen y en orden (el primero es la imagen 1 o la principal). Aceptan PNG o JPG. Al cambiar la cantidad de imágenes, los cortes vuelven a porciones iguales; las imágenes ya cargadas se conservan en su celda.
 - **Sliders de la plantilla** (solo existen si la plantilla no es Libre), `input[type=range]` en este orden:
+  - Con collage, antes del [0] aparecen los sliders **Corte** (1 con 2 imágenes, 2 con 3; posición del corte en % del área, cada imagen con al menos 15 %) y el **Grosor** de la línea divisoria (0–30 px, por defecto 8): los índices de abajo se corren en (cantidad de cortes + 1). Para no depender del índice, ubicá cada slider por el texto de su `label`.
   - [0] **Área de imagen** (35–75, por defecto 60). Porcentaje del alto (arriba) o del ancho (costado).
   - [1] **Borde**, de Recto a Rasgado (0–100, por defecto 40). Botón "Nuevo rasgado" sortea otra forma (deshabilitado en 0).
   - [2] **Inclinación** (−100 a 100, por defecto 0). Costado: positivo = el corte se corre a la derecha al bajar. Arriba: positivo = el corte baja hacia la derecha. Doble click lo vuelve a 0.
@@ -87,11 +99,11 @@ Cada bloque tiene:
 El texto nuevo aparece dentro del área de información cuando hay plantilla.
 
 ### Particularidades
-- El flyer se dibuja en un único `<canvas>`. La imagen, los textos y los íconos no están en el DOM: solo se mueven arrastrando sobre el lienzo (`left_click_drag`). Los textos están encima de los logos/íconos, y estos encima de la imagen principal.
+- El flyer se dibuja en un único `<canvas>`. La imagen, los textos y los íconos no están en el DOM: solo se mueven arrastrando sobre el lienzo (`left_click_drag`). Los textos están encima de los logos/íconos, y estos encima de las imágenes del área.
 - **Zoom:** "Ajustar" vuelve al 100%, no encaja el flyer. Para ver el flyer entero, bajá el zoom (30–40%) y ejecutá `document.querySelector('canvas').scrollIntoView({block:'center'}); document.scrollingElement.scrollLeft=0`. Para revisarlo, usá la acción zoom sobre el rect del canvas.
 - Poné `scrollLeft=0` antes de cada captura.
 - Es una app Vue de producción sin devtools: no toques su estado interno, usá eventos.
-- El botón "Descargar flyer" queda deshabilitado si falta la imagen principal (plantilla distinta de Libre) o la imagen de fondo (modo Imagen propia).
+- El botón "Descargar flyer" queda deshabilitado si falta alguna de las imágenes del área (plantilla distinta de Libre) o la imagen de fondo (modo Imagen propia).
 
 ### Atajos por JavaScript (javascript_tool)
 ```js
@@ -105,7 +117,8 @@ const slider=i=>document.querySelectorAll('input[type=range]')[i];
   3. Click en su `.btn-fuente` y luego `setVal(select,'Garamond')`.
   4. `setVal(input[type=color],'#hex')` (el del bloque).
   5. Tamaño con clicks en + o − del bloque (`block(textarea)`).
-- **Sliders de la plantilla:** `setVal(slider(i), v)` con i = 0..4 (ver orden arriba). Doble click para resetear inclinación y curvatura.
+- **Sliders de la plantilla:** `setVal(slider(i), v)` con i = 0..4 (ver orden arriba; con collage se corren, ver nota). Doble click para resetear inclinación y curvatura.
+- **Collage:** click en el botón cuyo texto es "2 imágenes" o "3 imágenes"; después cargá cada foto en `document.querySelectorAll('input[type=file]')[i]` (i = 0 para la imagen 1) con el método del Blob. Los cortes y el grosor de la línea se ajustan con `setVal` sobre los sliders que aparecen antes de "Área de imagen".
 - **Agregar un ícono:** `[...document.querySelectorAll('.btn-icono')].find(b=>b.title==='Agregar Instagram').click()`. Cambiar su color: en su bloque de "Logos e imágenes", `setVal(input[type=color],'#hex')`.
 - **Imagen desde un Blob:** `new File([blob],'img.jpg',{type})`, luego un `DataTransfer`, luego `input.files=dt.files` y dispatch de `change`.
 - **Paleta de una imagen:** dibujá el blob en un canvas de 64×64, leé `getImageData`, cuantizá cada canal en pasos de 32, contá los colores, ordená por frecuencia y devolvé los 6–8 principales con luminancia y saturación. Con eso elegí fondo, texto y acento según la sección 2.
@@ -122,6 +135,7 @@ const u='https://commons.wikimedia.org/w/api.php?action=query&format=json&origin
 - Para descargar, pedí `iiprop=url&iiurlwidth=1000` (o 1400) y usá `thumburl`.
 - Antes de decidir, previsualizá la foto cargándola en el panel y revisá la captura.
 - Si la licencia es CC BY o BY-SA, avisá al usuario que hay que dar crédito al autor.
+- Con collage, repetí la búsqueda para cada celda y revisá que las fotos combinen entre sí.
 
 ## 6. Tipografía, jerarquía e íconos
 Orden de los bloques, todos centrados en el área de información:
@@ -161,11 +175,14 @@ Generás la especificación del flyer; el panel la valida, descarga la imagen y 
   "version": 1,
   "formato": "4:5",
   "plantilla": "horizontal",
-  "imagen": {
-    "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Archivo.jpg/1200px-Archivo.jpg",
-    "offsetX": 0, "offsetY": 0,
-    "autor": "Nombre", "licencia": "CC BY-SA 4.0", "fuente": "https://commons.wikimedia.org/wiki/File:Archivo.jpg"
-  },
+  "imagenes": [
+    {
+      "url": "https://upload.wikimedia.org/wikipedia/commons/thumb/a/ab/Archivo.jpg/1200px-Archivo.jpg",
+      "offsetX": 0, "offsetY": 0,
+      "autor": "Nombre", "licencia": "CC BY-SA 4.0", "fuente": "https://commons.wikimedia.org/wiki/File:Archivo.jpg"
+    }
+  ],
+  "collage": { "cortesPct": [], "divisor": { "grosorPx": 8, "color": null } },
   "borde": { "areaPct": 55, "rasgadoPct": 0, "inclinacionPct": 0, "curvaturaPct": 0, "difuminadoPct": 0 },
   "fondo": { "tipo": "color", "color": "#f4ecd8" },
   "textos": [
@@ -179,7 +196,9 @@ Generás la especificación del flyer; el panel la valida, descarga la imagen y 
 Todos los campos son opcionales salvo lo que se quiera mostrar; los que falten toman el valor por defecto. Rangos (el panel rechaza lo que se salga, con un mensaje por campo):
 - `formato`: "4:5" | "16:9" | "1:1". `plantilla`: "libre" | "horizontal" (imagen arriba) | "vertical" (imagen al costado).
 - `borde.areaPct` 35–75 (60); `rasgadoPct` 0–100 (40; ponelo en 0 para un corte recto); `inclinacionPct` y `curvaturaPct` −100 a 100 (0); `difuminadoPct` 0–100 (0). Los signos y criterios son los de la sección 3 y los estilos de la sección 2.
-- `imagen.url`: **https** obligatoria para la plantilla no libre (sin URL el usuario tiene que subir la imagen a mano). `offsetX/offsetY`: encuadre en px; se limita solo a lo que sobresale de la imagen, así que ante la duda dejá 0.
+- `imagenes`: lista de 1 a 3 imágenes (más de 3 se rechaza). `imagenes[i].url`: **https** obligatoria para la plantilla no libre (sin URL el usuario tiene que subir esa imagen a mano). `offsetX/offsetY`: encuadre en px dentro de la celda de esa imagen; se limita solo a lo que sobresale de la imagen, así que ante la duda dejá 0. Con una sola imagen ocupa toda el área. Con 2 o 3 es un collage: columnas en "horizontal" (imagen arriba), filas en "vertical" (imagen al costado), en el orden de la lista (izquierda a derecha, o arriba hacia abajo).
+- `collage` (opcional; solo se usa con 2 o 3 imágenes): `cortesPct` es la posición de cada corte en % del área, en orden ascendente, con **un corte menos que imágenes** (2 imágenes → `[50]`; 3 → `[33, 67]`) y cada imagen con al menos 15 % (si no, el panel lo rechaza; omitilo para porciones iguales). `divisor.grosorPx` 0–30 (8; 0 quita la línea) y `divisor.color` `#rrggbb` o `null` para usar el color del fondo.
+- Formato anterior: un solo objeto `"imagen": { ... }` sigue siendo válido y equivale a `imagenes` con una imagen; para flyers nuevos usá `imagenes`.
 - `fondo`: `{ "tipo": "color", "color": "#rrggbb" }` o `{ "tipo": "imagen", "url": "https://..." }`.
 - Textos: `color` en `#rrggbb` (6 dígitos), `tamano` 0.4–3, `align` "left" | "center" | "right", `yBase` 0–1, `offsetX/offsetY` en px (−3000 a 3000). Los saltos de línea van como `\n`.
 - Íconos: `icono` ∈ ubicacion, calendario, reloj, telefono, mail, web, entradas, instagram, musica. `color` `#rrggbb`, `tamano` 0.05–3 (0.15 por defecto = 45 px, ver 8.3), `opacidadPct` 5–100. Si omitís `offsetX/offsetY` el ícono queda arriba y centrado (apilado): siempre indicalos.
@@ -187,7 +206,7 @@ Todos los campos son opcionales salvo lo que se quiera mostrar; los que falten t
 
 ## 8.2 Imagen y paleta sin ver la página
 - **Foto:** buscala en Wikimedia Commons (sección 5; en modo JSON usá tus herramientas de búsqueda web, no el javascript de la página). La URL tiene que ser un archivo directo de `upload.wikimedia.org` (con miniatura `/thumb/.../1200px-Archivo.jpg` para no pesar de más). Verificá la licencia; completá `autor`, `licencia` y `fuente`. Si la licencia es CC BY o BY-SA, avisá al usuario que el panel mostrará el crédito y que hay que darlo al publicar.
-- **Si no podés buscar o abrir imágenes:** pedile al usuario una URL, o dejá `imagen.url` en `null` y decile que suba la foto desde "Imagen principal" después de aplicar el JSON.
+- **Si no podés buscar o abrir imágenes:** pedile al usuario una URL, o dejá `url` en `null` en las imágenes que falten y decile que suba esas fotos desde los campos de imagen de "Plantilla" después de aplicar el JSON.
 - **Paleta:** si podés ver la foto, elegí los colores como en la sección 2 (fondo muy claro o muy oscuro del tono dominante, texto del tono opuesto, acento el más saturado) y verificá el contraste 4,5:1. Si no podés verla, usá una paleta sobria según el instrumento (madera cálida, metales, etc.) y avisalo para que el usuario revise el contraste.
 
 ## 8.3 Cómo calcular posiciones (el lienzo mide 1200 px de ancho; alto: 1500 en 4:5, 675 en 16:9, 1200 en 1:1)
@@ -219,7 +238,7 @@ y el bloque ocupa hasta `Y + 0.8·fs + lh·(n−1) + 0.2·fs`. El siguiente bloq
 
 ## 8.4 Receta paso a paso
 1. Datos (sección 1) y decisión de imagen, plantilla, borde y paleta (sección 2).
-2. Elegí `areaPct` (45–60) y los parámetros del borde.
+2. Elegí `areaPct` (45–60) y los parámetros del borde. Si es collage, definí también `cortesPct` y el divisor.
 3. Calculá la zona de información y el espacio disponible (8.3).
 4. Redactá los bloques de la jerarquía de la sección 6, calculando `fs`, líneas y alturas. Si no entra todo, bajá un poco los tamaños (nunca por debajo de 0.5 el chico ni 1.2 el título) o quitá el programa.
 5. Apilá los bloques de arriba hacia abajo con la fórmula de `yBase` y revisá que el último termine antes de `H − 50`.
@@ -242,7 +261,7 @@ El panel guarda los flyers en la base (sección **Flyers guardados / JSON**), as
 ## Guardar
 - Con el flyer terminado, el usuario escribe un **Título del flyer** (ej. "Concierto de cuerdas - Octubre") y toca **Guardar**. Si ya había uno cargado, aparece **Guardar como nuevo** (crea otro) y **Actualizar** (pisa el cargado). **Eliminar** lo oculta de la lista (borrado lógico).
 - En modo panel, antes de cerrar ofrecé guardarlo y proponé un título corto con el tipo de concierto y el mes; no lo guardes sin que el usuario lo confirme. En modo JSON, sugerí el título al entregar el archivo.
-- Solo se guarda lo que está en el JSON: **imagen principal y de fondo** (una foto subida desde un archivo se guarda en el servidor, comprimida a un máximo de 2 MB, y su URL queda en el JSON), **íconos del set** (los logos o imágenes propias no se guardan), textos, ajustes del borde y colores. El panel avisa debajo del botón si algo quedó afuera.
+- Solo se guarda lo que está en el JSON: **imágenes del área (hasta 3, con sus cortes y la línea divisoria) y de fondo** (una foto subida desde un archivo se guarda en el servidor, comprimida a un máximo de 2 MB, y su URL queda en el JSON), **íconos del set** (los logos o imágenes propias no se guardan), textos, ajustes del borde y colores. El panel avisa debajo del botón si algo quedó afuera.
 
 ## Reutilizar para un nuevo concierto
 1. Pedile al usuario que elija el flyer en el select **Flyers guardados** (se carga en pantalla). En modo panel podés hacerlo vos: elegir la opción del `<select>` y esperar a que cargue.

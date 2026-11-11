@@ -100,6 +100,10 @@ export default [
                 component: () => import('@/views/admin/sections/configuracion/NovedadesView.vue')
             },
             {
+                path: 'carrusel',
+                component: () => import('@/views/admin/sections/configuracion/CarruselView.vue')
+            },
+            {
                 path: 'mesasExamen',
                 component: () => import ('@/views/admin/sections/MesasExamenView.vue')
             },

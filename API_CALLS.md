@@ -35,6 +35,10 @@ Auditoría base: 2026-11-03, 247 puntos de llamada en `src` (excluye `composable
 | carreras | getCarreras | GET | OK | CarrerasView, PlanesEstudioView |
 | carreras | getCarrerasAlumno | GET | OK | ReservasVacanteView |
 | carreras | updCarrera | POST | OK | CarrerasView |
+| carrusel | addItemCarrusel | POST | OK | CarruselView |
+| carrusel | delItemCarrusel | POST | OK | CarruselView |
+| carrusel | getItemsCarrusel | GET | OK | CarruselView |
+| carrusel | updItemCarrusel | POST | OK | CarruselView |
 | cicloslectivos | getCiclosLectivos | GET | OK | useCicloLectivo, ReservasVacanteView |
 | config | getConfig | GET | OK | ConfiguracionView, HomeSection |
 | config | setConfig | POST | OK | ConfiguracionView |
@@ -254,6 +258,7 @@ Auditoría base: 2026-11-03, 247 puntos de llamada en `src` (excluye `composable
 | estudiantes | mesas | updSolicitud | POST | **FALTA (sin handler)** | HomeSection |
 | estudiantes | docs | uploadFile (Resumable) | POST | **FALTA** | DocumentacionView |
 | admin | novedades | uploadFile (Resumable) | POST | OK | NovedadesView |
+| admin | carrusel | uploadFile (Resumable) | POST | OK | CarruselView |
 | admin | docingresantes | uploadFile (Resumable) | POST | OK | PreinscripcionesDocumentacionView |
 | admin | docingresantes | delFile | POST | OK | PreinscripcionesDocumentacionView |
 | admin | flyers | uploadImagenFlyer (`fetch`) | POST | OK | FlyersView |

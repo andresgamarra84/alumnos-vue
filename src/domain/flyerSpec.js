@@ -5,11 +5,18 @@
 //   "version": 1,
 //   "formato": "4:5",                      // "4:5" | "16:9" | "1:1"
 //   "plantilla": "horizontal",             // "libre" | "horizontal" (imagen arriba) | "vertical" (imagen al costado)
-//   "imagen": {                            // imagen principal (obligatoria si la plantilla no es "libre" para poder descargar)
-//     "url": "https://upload.wikimedia.org/...jpg",
-//     "offsetX": 0, "offsetY": 0,          // encuadre en px dentro del área (se limita a lo que sobresale)
-//     "autor": "...", "licencia": "CC BY-SA 4.0", "fuente": "https://commons.wikimedia.org/..."
+//   "imagenes": [                          // de 1 a 3 imágenes (obligatorias si la plantilla no es "libre" para poder descargar)
+//     {                                    // 1 imagen: ocupa toda el área. 2 o 3: collage (columnas en "horizontal", filas en "vertical")
+//       "url": "https://upload.wikimedia.org/...jpg",
+//       "offsetX": 0, "offsetY": 0,        // encuadre en px dentro de su celda (se limita a lo que sobresale)
+//       "autor": "...", "licencia": "CC BY-SA 4.0", "fuente": "https://commons.wikimedia.org/..."
+//     }
+//   ],
+//   "collage": {                           // opcional; solo se usa con 2 o 3 imágenes
+//     "cortesPct": [50],                   // posición de cada corte en % del área (1 corte con 2 imágenes, 2 con 3). Cada imagen ocupa al menos 15 %
+//     "divisor": { "grosorPx": 8, "color": null }   // línea entre imágenes; color null = el mismo del fondo ("#rrggbb" para fijarlo)
 //   },
+//   // Formato anterior, todavía válido: "imagen": { ...igual que un ítem de "imagenes" } equivale a "imagenes": [ ... ] con una sola imagen.
 //   "borde": { "areaPct": 60, "rasgadoPct": 40, "inclinacionPct": 0, "curvaturaPct": 0, "difuminadoPct": 0 },
 //   "fondo": { "tipo": "color", "color": "#ffffff" },   // o { "tipo": "imagen", "url": "..." }
 //   "textos": [{ "valor": "Título", "fuente": "Garamond", "color": "#1b2452", "tamano": 1.5, "align": "center",
@@ -47,6 +54,16 @@ const RANGOS_BORDE = {
   inclinacionPct: { min: -100, max: 100, defecto: 0 },
   curvaturaPct: { min: -100, max: 100, defecto: 0 },
   difuminadoPct: { min: 0, max: 100, defecto: 0 },
+}
+
+// Collage: cantidad máxima de imágenes, porción mínima de cada una (en %) y rango del grosor de la línea divisoria (px)
+export const MAX_IMAGENES = 3
+export const PORCION_MIN_IMAGEN_PCT = 15
+export const RANGO_DIVISOR_PX = { min: 0, max: 30, defecto: 8 }
+
+// Cortes por defecto (en %) para n imágenes: porciones iguales.
+export function cortesPorDefecto(n) {
+  return Array.from({ length: Math.max(0, n - 1) }, (_, i) => Math.round(((i + 1) * 100) / n))
 }
 
 // Mismos límites que cambiarTamano() del editor
@@ -132,14 +149,51 @@ export function validarEspecificacion(raw) {
   const formato = opcion('formato', raw.formato, FORMATOS_VALIDOS, '4:5')
   const plantilla = opcion('plantilla', raw.plantilla, PLANTILLAS_VALIDAS, 'libre')
 
-  const img = objeto('imagen', raw.imagen)
-  const imagen = {
-    url: urlHttps('imagen.url', img.url),
-    offsetX: numero('imagen.offsetX', img.offsetX, { min: -5000, max: 5000, defecto: 0 }),
-    offsetY: numero('imagen.offsetY', img.offsetY, { min: -5000, max: 5000, defecto: 0 }),
-    autor: texto('imagen.autor', img.autor),
-    licencia: texto('imagen.licencia', img.licencia),
-    fuente: texto('imagen.fuente', img.fuente),
+  // "imagenes" (1 a 3). Si no viene, se acepta el formato anterior con una sola "imagen".
+  let crudas = []
+  if (raw.imagenes !== undefined && raw.imagenes !== null) {
+    crudas = lista('imagenes', raw.imagenes)
+    if (crudas.length > MAX_IMAGENES) {
+      err('imagenes', `admite hasta ${MAX_IMAGENES} imágenes (recibidas ${crudas.length})`)
+      crudas = crudas.slice(0, MAX_IMAGENES)
+    }
+  } else if (raw.imagen !== undefined && raw.imagen !== null) {
+    crudas = [raw.imagen]
+  }
+  if (!crudas.length) crudas = [{}]
+  const imagenes = crudas.map((c, i) => {
+    const r = raw.imagenes !== undefined && raw.imagenes !== null ? `imagenes[${i}]` : 'imagen'
+    const img = objeto(r, c)
+    return {
+      url: urlHttps(`${r}.url`, img.url),
+      offsetX: numero(`${r}.offsetX`, img.offsetX, { min: -5000, max: 5000, defecto: 0 }),
+      offsetY: numero(`${r}.offsetY`, img.offsetY, { min: -5000, max: 5000, defecto: 0 }),
+      autor: texto(`${r}.autor`, img.autor),
+      licencia: texto(`${r}.licencia`, img.licencia),
+      fuente: texto(`${r}.fuente`, img.fuente),
+    }
+  })
+
+  const col = objeto('collage', raw.collage)
+  let cortesPct = cortesPorDefecto(imagenes.length)
+  if (col.cortesPct !== undefined && col.cortesPct !== null) {
+    const cortes = lista('collage.cortesPct', col.cortesPct)
+    const validos =
+      cortes.length === imagenes.length - 1 &&
+      cortes.every((v) => esNumero(v)) &&
+      [0, ...cortes, 100].every((v, i, a) => i === 0 || v - a[i - 1] >= PORCION_MIN_IMAGEN_PCT)
+    if (validos) cortesPct = cortes
+    else if (imagenes.length > 1 || cortes.length) {
+      err(
+        'collage.cortesPct',
+        `con ${imagenes.length} imagen(es) deben ser ${imagenes.length - 1} corte(s) ascendentes, y cada imagen debe ocupar al menos ${PORCION_MIN_IMAGEN_PCT} %`
+      )
+    }
+  }
+  const dv = objeto('collage.divisor', col.divisor)
+  const divisor = {
+    grosorPx: numero('collage.divisor.grosorPx', dv.grosorPx, RANGO_DIVISOR_PX),
+    color: dv.color === undefined || dv.color === null ? null : color('collage.divisor.color', dv.color, null),
   }
 
   const b = objeto('borde', raw.borde)
@@ -187,7 +241,7 @@ export function validarEspecificacion(raw) {
   return {
     ok: errores.length === 0,
     errores,
-    spec: { version: VERSION_SPEC, formato, plantilla, imagen, borde, fondo, textos, iconos },
+    spec: { version: VERSION_SPEC, formato, plantilla, imagenes, collage: { cortesPct, divisor }, borde, fondo, textos, iconos },
   }
 }
 
