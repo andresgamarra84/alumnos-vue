@@ -64,9 +64,34 @@
           <div v-html="sanitize(r.cuerpo_html)"></div>
         </div>
 
+        <div v-for="p in seleccionado.programados" :key="p.codigo" class="respuesta-programada" :class="{ 'respuesta-programada--error': p.estado == 2 }">
+          <div class="respuesta-programada__meta">
+            <template v-if="p.estado == 2">⚠ No se pudo enviar la respuesta programada para el {{ fechaProgramada(p.enviar_en) }}.</template>
+            <template v-else>🕒 Respuesta programada para el {{ fechaProgramada(p.enviar_en) }}</template>
+            <a href="#" @click.prevent="cancelarProgramado(p)">Cancelar</a>
+          </div>
+          <div class="respuesta-programada__texto">{{ p.cuerpo_texto }}</div>
+        </div>
+
         <div class="responder">
           <textarea v-model="respuesta" class="form-control" rows="6" placeholder="Escribí tu respuesta…"></textarea>
           <button class="btn btn-accion btn-accion--guardar" :disabled="!respuesta.trim() || enviando" @click="responder">{{ enviando ? 'Enviando…' : 'Responder' }}</button>
+        </div>
+
+        <div v-if="dlgProgramar.visible" class="dlg-fondo" @click.self="dlgProgramar.visible = false">
+          <div class="dlg">
+            <h5>Son más de las {{ horaCorte }} hs</h5>
+            <p>¿Querés programar la respuesta para otro momento?</p>
+            <label class="dlg__campo">
+              <span>Día y hora de envío</span>
+              <input type="datetime-local" v-model="dlgProgramar.fecha" :min="minFecha" class="form-control form-control-sm">
+            </label>
+            <div class="dlg__acciones">
+              <button class="btn btn-sm btn-outline-secondary me-auto" @click="dlgProgramar.visible = false">Cancelar</button>
+              <button class="btn btn-sm btn-outline-secondary" :disabled="enviando" @click="confirmarEnvio({ enviarAhora: true })">Enviar ahora</button>
+              <button class="btn btn-sm btn-accion btn-accion--guardar" :disabled="!dlgProgramar.fecha || enviando" @click="confirmarEnvio({ programarPara: dlgProgramar.fecha })">Programar</button>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -74,7 +99,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import DOMPurify from 'dompurify'
 import { api } from '@/api/api'
 import { showModal, showToast } from '@/services/uiBus'
@@ -183,20 +208,61 @@ async function borrar() {
   await cargar(pagina.value)
 }
 
+// Pasada la hora de corte (hora de Argentina) las respuestas se pueden programar. El BE tiene la última palabra: si
+// el reloj de este equipo no coincide, responde requiereProgramar y se muestra el diálogo igual.
+const horaCorte = 20
+const dlgProgramar = reactive({ visible: false, fecha: '' })
+const aLocalInput = (d) => {
+  const p = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`
+}
+const minFecha = computed(() => (dlgProgramar.visible ? aLocalInput(new Date()) : ''))
+const horaArgentina = () => Number(new Intl.DateTimeFormat('es-AR', { timeZone: 'America/Argentina/Buenos_Aires', hour: 'numeric', hourCycle: 'h23' }).format(new Date()))
+const fechaProgramada = (f) => parseFecha(f).toLocaleString('es-AR', { weekday: 'long', day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' hs'
+
+function abrirDialogoProgramar() {
+  const manana = new Date()
+  manana.setDate(manana.getDate() + 1)
+  manana.setHours(8, 0, 0, 0)
+  dlgProgramar.fecha = aLocalInput(manana)
+  dlgProgramar.visible = true
+}
+
 async function responder() {
+  if (horaArgentina() >= horaCorte) return abrirDialogoProgramar()
   const { ok } = await showModal(`¿Enviar la respuesta a ${seleccionado.value.de_email}?`, 1, 'Confirmación')
   if (!ok) return
+  await confirmarEnvio({})
+}
+
+// extra: {} (el BE decide), { enviarAhora: true } o { programarPara: 'YYYY-MM-DDTHH:mm' }
+async function confirmarEnvio(extra) {
   enviando.value = true
   try {
-    const r = await api.post({ entity: 'correo', action: 'responder', payload: { codigo: seleccionado.value.codigo, texto: respuesta.value } })
+    const r = await api.post({ entity: 'correo', action: 'responder', payload: { codigo: seleccionado.value.codigo, texto: respuesta.value, ...extra } })
     if (!r.ok) return
-    showToast('Respuesta enviada', 'success')
-    const it = items.value.find((i) => i.codigo === seleccionado.value.codigo)
-    if (it) it.respondido = 1
+    if (r.payload.requiereProgramar) return abrirDialogoProgramar()
+    dlgProgramar.visible = false
+    if (r.payload.programado) {
+      showToast('Respuesta programada', 'success')
+    } else {
+      showToast('Respuesta enviada', 'success')
+      const it = items.value.find((i) => i.codigo === seleccionado.value.codigo)
+      if (it) it.respondido = 1
+    }
     await abrir(seleccionado.value)
   } finally {
     enviando.value = false
   }
+}
+
+async function cancelarProgramado(p) {
+  const { ok } = await showModal('¿Cancelar el envío programado de esta respuesta?', 1, 'Confirmación')
+  if (!ok) return
+  const r = await api.post({ entity: 'correo', action: 'cancelarProgramado', payload: { codigo: p.codigo } })
+  if (!r.ok) return
+  seleccionado.value.programados = seleccionado.value.programados.filter((x) => x.codigo !== p.codigo)
+  showToast('Envío cancelado', 'success')
 }
 
 async function descargar(a) {
@@ -237,6 +303,15 @@ onMounted(async () => {
 .adjuntos { display: flex; flex-direction: column; gap: 4px; }
 .respuesta-enviada { border-left: 3px solid var(--color-acento); padding-left: 12px; }
 .respuesta-enviada__meta { color: var(--color-texto-secundario); font-size: .8rem; }
+.respuesta-programada { border-left: 3px solid #d39e00; padding-left: 12px; }
+.respuesta-programada--error { border-left-color: #dc3545; }
+.respuesta-programada__meta { color: var(--color-texto-secundario); font-size: .85rem; display: flex; gap: 12px; flex-wrap: wrap; }
+.respuesta-programada__texto { white-space: pre-wrap; font-size: .9rem; }
+.dlg-fondo { position: fixed; inset: 0; background: rgba(0,0,0,.5); display: flex; align-items: center; justify-content: center; z-index: 1050; padding: 16px; }
+.dlg { background: var(--color-fondo-secundario); border: 1px solid var(--color-borde); border-radius: 10px; padding: 20px; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 12px; }
+.dlg h5, .dlg p { margin: 0; }
+.dlg__campo { display: flex; flex-direction: column; gap: 4px; font-size: .9rem; }
+.dlg__acciones { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
 .responder { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
 .responder textarea { width: 100%; }
 .chip { display: inline-flex; align-items: center; cursor: pointer; user-select: none; margin: 0; }
