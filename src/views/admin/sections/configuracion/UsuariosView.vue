@@ -163,6 +163,7 @@ const permissionSections = [
       { id: "preinscripciones_all", label: "Todos los permisos" },
       { id: "preinscripciones_ver", label: "Ver preinscripciones" },
       { id: "preinscripciones_documentacion", label: "Acreditacion de documentacion" },
+      { id: "preinscripciones_correo", label: "Correo de consultas" },
     ],
   },
   {

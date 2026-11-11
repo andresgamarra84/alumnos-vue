@@ -120,6 +120,10 @@ export default [
                 component: () => import('@/views/admin/sections/preinscripciones/PreinscripcionesDocumentacionView.vue')
             },
             {
+                path: 'preinscripcionesCorreo',
+                component: () => import('@/views/admin/sections/preinscripciones/PreinscripcionesCorreoView.vue')
+            },
+            {
                 path: 'reservas',
                 component: () => import('@/views/admin/sections/ReservasVacanteView.vue')
             },
