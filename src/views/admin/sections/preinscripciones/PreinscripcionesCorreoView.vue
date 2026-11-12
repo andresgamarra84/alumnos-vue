@@ -28,7 +28,7 @@
           <div class="item__asunto">
             {{ m.asunto || '(sin asunto)' }}
             <span v-if="m.tiene_adjuntos" title="Adjuntos">📎</span>
-            <span v-if="m.respondido" class="badge-estado badge-estado--ok">Respondido</span>
+            <component :is="ESTADOS[m.estado_icono].icono" class="estado-icono" :class="ESTADOS[m.estado_icono].clase" :size="16" :title="ESTADOS[m.estado_icono].titulo" :aria-label="ESTADOS[m.estado_icono].titulo" />
             <span v-if="m.codalumno" class="badge-estado badge-estado--neutro">Ingresante</span>
           </div>
           <div class="item__extracto">{{ m.extracto }}</div>
@@ -101,11 +101,19 @@
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import DOMPurify from 'dompurify'
+import { Mail, Reply, MessageSquareReply } from '@lucide/vue'
 import { api } from '@/api/api'
 import { showModal, showToast } from '@/services/uiBus'
 import { useFileDownload } from '@/composables/useFileDownload'
 
 const { downloadBlob } = useFileDownload()
+
+// Índice = estado_icono que calcula el BE: 0 nuevo, 1 respondido, 2 respuesta del destinatario sin atender
+const ESTADOS = [
+  { icono: Mail, clase: 'estado-icono--nuevo', titulo: 'Nuevo correo' },
+  { icono: Reply, clase: 'estado-icono--respondido', titulo: 'Correo respondido' },
+  { icono: MessageSquareReply, clase: 'estado-icono--respuesta', titulo: 'Respuesta del destinatario' },
+]
 
 const items = ref([])
 const total = ref(0)
@@ -247,9 +255,9 @@ async function confirmarEnvio(extra) {
       showToast('Respuesta programada', 'success')
     } else {
       showToast('Respuesta enviada', 'success')
-      const it = items.value.find((i) => i.codigo === seleccionado.value.codigo)
-      if (it) it.respondido = 1
     }
+    // Recarga la lista: al responder puede cambiar el ícono de este mensaje y también el del que lo originó
+    await cargar(pagina.value)
     await abrir(seleccionado.value)
   } finally {
     enviando.value = false
@@ -293,6 +301,10 @@ onMounted(async () => {
 .item__fecha { color: var(--color-texto-secundario); font-size: .8rem; flex-shrink: 0; }
 .item__asunto { font-size: .92rem; }
 .item__extracto { color: var(--color-texto-secundario); font-size: .82rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.estado-icono { vertical-align: -3px; margin-left: 4px; flex-shrink: 0; }
+.estado-icono--nuevo { color: var(--color-acento); }
+.estado-icono--respondido { color: #28a745; }
+.estado-icono--respuesta { color: #fd7e14; }
 .paginacion { display: flex; justify-content: center; align-items: center; gap: 12px; padding: 8px; }
 .detalle { border: 1px solid var(--color-borde); border-radius: 8px; background: var(--color-fondo-secundario); padding: 16px; display: flex; flex-direction: column; gap: 12px; min-width: 0; }
 .detalle__volver { display: none; align-self: flex-start; }
