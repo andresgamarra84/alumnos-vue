@@ -49,6 +49,8 @@
           :key="item.codHilo"
           :item="item"
           :showNombre="true"
+          :enviando="!!enviando[item.codHilo]"
+          :cargando="!!cargando[item.codHilo]"
           @open-panel="openPanel(item.codAlumno)"
           @click="getMsg(idx)"
         >
@@ -69,7 +71,7 @@
   </div>
 </template>
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted } from 'vue'
 import { api } from '@/api/api'
 import { showModal, showToast } from '@/services/uiBus'
 import Conversacion from '@/views/shared/Conversacion.vue'
@@ -84,6 +86,10 @@ const arrHilos = ref([])
 const arrGlobales = ref([])
 const respuesta = ref('')
 const filtroActivo = ref('todos')
+// codHilo -> true mientras se envía una respuesta de ese hilo (por código y no por objeto: list() reemplaza los objetos)
+const enviando = reactive({})
+// Ídem para la carga de la conversación al abrir un hilo
+const cargando = reactive({})
 
 /* ---------- filtros ---------- */
 const esActivo = (estado) => estado === 1 || estado === 2
@@ -113,26 +119,35 @@ const list = async () => {
     entity: 'mensajes',
     action: 'getAllThreads'
   })
-  arrHilos.value = payload ?? []
+  // Se conservan los mensajes de las conversaciones abiertas: recargar la lista no debe cerrarlas
+  const abiertos = new Map(arrHilos.value.filter(h => h.mensajes?.length).map(h => [h.codHilo, h.mensajes]))
+  arrHilos.value = (payload ?? []).map(h => ({ ...h, mensajes: abiertos.get(h.codHilo) ?? h.mensajes ?? [] }))
 }
 const openPanel = (codigo) =>  {
   openUserPanel({area: "estudiantes", codigo})
 }
 const getMsg = async (index) => {
-  if (arrHilos.value[index].mensajes.length>0) return
-  const item = arrHilos.value[index]
-  const codHilo = item.codHilo
-  const { payload } = await api.get({
-    entity: 'mensajes',
-    action: 'getMessageFromThread',
-    payload: { codHilo }
-  })
-  item.mensajes = payload.map(v => ({
-    mensaje: v.mensaje,
-    fechaIngreso: v.fechaIngreso,
-    clase : v.codTipo,
-    visto: v.visto,
-  })) ?? []
+  const { codHilo, mensajes } = arrHilos.value[index]
+  if (mensajes.length > 0 || cargando[codHilo]) return
+  cargando[codHilo] = true
+  try {
+    // spinner:false -> no bloquea la pantalla; la espera se muestra sobre el hilo (HiloItem)
+    const { payload } = await api.get({
+      entity: 'mensajes',
+      action: 'getMessageFromThread',
+      payload: { codHilo }
+    }, { spinner: false })
+    // Por código: durante la espera la lista pudo recargarse y el objeto original ya no estar en ella
+    const hilo = arrHilos.value.find(h => h.codHilo === codHilo)
+    if (hilo) hilo.mensajes = (payload ?? []).map(v => ({
+      mensaje: v.mensaje,
+      fechaIngreso: v.fechaIngreso,
+      clase : v.codTipo,
+      visto: v.visto,
+    }))
+  } finally {
+    delete cargando[codHilo]
+  }
 }
 const closeChat = (k) => {
   arrHilos.value[k].mensajes = []
@@ -165,23 +180,35 @@ const sendMsg = async (k) => {
     1
   )
   if (!ok) return
-  const codHilo = arrHilos.value[k].codHilo
+  const { codHilo, codAlumno } = arrHilos.value[k]
   const mensaje = respuesta.value
-  const r = await api.post({
-    entity: 'mensajes',
-    action: 'addMessageToThread',
-    payload: {
-      codHilo,
-      mensaje,
-      codAlumno: arrHilos.value[k].codAlumno
-    }
-  })
-  if (r.ok) {
-    showToast('Mensaje enviado', 'success')
-  }
+  // El textarea es compartido: se libera ya para poder responder en otros hilos mientras este se envía
   respuesta.value = ''
-  closeChat(k)
-  list()
+  enviando[codHilo] = true
+  let enviado = false
+  try {
+    // spinner:false -> no bloquea la pantalla; la espera se muestra sobre el hilo (HiloItem)
+    const r = await api.post({
+      entity: 'mensajes',
+      action: 'addMessageToThread',
+      payload: { codHilo, mensaje, codAlumno }
+    }, { spinner: false })
+    enviado = !!r.ok
+  } catch (e) {
+    showToast(e.message || 'No se pudo enviar el mensaje', 'error')
+  } finally {
+    delete enviando[codHilo]
+  }
+  if (!enviado) {
+    // No se pierde lo escrito, salvo que ya se haya empezado a escribir otra cosa
+    if (!respuesta.value) respuesta.value = mensaje
+    return
+  }
+  showToast('Mensaje enviado', 'success')
+  // Se busca por código: durante la espera la lista pudo reemplazarse (índices y objetos distintos)
+  const hilo = arrHilos.value.find(h => h.codHilo === codHilo)
+  if (hilo) hilo.mensajes = []
+  await list()
 }
 
 const newMsg = async ({ asunto, mensaje, fechaHasta }) => {
