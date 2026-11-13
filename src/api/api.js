@@ -4,6 +4,8 @@ const { start, stop } = useLoading()
 import { BASE_URL, SESSION_NAME } from '@/config/app.config'
 
 const request = async (options = {}) => {
+    // options.spinner === false: no muestra el spinner de pantalla completa (el llamador maneja la espera)
+    const spinner = options.spinner !== false
     try {
         let url = BASE_URL;
         const token = sessionStorage.getItem(SESSION_NAME)
@@ -18,7 +20,7 @@ const request = async (options = {}) => {
                 url += `?${params.toString()}`;
             }
         }
-        start();
+        start(spinner);
         const response = await fetch(url, {
             method: options.method || 'GET',
             headers: {
@@ -59,13 +61,18 @@ const request = async (options = {}) => {
         throw new Error(error.message || 'Error de conexión. Intenta de nuevo.');
     }
     finally {
-        stop();
+        stop(spinner);
     }
 };
 
+// opts (segundo parámetro, opcional en todos los métodos):
+//   silent:  false por defecto. Con true no muestra el toast de error automático (el llamador maneja el error)
+//   spinner: true por defecto. Con false no muestra el spinner de pantalla completa (el llamador maneja la espera)
+//   headers: encabezados HTTP extra (el Authorization y el Content-Type los arma request)
+// Ej.: api.get({ entity, action, payload }, { spinner: false })
+// `headers` se crea nuevo en cada llamada porque request le agrega el Authorization.
 export const api = {
-    // opts.silent: no muestra el toast de error automático (el llamador maneja el error)
-    post: (body, headers = {}, opts = {}) => request({ type:'json', method: 'POST', body, headers, ...opts }),
-    get: (params, headers = {}) => request({ type:'json', method: 'GET', body: params, headers }),
-    getPDF: (params, headers = {}) => request({ type: 'pdf', method: 'GET', body: params, headers }),
+    post: (body, opts = {}) => request({ type: 'json', method: 'POST', body, ...opts, headers: { ...opts.headers } }),
+    get: (params, opts = {}) => request({ type: 'json', method: 'GET', body: params, ...opts, headers: { ...opts.headers } }),
+    getPDF: (params, opts = {}) => request({ type: 'pdf', method: 'GET', body: params, ...opts, headers: { ...opts.headers } }),
 };
