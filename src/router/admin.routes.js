@@ -56,6 +56,10 @@ export default [
                 component: () => import ('@/views/admin/sections/estudiantes/SolicitudesConstanciasView.vue')
             },
             {
+                path: 'graduados',
+                component: () => import('@/views/admin/sections/estudiantes/GraduadosView.vue')
+            },
+            {
                 path: 'nuevoEstudiante',
                 component: () => import('@/views/admin/sections/estudiantes/NuevoEstudianteView.vue')
             },

@@ -16,7 +16,7 @@ Rol: lo decide el backend por el token (`api.js` solo manda `Authorization: Bear
 
 Auditoría base: 2026-11-03, 247 puntos de llamada en `src` (excluye `composables/useApiClient.js` y `useMesas.js`, sin importadores, y `MateriasView_old.vue`, sin ruta).
 
-## Rol: admin (133 llamados)
+## Rol: admin (135 llamados)
 
 | entity | action | método | routes.php | vistas |
 |---|---|---|---|---|
@@ -32,7 +32,7 @@ Auditoría base: 2026-11-03, 247 puntos de llamada en `src` (excluye `composable
 | carreras | addCarrera | POST | OK | CarrerasView |
 | carreras | delCarrera | POST | OK | CarrerasView |
 | carreras | getCarreraInfo | GET | OK | CarrerasView |
-| carreras | getCarreras | GET | OK | CarrerasView, PlanesEstudioView |
+| carreras | getCarreras | GET | OK | CarrerasView, GraduadosView, PlanesEstudioView |
 | carreras | getCarrerasAlumno | GET | OK | ReservasVacanteView |
 | carreras | updCarrera | POST | OK | CarrerasView |
 | carrusel | addItemCarrusel | POST | OK | CarruselView |
@@ -69,6 +69,7 @@ Auditoría base: 2026-11-03, 247 puntos de llamada en `src` (excluye `composable
 | docingresantes | getList | GET | OK | PreinscripcionesDocumentacionView |
 | docingresantes | updDocumentacion | POST | OK | PreinscripcionesDocumentacionView |
 | estudiantes | addEstudiante | POST | OK | NuevoEstudianteView |
+| estudiantes | getGraduados | GET | OK | GraduadosView |
 | flyers | delFlyer | POST | OK | FlyersView |
 | flyers | getFlyer | GET | OK | FlyersView |
 | flyers | getFlyers | GET | OK | FlyersView |

@@ -97,6 +97,7 @@ const permissionSections = [
       { id: "estudiantes_buscar", label: "Buscar estudiantes" },
       { id: "estudiantes_nuevo", label: "Nuevo estudiantes" },
       { id: "estudiantes_solicitud_constancia", label: "Solicitudes de constancia" },
+      { id: "estudiantes_graduados", label: "Ver graduados" },
       { id: "estudiantes_documentacion", label: "Envio de documentacion" },
     ],
   },
