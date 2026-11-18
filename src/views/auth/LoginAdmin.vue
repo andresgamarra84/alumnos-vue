@@ -102,7 +102,7 @@ const login = async () => {
         user: userId.value,
         pwd: password.value
       }
-    }, {}, { silent: true })
+    }, { silent: true })
   } catch (e) {
     showModal(e.message || 'Usuario o contraseña incorrectos')
     return

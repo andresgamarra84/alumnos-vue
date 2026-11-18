@@ -16,7 +16,7 @@ Rol: lo decide el backend por el token (`api.js` solo manda `Authorization: Bear
 
 Auditoría base: 2026-11-03, 247 puntos de llamada en `src` (excluye `composables/useApiClient.js` y `useMesas.js`, sin importadores, y `MateriasView_old.vue`, sin ruta).
 
-## Rol: admin (135 llamados)
+## Rol: admin (137 llamados)
 
 | entity | action | método | routes.php | vistas |
 |---|---|---|---|---|
@@ -60,6 +60,14 @@ Auditoría base: 2026-11-03, 247 puntos de llamada en `src` (excluye `composable
 | cursoshorarios | getInfoCursoHorario | GET | OK | GrillaHorariosView |
 | cursoshorarios | updPositionCH | POST | OK | GrillaHorariosView |
 | cursoshorarios | updWidthCH | POST | OK | GrillaHorariosView |
+| correo | cancelarProgramado | POST | OK | PreinscripcionesCorreoView |
+| correo | delMensaje | POST | OK | PreinscripcionesCorreoView |
+| correo | getAdjunto (getPDF) | GET | OK | PreinscripcionesCorreoView |
+| correo | getMensaje | GET | OK | PreinscripcionesCorreoView |
+| correo | getMensajes | GET | OK | PreinscripcionesCorreoView |
+| correo | marcarLeido | POST | OK | PreinscripcionesCorreoView |
+| correo | responder | POST | OK | PreinscripcionesCorreoView |
+| correo | sincronizar | POST | OK | PreinscripcionesCorreoView |
 | data | getCiclos | GET | OK | MateriasView |
 | data | getComisiones | GET | OK | GrillaHorariosView |
 | data | getDias | GET | OK | GrillaHorariosView |
