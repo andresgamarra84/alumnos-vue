@@ -29,7 +29,7 @@
                 <InfoMeta><template #icon><CalendarDays /></template>{{ item.fechaInscripcion }}</InfoMeta>
             </template>
 
-            <template #actions v-if='!item.deleted'>
+            <template #actions v-if='!item.deleted && item.codcursosalumnos'>
                 <button type='button' class='card-link card-link--danger' @click='delCursada(key)'>Borrar cursada</button>
             </template>
         </InfoCard>
@@ -39,6 +39,7 @@
 <script setup>
     import { ref, computed, onMounted } from 'vue';
     import { api } from '@/api/api';
+    import { showModal } from '@/services/uiBus';
     import CarrerasSelect from '@/components/CarrerasSelect.vue';
     import InfoCard from '@/components/card/InfoCard.vue';
     import InfoCardGrid from '@/components/card/InfoCardGrid.vue';
@@ -75,8 +76,11 @@
         arrCursadas.value = r.payload
     }
     const delCursada = async (key) => {
-        const codigo = arrCursadas.value[key].codcursosalumnos
+        const cursada = arrCursadas.value[key]
+        const codigo = cursada.codcursosalumnos
         if (!codigo) return
+        const confirma = await showModal(`¿Confirma el borrado de la cursada de ${cursada.nombre}?`, 1, 'Borrar cursada')
+        if (!confirma?.ok) return
         const r = await api.post({
             entity: "calificaciones",
             action: "borrarCursada",
