@@ -4,9 +4,11 @@
 // {
 //   "version": 1,
 //   "formato": "4:5",                      // "4:5" | "16:9" | "1:1"
-//   "plantilla": "horizontal",             // "libre" | "horizontal" (imagen arriba) | "vertical" (imagen al costado)
+//   "plantilla": "horizontal",             // "libre" | "horizontal" (imagen arriba) | "vertical" (imagen al costado) | "esquina" (imagen en una esquina)
+//   "esquina": "superior-izquierda",       // solo con plantilla "esquina": "superior-izquierda" | "superior-derecha" | "inferior-izquierda" | "inferior-derecha"
+//                                          // el corte es una diagonal; borde.areaPct es la fracción del lienzo que ocupa la imagen
 //   "imagenes": [                          // de 1 a 3 imágenes (obligatorias si la plantilla no es "libre" para poder descargar)
-//     {                                    // 1 imagen: ocupa toda el área. 2 o 3: collage (columnas en "horizontal", filas en "vertical")
+//     {                                    // 1 imagen: ocupa toda el área. 2 o 3: collage (columnas en "horizontal" y "esquina", filas en "vertical")
 //       "url": "https://upload.wikimedia.org/...jpg",
 //       "offsetX": 0, "offsetY": 0,        // encuadre en px dentro de su celda (se limita a lo que sobresale)
 //       "autor": "...", "licencia": "CC BY-SA 4.0", "fuente": "https://commons.wikimedia.org/..."
@@ -27,7 +29,8 @@
 export const VERSION_SPEC = 1
 
 export const FORMATOS_VALIDOS = ['4:5', '16:9', '1:1']
-export const PLANTILLAS_VALIDAS = ['libre', 'horizontal', 'vertical']
+export const PLANTILLAS_VALIDAS = ['libre', 'horizontal', 'vertical', 'esquina']
+export const ESQUINAS_VALIDAS = ['superior-izquierda', 'superior-derecha', 'inferior-izquierda', 'inferior-derecha']
 export const ALINEACIONES_VALIDAS = ['left', 'center', 'right']
 
 // Íconos de uso común (trazados en una grilla de 24 × 24, estilo Material). Se rasterizan como SVG
@@ -148,6 +151,7 @@ export function validarEspecificacion(raw) {
 
   const formato = opcion('formato', raw.formato, FORMATOS_VALIDOS, '4:5')
   const plantilla = opcion('plantilla', raw.plantilla, PLANTILLAS_VALIDAS, 'libre')
+  const esquina = opcion('esquina', raw.esquina, ESQUINAS_VALIDAS, 'superior-izquierda')
 
   // "imagenes" (1 a 3). Si no viene, se acepta el formato anterior con una sola "imagen".
   let crudas = []
@@ -241,7 +245,7 @@ export function validarEspecificacion(raw) {
   return {
     ok: errores.length === 0,
     errores,
-    spec: { version: VERSION_SPEC, formato, plantilla, imagenes, collage: { cortesPct, divisor }, borde, fondo, textos, iconos },
+    spec: { version: VERSION_SPEC, formato, plantilla, esquina, imagenes, collage: { cortesPct, divisor }, borde, fondo, textos, iconos },
   }
 }
 

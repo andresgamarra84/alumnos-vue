@@ -36,6 +36,20 @@
             >{{ p.etiqueta }}</button>
           </div>
 
+          <template v-if="plantilla === 'esquina'">
+            <span class="ajustes-titulo">Esquina</span>
+            <div class="opciones">
+              <button
+                type="button"
+                v-for="e in ESQUINAS"
+                :key="e.clave"
+                :class="{ activo: esquina === e.clave }"
+                :title="e.etiqueta"
+                @click="esquina = e.clave"
+              >{{ e.flecha }} {{ e.etiqueta }}</button>
+            </div>
+          </template>
+
           <template v-if="plantilla !== 'libre'">
             <span class="ajustes-titulo">Imágenes del área</span>
             <div class="opciones">
@@ -60,7 +74,7 @@
                 <span>{{ cortesPct[k] }}%</span>
               </div>
               <p class="ajustes-hint">
-                Reparto ({{ plantilla === 'horizontal' ? 'de izquierda a derecha' : 'de arriba hacia abajo' }}): {{ repartoTexto }}.
+                Reparto ({{ plantilla === 'vertical' ? 'de arriba hacia abajo' : 'de izquierda a derecha' }}): {{ repartoTexto }}.
                 Arrastrá cada imagen sobre el lienzo para elegir qué parte se ve.
               </p>
 
@@ -105,7 +119,9 @@
             <p class="ajustes-hint">
               {{ plantilla === 'vertical'
                 ? 'Negativo: la línea se corre a la izquierda al descender. Positivo: a la derecha.'
-                : 'Negativo: la línea sube hacia la derecha. Positivo: baja hacia la derecha.' }}
+                : plantilla === 'esquina'
+                  ? 'Gira la diagonal del corte: con un signo la imagen ocupa más del lado horizontal; con el otro, más del vertical.'
+                  : 'Negativo: la línea sube hacia la derecha. Positivo: baja hacia la derecha.' }}
               Doble click para volver a 0.
             </p>
 
@@ -117,7 +133,9 @@
             <p class="ajustes-hint">
               {{ plantilla === 'vertical'
                 ? 'En 0 el corte es recto. Negativo: se curva hacia la izquierda. Positivo: hacia la derecha.'
-                : 'En 0 el corte es recto. Negativo: se curva hacia arriba. Positivo: hacia abajo.' }}
+                : plantilla === 'esquina'
+                  ? 'En 0 el corte es recto. Negativo: se curva hacia la esquina. Positivo: hacia el centro del flyer.'
+                  : 'En 0 el corte es recto. Negativo: se curva hacia arriba. Positivo: hacia abajo.' }}
               Doble click para volver a 0.
             </p>
 
@@ -467,9 +485,19 @@ const PLANTILLAS = [
   { clave: 'libre', etiqueta: 'Libre' },
   { clave: 'horizontal', etiqueta: 'Imagen arriba' },
   { clave: 'vertical', etiqueta: 'Imagen al costado' },
+  { clave: 'esquina', etiqueta: 'Imagen en esquina' },
+]
+
+// Plantilla "esquina": la imagen ocupa una esquina del lienzo y el corte es una diagonal hacia el centro.
+const ESQUINAS = [
+  { clave: 'superior-izquierda', etiqueta: 'Sup. izq.', flecha: '↖' },
+  { clave: 'superior-derecha', etiqueta: 'Sup. der.', flecha: '↗' },
+  { clave: 'inferior-izquierda', etiqueta: 'Inf. izq.', flecha: '↙' },
+  { clave: 'inferior-derecha', etiqueta: 'Inf. der.', flecha: '↘' },
 ]
 
 const plantilla = ref('libre')
+const esquina = ref('superior-izquierda')
 const proporcionImagenPct = ref(60) // fracción del alto (horizontal) o del ancho (vertical) para la imagen
 const inclinacionPct = ref(0) // -100 a 100
 const curvaturaPct = ref(0) // -100 a 100: 0 = recto, el signo indica hacia qué lado se arquea
@@ -610,6 +638,14 @@ function agregarTexto() {
   if (plantilla.value === 'horizontal') {
     const rango = Math.max(1 - p - 0.12, 0.06)
     textos.push(crearTexto('Nuevo texto', { yBase: p + 0.08 + ((n * 0.06) % rango) }))
+  } else if (plantilla.value === 'esquina') {
+    // El área de información es el lado opuesto a la esquina: textos en la mitad vertical libre, corridos hacia el lado libre
+    const { flipX, flipY } = ladosEsquina()
+    textos.push(crearTexto('Nuevo texto', {
+      yBase: (flipY ? 0.12 : 0.6) + ((n * 0.06) % 0.28),
+      offsetX: (flipX ? -1 : 1) * ANCHO_BASE * 0.18,
+      fontBase: 0.035,
+    }))
   } else if (plantilla.value === 'vertical') {
     // offsetX desplaza el ancla (centro del lienzo) hasta el centro del panel derecho
     const centroPanel = ((p + 1) / 2) * ANCHO_BASE
@@ -820,6 +856,27 @@ function zonaImagen(width, height) {
   return { x: 0, y: 0, w: width * p, h: height }
 }
 
+// Plantilla "esquina": de qué lados está la esquina elegida. Todo se calcula para la esquina superior
+// izquierda y se espeja (x → width - x, y → height - y) para las demás.
+function ladosEsquina() {
+  return { flipX: esquina.value.endsWith('derecha'), flipY: esquina.value.startsWith('inferior') }
+}
+
+// Posición s del corte diagonal: la región x/W + y/H < s ocupa exactamente el "Área de imagen" del lienzo
+// (hasta 50 % es un triángulo; por encima, el corte sale por los lados opuestos y la región es un pentágono).
+function corteEsquina() {
+  const p = proporcionImagenPct.value / 100
+  return p <= 0.5 ? Math.sqrt(2 * p) : 2 - Math.sqrt(2 * (1 - p))
+}
+
+// Dimensión de referencia para escalar inclinación, curvatura y difuminado: la perpendicular al borde.
+// En la esquina el corte es diagonal, así que se usa el lado menor.
+function dimensionPerpendicular(width, height) {
+  if (plantilla.value === 'vertical') return width
+  if (plantilla.value === 'horizontal') return height
+  return Math.min(width, height)
+}
+
 // Pseudoaleatorio (0 a 1) a partir de una semilla. La semilla se sortea al abrir el editor y con el
 // botón "Nuevo rasgado": fuera de eso no cambia (ni al mover sliders ni al redibujar).
 let semillaRasgado = 0
@@ -846,13 +903,15 @@ function rugosidad(i) {
 // Desplazamiento máximo del borde por inclinación (a ±100%): una fracción de la dimensión
 // perpendicular al borde, para que la diagonal nunca se coma toda el área de imagen o de información.
 function desplazamientoInclinacion(width, height) {
-  const max = plantilla.value === 'vertical' ? width * 0.25 : height * 0.15
+  const factor = plantilla.value === 'horizontal' ? 0.15 : 0.25
+  const max = dimensionPerpendicular(width, height) * factor
   return (inclinacionPct.value / 100) * max
 }
 
 // Flecha máxima del arco (a ±100%), con el mismo criterio que la inclinación.
 function flechaCurvatura(width, height) {
-  const max = plantilla.value === 'vertical' ? width * 0.2 : height * 0.12
+  const factor = plantilla.value === 'horizontal' ? 0.12 : 0.2
+  const max = dimensionPerpendicular(width, height) * factor
   return (curvaturaPct.value / 100) * max
 }
 
@@ -874,8 +933,7 @@ function desvioBorde(t, i, { d, c, amp }) {
 // Desviación estándar (px) del difuminado del corte. Es una fracción de la dimensión perpendicular
 // al borde, para que a 100% el degradé sea amplio pero no se coma toda el área de imagen.
 function sigmaDesvanecido(width, height) {
-  const dimension = plantilla.value === 'vertical' ? width : height
-  return dimension * 0.08 * (desvanecidoPct.value / 100)
+  return dimensionPerpendicular(width, height) * 0.08 * (desvanecidoPct.value / 100)
 }
 
 // Traza el contorno del área de imagen. El lado que da al área de información puede ir inclinado
@@ -883,6 +941,7 @@ function sigmaDesvanecido(width, height) {
 // margen: prolonga el contorno hacia afuera del lienzo por los otros tres lados (para que el
 // difuminado de la máscara no clarée también en los bordes del lienzo).
 function trazarZonaImagen(z, width, height, borde, margen = 0, c = ctx) {
+  if (plantilla.value === 'esquina') return trazarZonaEsquina(width, height, borde, margen, c)
   const pasos = borde.amp > 0 || borde.c !== 0 ? 60 : 1
   const m = margen
   c.beginPath()
@@ -904,6 +963,35 @@ function trazarZonaImagen(z, width, height, borde, margen = 0, c = ctx) {
   c.closePath()
 }
 
+// Contorno de la plantilla "esquina". Para la esquina superior izquierda, el corte va de (s·W, 0) a (0, s·H)
+// y el desvío del borde (inclinación, curvatura, rasgado) se aplica sobre la normal, hacia el área de información.
+// Las partes del contorno que caen fuera del lienzo se recortan solas. Con margen, el corte se prolonga por
+// sus dos extremos y el contorno rodea la esquina por fuera del lienzo (para el difuminado).
+function trazarZonaEsquina(width, height, borde, margen = 0, c = ctx) {
+  const { flipX, flipY } = ladosEsquina()
+  const s = corteEsquina()
+  const diag = Math.hypot(width, height)
+  const ux = -width / diag // dirección del corte, de su extremo superior al izquierdo
+  const uy = height / diag
+  const nx = height / diag // normal al corte, hacia el área de información
+  const ny = width / diag
+  const pasos = borde.amp > 0 || borde.c !== 0 ? 80 : 1
+  const m = margen
+  const lienzo = (x, y) => [flipX ? width - x : x, flipY ? height - y : y]
+  const punto = (t, i) => {
+    const dv = desvioBorde(t, i, borde)
+    return [s * width * (1 - t) + nx * dv, s * height * t + ny * dv]
+  }
+  c.beginPath()
+  c.moveTo(...lienzo(-m, -m))
+  const [x0, y0] = punto(0, 0)
+  if (m) c.lineTo(...lienzo(x0 - ux * m, y0 - uy * m))
+  for (let i = 0; i <= pasos; i++) c.lineTo(...lienzo(...punto(i / pasos, i)))
+  const [x1, y1] = punto(1, pasos)
+  if (m) c.lineTo(...lienzo(x1 + ux * m, y1 + uy * m))
+  c.closePath()
+}
+
 // Dibuja img cubriendo por completo la caja (recorta lo que sobra, sin deformar).
 // Tamaño (dw, dh) con el que img cubre por completo una caja de w × h.
 function medidasCubriendo(img, w, h) {
@@ -915,7 +1003,7 @@ function medidasCubriendo(img, w, h) {
 // lado paralelo al borde con el área de información: columnas con "Imagen arriba", filas con "Imagen al costado".
 // El borde (inclinación, curvatura, rasgado, difuminado) se aplica después sobre el conjunto, no sobre cada celda.
 function celdasImagen(w, h) {
-  const horizontal = plantilla.value === 'horizontal'
+  const horizontal = plantilla.value !== 'vertical'
   const largo = horizontal ? w : h
   const bordes = [0, ...cortesPct.value.slice(0, cantidadImagenes.value - 1).map((p) => Math.round((largo * p) / 100)), largo]
   return bordes.slice(0, -1).map((ini, i) => {
@@ -942,7 +1030,6 @@ function limitarEncuadre(width, height) {
 // de información lo máximo que puede avanzar el borde (mitad de la inclinación, arco de la curvatura y
 // picos del rasgado), para que la imagen lo cubra siempre.
 function cajaImagenPrincipal(width, height) {
-  const z = zonaImagen(width, height)
   const borde = {
     d: desplazamientoInclinacion(width, height),
     c: flechaCurvatura(width, height),
@@ -951,6 +1038,18 @@ function cajaImagenPrincipal(width, height) {
   // La curvatura solo agranda la caja cuando se arquea hacia el área de información (c > 0)
   // El difuminado también avanza hacia el área de información (hasta ~3 sigmas).
   const extension = Math.abs(borde.d) / 2 + Math.max(borde.c, 0) + borde.amp * 1.5 + sigmaDesvanecido(width, height) * 3
+  if (plantilla.value === 'esquina') {
+    // Caja que contiene la región de la esquina con el corte corrido "extension" sobre su normal:
+    // cada intersección con los lados del lienzo avanza extension / (componente de la normal)
+    const s = corteEsquina()
+    const diag = Math.hypot(width, height)
+    const w = Math.min(width, s * width + (extension * diag) / height)
+    const h = Math.min(height, s * height + (extension * diag) / width)
+    const { flipX, flipY } = ladosEsquina()
+    const z = { x: flipX ? width - w : 0, y: flipY ? height - h : 0, w, h }
+    return { z, borde, w, h }
+  }
+  const z = zonaImagen(width, height)
   const w = plantilla.value === 'vertical' ? z.w + extension : z.w
   const h = plantilla.value === 'horizontal' ? z.h + extension : z.h
   return { z, borde, w, h }
@@ -978,9 +1077,23 @@ function colorDivisor() {
 
 // Dibuja las imágenes (o sus marcadores) en el contexto c, cada una en su celda de la caja que debe cubrir,
 // y la línea divisoria entre ellas.
-function pintarContenidoImagen(c, z, w, h, width) {
+function pintarContenidoImagen(c, z, w, h, width, height) {
   const celdas = celdasImagen(w, h)
-  const horizontal = plantilla.value === 'horizontal'
+  const horizontal = plantilla.value !== 'vertical'
+  // Punto donde va el rótulo del marcador: el centro de la parte visible de la celda
+  const puntoRotulo = (x, celda) => {
+    if (plantilla.value !== 'esquina') {
+      return [horizontal ? x + celda.w / 2 : z.x + z.w / 2, horizontal ? z.y + z.h / 2 : z.y + celda.y + celda.h / 2]
+    }
+    // En la esquina, a media altura de la región bajo el corte, medida en el centro de la columna
+    const { flipX, flipY } = ladosEsquina()
+    const s = corteEsquina()
+    const cx = x + celda.w / 2
+    const cxEsquina = flipX ? width - cx : cx
+    const alto = Math.min(height, Math.max(0, s * height * (1 - cxEsquina / (s * width))))
+    const cy = alto / 2
+    return [cx, flipY ? height - cy : cy]
+  }
   celdas.forEach((celda, i) => {
     const r = ranuras[i]
     const x = z.x + celda.x
@@ -1000,11 +1113,7 @@ function pintarContenidoImagen(c, z, w, h, width) {
       c.font = `${width * 0.03}px Arial`
       c.textAlign = 'center'
       // El centro se mide sobre la parte visible (z): la caja se extiende hacia el área de información
-      c.fillText(
-        celdas.length === 1 ? 'Imagen principal' : `Imagen ${i + 1}`,
-        horizontal ? x + celda.w / 2 : z.x + z.w / 2,
-        horizontal ? z.y + z.h / 2 : y + celda.h / 2
-      )
+      c.fillText(celdas.length === 1 ? 'Imagen principal' : `Imagen ${i + 1}`, ...puntoRotulo(x, celda))
     }
     c.restore()
   })
@@ -1029,7 +1138,7 @@ function dibujarImagenPrincipal(width, height) {
     ctx.save()
     trazarZonaImagen(z, width, height, borde)
     ctx.clip()
-    pintarContenidoImagen(ctx, z, w, h, width)
+    pintarContenidoImagen(ctx, z, w, h, width, height)
     ctx.restore()
     return
   }
@@ -1041,7 +1150,7 @@ function dibujarImagenPrincipal(width, height) {
   const cImg = lienzoImagen.getContext('2d')
   const cMask = lienzoMascara.getContext('2d')
 
-  pintarContenidoImagen(cImg, z, w, h, width)
+  pintarContenidoImagen(cImg, z, w, h, width, height)
 
   cMask.filter = `blur(${sigma}px)`
   cMask.fillStyle = '#000'
@@ -1276,7 +1385,7 @@ function dibujar() {
 }
 
 watch(
-  [bgMode, bgColor, plantilla, proporcionImagenPct, inclinacionPct, curvaturaPct, nivelRasgadoPct, desvanecidoPct, ranuras, cantidadImagenes, cortesPct, divisorPx, divisorColorModo, divisorColor, logos, textos],
+  [bgMode, bgColor, plantilla, esquina, proporcionImagenPct, inclinacionPct, curvaturaPct, nivelRasgadoPct, desvanecidoPct, ranuras, cantidadImagenes, cortesPct, divisorPx, divisorColorModo, divisorColor, logos, textos],
   dibujar,
   { deep: true }
 )
@@ -1330,6 +1439,7 @@ async function aplicarEspecificacion(raw) {
 
   formato.value = spec.formato
   plantilla.value = spec.plantilla
+  esquina.value = spec.esquina
   proporcionImagenPct.value = spec.borde.areaPct
   nivelRasgadoPct.value = spec.borde.rasgadoPct
   inclinacionPct.value = spec.borde.inclinacionPct
@@ -1413,6 +1523,7 @@ function especificacionActual() {
     version: VERSION_SPEC,
     formato: formato.value,
     plantilla: plantilla.value,
+    ...(plantilla.value === 'esquina' ? { esquina: esquina.value } : {}),
     imagenes: ranuras.slice(0, cantidadImagenes.value).map((r) => ({
       url: r.url,
       offsetX: redondear(r.offsetX),
