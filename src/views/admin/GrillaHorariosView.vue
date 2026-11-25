@@ -274,11 +274,17 @@
   <div
     ref='gridWrapper'
     class="horarios-layout m-2"
-   
+    :class="{ 'horarios-layout--cargando': cargandoGrilla }"
     :style="{
       maxWidth: gridConfig.maxWidth + 'px'
     }"
+    :aria-busy="cargandoGrilla"
   >
+    <!-- Spinner propio de la grilla (sin el spinner global): el resto de la pantalla sigue operable -->
+    <div v-if="cargandoGrilla" class="grilla-cargando" role="status" aria-label="Cargando grilla">
+      <div class="spinner-border text-primary" aria-hidden="true"></div>
+      <span>Cargando grilla...</span>
+    </div>
         <!-- esquina vacía -->
     <div class="corner"></div>
 
@@ -337,7 +343,7 @@
 import { ref, onMounted, watch, computed, inject } from 'vue'
 import CursoItem from '@/views/admin/components/CursoItem.vue'
 import { api } from '@/api/api'
-import { showModal } from '@/services/uiBus'
+import { showModal, showToast } from '@/services/uiBus'
 import { usePermisos } from '@/composables/usePermisos'
 
 const { tienePermiso } = usePermisos()
@@ -350,11 +356,21 @@ const sedeSeleccionada = ref('S') // Santa Fe
 const profesorSeleccionado = ref(null)
 const cursoSeleccionado = ref(null)
 onMounted(async () => {
-  cursos.value = await getCursos()
-  aulas.value = await getAulas()
-  materias.value = await getMaterias()
-  profesores.value = await getProfesores()
-  instrumentos.value = await getInstrumentos()
+  // Carga inicial con el spinner de la grilla en lugar del global
+  cargandoGrilla.value = true
+  try {
+    const [c, a, m, p, i] = await Promise.all([
+      getCursos(), getAulas(), getMaterias(), getProfesores(), getInstrumentos()
+    ])
+    // Si la API no devuelve datos, valores vacíos para que la vista no se rompa al renderizar
+    cursos.value = c ?? []
+    aulas.value = a ?? {}
+    materias.value = m ?? []
+    profesores.value = p ?? []
+    instrumentos.value = i ?? []
+  } catch (e) {
+    showToast(e.message || 'No se pudieron cargar los datos de la grilla', 'error')
+  }
   updGrilla()
   //Observer para el resize de la página principal  
   const observer = new ResizeObserver(entries => {
@@ -401,14 +417,26 @@ const cursosDelDia = computed(() => {
   return (cursos.value ?? []).filter(c => enGrilla.has(String(c.codigo)))
 })
 
+// Spinner local de la grilla. Como la pantalla no se bloquea, se puede cambiar de día o sede
+// mientras carga: solo se aplica la respuesta del último pedido.
+const cargandoGrilla = ref(false)
+let ultimoPedidoGrilla = 0
 const updGrilla = async () => {
-  const dia = diaSeleccionado.value
-  const sede = sedeSeleccionada.value
-  grillaHorarios.value = await getGrilla(dia, sede)
-  // Se mantiene el filtro al cambiar de día o sede solo si ese docente o curso tiene clase allí
-  if (!profesoresDelDia.value.some(p => p.codigo === profesorSeleccionado.value)) profesorSeleccionado.value = null
-  if (!cursosDelDia.value.some(c => c.codigo === cursoSeleccionado.value)) cursoSeleccionado.value = null
-  aplicarFiltros()
+  const pedido = ++ultimoPedidoGrilla
+  cargandoGrilla.value = true
+  try {
+    const grilla = await getGrilla()
+    if (pedido !== ultimoPedidoGrilla) return
+    grillaHorarios.value = grilla ?? []
+    // Se mantiene el filtro al cambiar de día o sede solo si ese docente o curso tiene clase allí
+    if (!profesoresDelDia.value.some(p => p.codigo === profesorSeleccionado.value)) profesorSeleccionado.value = null
+    if (!cursosDelDia.value.some(c => c.codigo === cursoSeleccionado.value)) cursoSeleccionado.value = null
+    aplicarFiltros()
+  } catch (e) {
+    if (pedido === ultimoPedidoGrilla) showToast(e.message || 'No se pudo cargar la grilla', 'error')
+  } finally {
+    if (pedido === ultimoPedidoGrilla) cargandoGrilla.value = false
+  }
 }
 const getGrilla = async () => {
   const r = await api.get({
@@ -418,7 +446,7 @@ const getGrilla = async () => {
       dia: diaSeleccionado.value,
       sede: sedeSeleccionada.value
     }
-  })
+  }, { spinner: false })
   return r.payload
 }
 
@@ -426,21 +454,21 @@ const getInstrumentos = async ()=>{
   const r = await api.get({
     entity: "instrumentos",
     action: 'getInstrumentos',
-  })
+  }, { spinner: false })
   return r.payload
 }
 const getMaterias = async () => {
   const r = await api.get({
     entity: "materias",
     action: "getMaterias"
-  })
+  }, { spinner: false })
   return r.payload
 }
 const getProfesores = async () => {
   const r = await api.get({
     entity: 'profesores',
     action: 'getProfesores'
-  })
+  }, { spinner: false })
   return r.payload
 }
 const getAulas = async () => {
@@ -450,14 +478,14 @@ const getAulas = async () => {
     payload: {
       sede: sedeSeleccionada.value
     }
-  })
+  }, { spinner: false })
   return r.payload
 }
 const getCursos = async () => {
   const r = await api.get({
     entity: "cursos",
     action: "getCursos"
-  })
+  }, { spinner: false })
   return r.payload
 }
 
@@ -657,14 +685,14 @@ const getDias = async () => {
   const r = await api.get({
     entity: "data",
     action: 'getDias'
-  })
+  }, { spinner: false })
   return r.payload
 }
 const getComisiones = async () => {
   const r = await api.get({
     entity: "data",
     action: 'getComisiones'
-  })
+  }, { spinner: false })
   return r.payload
 }
 
@@ -841,9 +869,28 @@ const clearHover = () => {
 
 <style>
 .horarios-layout {
+  position: relative;
   display: grid;
   grid-template-columns: auto 1fr;
   grid-template-rows: auto 1fr;
+}
+/* Espacio para el spinner cuando la grilla todavía está vacía */
+.horarios-layout--cargando {
+  min-height: 200px;
+}
+.grilla-cargando {
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  border-radius: 8px;
+  cursor: progress;
+  background: rgba(127, 127, 127, 0.35);
+  background: color-mix(in srgb, var(--color-fondo-principal) 70%, transparent);
+  font-weight: 600;
 }
 .leyenda-ausente {
   display: inline-block;
