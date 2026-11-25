@@ -16,7 +16,7 @@ Rol: lo decide el backend por el token (`api.js` solo manda `Authorization: Bear
 
 Auditoría base: 2026-11-03, 247 puntos de llamada en `src` (excluye `composables/useApiClient.js` y `useMesas.js`, sin importadores, y `MateriasView_old.vue`, sin ruta).
 
-## Rol: admin (137 llamados)
+## Rol: admin (138 llamados)
 
 | entity | action | método | routes.php | vistas |
 |---|---|---|---|---|
@@ -148,6 +148,7 @@ Auditoría base: 2026-11-03, 247 puntos de llamada en `src` (excluye `composable
 | preinscripciones | enviarClave | POST | OK | PreinscripcionesVerView |
 | preinscripciones | getInscripciones | GET | OK | PreinscripcionesVerView |
 | preinscripciones | getResumen | GET | OK | PreinscripcionesVerView |
+| profesores | enviarClave | POST | OK | BusquedaView |
 | profesores | getProfesores | GET | OK | GrillaHorariosView, MesasExamenView, DocentesAusentesView, ReservasVacanteView |
 | reservas | delReserva | POST | OK | ReservasVacanteView |
 | reservas | getReservas | GET | OK | ReservasVacanteView |

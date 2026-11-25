@@ -15,7 +15,7 @@
           Ingresar
         </button>
         <button
-          v-if="!item.validado"
+          v-if="area === 'docentes'"
           type="button"
           class="card-link"
           @click="emit('send-key', index)"

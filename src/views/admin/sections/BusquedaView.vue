@@ -98,7 +98,7 @@ import BusquedaItem from '@/views/admin/components/BusquedaItem.vue'
 import InfoCardGrid from '@/components/card/InfoCardGrid.vue'
 
 import MessagePopup from '@/views/admin/components/MessagePopup.vue'
-import { showToast } from '@/services/uiBus'
+import { showToast, showModal } from '@/services/uiBus'
 import { useRoute } from 'vue-router'
 import { useImpersonation } from '@/views/admin/composables/useImpersonation'
 const { openUserPanel }  = useImpersonation()
@@ -145,8 +145,52 @@ const showData = (index) => {
 const openPanel = (codigo) => {
     openUserPanel({area: searchArea,codigo})
 }
-const sendKey = (codigo) => {
+// Blanqueo de clave de docentes: usuario -> email -> confirmación
+const sendKey = async (k) => {
+  if (searchArea !== 'docentes') return
+  const item = arrBusqueda.value[k]
+  if (!item) return
 
+  const rUser = await showModal(
+    `Ingrese el nombre de usuario para ${item.nombre}.`,
+    2,
+    'Nombre de usuario',
+    item.userName ?? ''
+  )
+  const userName = (rUser.value ?? '').trim()
+  if (!rUser.ok || !userName) return
+
+  const rEmail = await showModal(
+    `Ingrese el correo electrónico asociado al usuario "${userName}".`,
+    2,
+    'Correo electrónico',
+    item.email ?? ''
+  )
+  const email = (rEmail.value ?? '').trim()
+  if (!rEmail.ok || !email) return
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    showToast('La dirección de correo no es válida', 'error')
+    return
+  }
+
+  const { ok: confirmado } = await showModal(
+    `Docente: ${item.nombre}\nUsuario: ${userName}\nCorreo: ${email}\n\nSe guardarán estos datos y se enviará un blanqueo de clave a ese correo. ¿Confirma?`,
+    1,
+    'Confirmar datos'
+  )
+  if (!confirmado) return
+
+  const r = await api.post({
+    entity: 'profesores',
+    action: 'enviarClave',
+    payload: { codProfesor: item.codigo, userName, email }
+  })
+  if (r.ok) {
+    item.userName = userName
+    item.email = email
+    item.validado = false
+    showToast('Clave enviada', 'success')
+  }
 }
 const toggleMsgForm = (k) => {
     indexArr.value = k
