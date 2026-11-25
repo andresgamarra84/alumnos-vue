@@ -385,6 +385,8 @@ const  addMesa = async () => {
     action: "addMesa",
     payload: formMesa.value,
   })
+  // Los errores (p. ej. curso sin materias asociadas) los muestra api.js
+  if (r.ok) showToast("Mesa incorporada", "success")
 }
 
 const listMesas = async (criterio=0) => {
