@@ -56,7 +56,7 @@
           <option disabled value="">Seleccione</option>
           <option value="0">Masculino</option>
           <option value="1">Femenino</option>
-          <option value="2">Otro</option>
+          <option value="2">X</option>
         </select>
       </div>
     <!-- ================= FECHA NACIMIENTO ================= -->
