@@ -414,33 +414,40 @@ const borrarMesa = async (key) => {
   if (r.ok) arrMesas.value.splice(key,1)
 }
 
-const downloadActa = async (key) => {
-  console.log("Descargar acta:", key)
-  if (this.arrMesas[k].datosMesa.cantAlumnos==0){
-    showToast("No se puede descargar el acta porque no posee estudiantes inscriptos", 'error');
+// Acta de una mesa (clic en el código de la mesa)
+const downloadActa = async (codMesa) => {
+  const mesa = arrMesas.value.find(m => m.codigo === codMesa)
+  if (mesa && !(mesa.cantAlumnos > 0)) {
+    showToast("No se puede descargar el acta porque la mesa no tiene estudiantes inscriptos", "error")
     return
   }
-	const blob = await api.getPDF({
-    entity: "mesasexamen",
-    action: "getActaMesa",
-    payload: {
-      codMesa: key,
-    }
-  })
-  downloadBlob(blob, "ActaMesa - "+this.arrMesas[k].datosMesa.codigo+".pdf", "application/pdf")
+  try {
+    const blob = await api.getPDF({
+      entity: "mesasexamen",
+      action: "getActaMesa",
+      payload: { codMesa },
+    })
+    downloadBlob(blob, `ActaMesa - ${codMesa}.pdf`, "application/pdf")
+  } catch {
+    // api.js ya mostró el motivo
+  }
 }
 
+// Actas de todas las mesas del período del filtro (sin fechas: últimos 30 días, igual que el listado)
 const downloadActaAll = async () => {
-  console.log("Descargar todas")
-  const blob = await api.getPDF({
-    entity: "mesasexamen", 
-    action: "getActasMesas",
-    payload: {
-      fechaInicio: filtro.value.desde,
-      fechaFin: filtro.value.hasta,
-    }
-  })
-  downloadBlob(blob, "ActasMesas.pdf", "application/pdf")
+  try {
+    const blob = await api.getPDF({
+      entity: "mesasexamen",
+      action: "getActasMesas",
+      payload: {
+        fechaInicio: filtro.value.desde,
+        fechaFin: filtro.value.hasta,
+      }
+    })
+    downloadBlob(blob, "ActasMesas.pdf", "application/pdf")
+  } catch {
+    // api.js ya mostró el motivo
+  }
 }
 
 const downloadCitaciones = async () => {

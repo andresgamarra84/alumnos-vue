@@ -37,6 +37,23 @@ const request = async (options = {}) => {
         if (options.type == 'json'){//(contentType && contentType.includes('application/json')) {
             data = await response.json();
         } else {
+            // Un error del backend llega como JSON ({ ok:false, message }): no devolverlo como archivo
+            const contentType = response.headers.get('Content-Type') || ''
+            if (!response.ok || contentType.includes('application/json')) {
+                let message = 'No se pudo generar el archivo solicitado'
+                try {
+                    const err = await response.json()
+                    message = err.message || message
+                } catch {
+                    // cuerpo vacío o no JSON: queda el mensaje genérico
+                }
+                if (response.status == 401 && token) {
+                    window.dispatchEvent(new CustomEvent('session-expired'))
+                    throw new Error('SESSION_EXPIRED')
+                }
+                if (!options.silent) showToast(message, 'error')
+                throw new Error(message)
+            }
             data = await response.blob();
             if (data.size) {
                 return data
