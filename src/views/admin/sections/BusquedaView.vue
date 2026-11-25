@@ -180,11 +180,17 @@ const sendKey = async (k) => {
   )
   if (!confirmado) return
 
-  const r = await api.post({
-    entity: 'profesores',
-    action: 'enviarClave',
-    payload: { codProfesor: item.codigo, userName, email }
-  })
+  let r
+  try {
+    r = await api.post({
+      entity: 'profesores',
+      action: 'enviarClave',
+      payload: { codProfesor: item.codigo, userName, email }
+    })
+  } catch (e) {
+    showToast(`No se pudo enviar la clave: ${e.message}`, 'error')
+    return
+  }
   if (r.ok) {
     item.userName = userName
     item.email = email
