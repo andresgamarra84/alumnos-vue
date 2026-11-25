@@ -376,7 +376,7 @@ watch(
     updGrilla()
   }
 )
-// Los filtros de profesor y curso se combinan (AND); null = sin filtrar
+// Filtro de profesor o de curso (uno a la vez, ver watchers abajo); null = sin filtrar
 const aplicarFiltros = () => {
   const profesor = profesorSeleccionado.value
   const curso = cursoSeleccionado.value
@@ -386,6 +386,9 @@ const aplicarFiltros = () => {
   })
 }
 watch([profesorSeleccionado, cursoSeleccionado], aplicarFiltros)
+// Los filtros son excluyentes: elegir un docente vuelve el curso a (Todos) y viceversa
+watch(profesorSeleccionado, (v) => { if (v !== null) cursoSeleccionado.value = null })
+watch(cursoSeleccionado, (v) => { if (v !== null) profesorSeleccionado.value = null })
 
 // Opciones de los filtros: solo docentes y cursos que tienen clase en el día y sede de la grilla
 const codigosEnGrilla = (campo) => new Set((grillaHorarios.value ?? []).map(v => String(v[campo])))
