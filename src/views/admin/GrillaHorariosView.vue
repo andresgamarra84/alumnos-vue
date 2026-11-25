@@ -252,7 +252,7 @@
       <label>Profesor:</label>
       <select v-model="profesorSeleccionado">
         <option :value="null">(Todos)</option>
-        <option v-for="p in profesores" :key="p.codigo" :value="p.codigo">
+        <option v-for="p in profesoresDelDia" :key="p.codigo" :value="p.codigo">
           {{ p.nombre }}
         </option>
       </select>
@@ -261,7 +261,7 @@
       <label>Curso:</label>
       <select v-model="cursoSeleccionado">
         <option :value="null">(Todos)</option>
-        <option v-for="c in cursos" :key="c.codigo" :value="c.codigo">
+        <option v-for="c in cursosDelDia" :key="c.codigo" :value="c.codigo">
           {{ c.nombre }}
         </option>
       </select>
@@ -387,11 +387,25 @@ const aplicarFiltros = () => {
 }
 watch([profesorSeleccionado, cursoSeleccionado], aplicarFiltros)
 
+// Opciones de los filtros: solo docentes y cursos que tienen clase en el día y sede de la grilla
+const codigosEnGrilla = (campo) => new Set((grillaHorarios.value ?? []).map(v => String(v[campo])))
+const profesoresDelDia = computed(() => {
+  const enGrilla = codigosEnGrilla('codProfesor')
+  return (profesores.value ?? []).filter(p => enGrilla.has(String(p.codigo)))
+})
+const cursosDelDia = computed(() => {
+  const enGrilla = codigosEnGrilla('codCurso')
+  return (cursos.value ?? []).filter(c => enGrilla.has(String(c.codigo)))
+})
+
 const updGrilla = async () => {
   const dia = diaSeleccionado.value
   const sede = sedeSeleccionada.value
   grillaHorarios.value = await getGrilla(dia, sede)
-  aplicarFiltros() // Mantener los filtros al cambiar de día o sede
+  // Se mantiene el filtro al cambiar de día o sede solo si ese docente o curso tiene clase allí
+  if (!profesoresDelDia.value.some(p => p.codigo === profesorSeleccionado.value)) profesorSeleccionado.value = null
+  if (!cursosDelDia.value.some(c => c.codigo === cursoSeleccionado.value)) cursoSeleccionado.value = null
+  aplicarFiltros()
 }
 const getGrilla = async () => {
   const r = await api.get({
